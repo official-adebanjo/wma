@@ -14,6 +14,7 @@
     "test:mobile:ios": "wdio run mobile/config/wdio.ios.conf.ts",
     "test:mobile:cloud": "wdio run mobile/config/wdio.lambdatest.conf.ts",
     "test:mobile:smoke": "wdio run mobile/config/wdio.android.conf.ts --mochaOpts.grep @smoke",
+    "test:admin:dev": "playwright test --project=admin-dev",
     "report:admin": "playwright show-report reports/playwright-html"
   },
   "devDependencies": {

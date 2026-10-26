@@ -38,6 +38,28 @@ export default defineConfig({
       dependencies: ['admin-setup'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
+    // Real dev Admin Portal — specs built from Playwright codegen recordings (admin/dev-portal).
+    {
+      name: 'admin-dev-setup',
+      testDir: './admin/dev-portal',
+      testMatch: /dev\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'], baseURL: process.env.DEV_ADMIN_URL },
+    },
+    {
+      name: 'admin-dev',
+      testDir: './admin/dev-portal',
+      testMatch: /\.spec\.ts/,
+      dependencies: ['admin-dev-setup'],
+      timeout: 180_000,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: process.env.DEV_ADMIN_URL,
+        storageState: '.auth/dev-super-admin.json',
+        viewport: { width: 1440, height: 900 },
+        trace: 'on',
+        screenshot: 'on',
+      },
+    },
     {
       name: 'admin-firefox',
       testDir: './admin/specs',
