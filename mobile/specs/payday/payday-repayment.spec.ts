@@ -14,12 +14,13 @@ import { PaydayLandingScreen, PaydayLoanScreen } from '../../screens/loans/Payda
  * Payday — on-loan view, payday auto-debit via Remita, retries, wallet fallback, repay early,
  * collections (Payday_Customer_App_Spec §5–§9, §11). Risk: repayment / debit = CRIT.
  *
- * Seeded loan `extra` contract: termRatePct, paydayInDays, salaryBank, mandateProvider, mandateStatus, overdueDays.
+ * Seeded loan `extra` contract: dailyRatePct, tenorDays, daysElapsed (days since disbursement), paydayInDays, salaryBank, mandateProvider, mandateStatus, overdueDays.
  */
 describe('Payday › Repayment & servicing', () => {
   const AMOUNT = 150_000;
   const BANK = 'GTBank';
-  const { interest: INTEREST, totalRepayment: TOTAL } = loans.flatInterest(AMOUNT, PAYDAY_TERMS.termRatePct);
+  const TENOR = PAYDAY_TERMS.termDays; // days selected at booking (7–30)
+  const { interest: INTEREST, totalRepayable: TOTAL } = loans.proratedInterest(AMOUNT, PAYDAY_TERMS.dailyRatePct, TENOR);
   let hooks: QaHooks;
   let customerId: string;
 
@@ -38,8 +39,10 @@ describe('Payday › Repayment & servicing', () => {
   });
 
   async function seedPayday(extra: Record<string, unknown> = {}, state: 'ACTIVE' | 'DEBIT_FAILED' | 'OVERDUE' | 'IN_COLLECTIONS' | 'WRITTEN_OFF' = 'ACTIVE') {
+    const paydayInDays = (extra.paydayInDays as number | undefined) ?? 12;
     const id = await openSeededLoan(hooks, customerId, 'PAYDAY', state, AMOUNT, {
-      termRatePct: PAYDAY_TERMS.termRatePct, paydayInDays: 12, salaryBank: BANK, mandateProvider: 'REMITA', mandateStatus: 'ACTIVE', ...extra,
+      dailyRatePct: PAYDAY_TERMS.dailyRatePct, tenorDays: TENOR, daysElapsed: Math.max(0, TENOR - paydayInDays), paydayInDays,
+      salaryBank: BANK, mandateProvider: 'REMITA', mandateStatus: 'ACTIVE', ...extra,
     });
     await loan.waitForShown();
     return id;
@@ -51,7 +54,7 @@ describe('Payday › Repayment & servicing', () => {
   }
 
   describe('On-loan view (§5)', () => {
-    it(title('payday countdown hero: days to payday, outstanding and amount to be auto-debited match the oracle', Tag.crit, Tag.smoke, Tag.spec('Payday§5'), Tag.spec('Payday§10')), async () => {
+    it(title('payday countdown hero: days to payday, outstanding and amount to be auto-debited match the prorated oracle', Tag.crit, Tag.smoke, Tag.spec('Payday§5'), Tag.spec('Payday§10'), Tag.spec('LoanSpec§3.2')), async () => {
       await seedPayday({ paydayInDays: 12 });
       await expect(await loan.countdown()).toMatch(/\b12\b.*payday|payday.*\b12\b/i);
       await expect((await loan.outstanding()).toFixed(2)).toBe(TOTAL.toFixed(2));
@@ -144,18 +147,22 @@ describe('Payday › Repayment & servicing', () => {
   });
 
   describe('Repay early (§7)', () => {
-    it(title('repay early from wallet: full outstanding, loan closes, wallet debited exactly, mandate cancelled', Tag.crit, Tag.open('L-payday-early-interest'), Tag.spec('Payday§7')), async () => {
+    it(title('repay early from wallet: interest prorated on days used only, loan closes, wallet debited exactly, mandate cancelled', Tag.crit, Tag.spec('Payday§7'), Tag.spec('LoanSpec§3.2')), async () => {
       await hooks.setWalletBalance(customerId, 300_000);
-      const id = await seedPayday({ paydayInDays: 20 });
+      const daysUsed = 10;
+      const early = loans.paydayEarlySettlement(AMOUNT, PAYDAY_TERMS.dailyRatePct, daysUsed, TENOR);
+      expect(early.interest.toFixed(2)).toBe(loans.proratedInterest(AMOUNT, PAYDAY_TERMS.dailyRatePct, daysUsed).interest.toFixed(2));
+      expect(early.interestSaved.gt(0)).toBe(true);
+      const id = await seedPayday({ daysElapsed: daysUsed, paydayInDays: TENOR - daysUsed });
       await loan.action('repayEarly');
       await repay.waitForShown();
-      // ASSUMPTION: no interest rebate for early repayment — full 30-day flat interest (spec: "amount (full outstanding)").
-      await expect((await repay.repayAmount()).toFixed(2)).toBe(TOTAL.toFixed(2));
+      // LoanSpec §3.2: early settlement recalculates interest on the active days used, not the full selected tenor.
+      await expect((await repay.repayAmount()).toFixed(2)).toBe(early.totalRepayable.toFixed(2));
       await expect(await repay.source()).toMatch(/wallet/i);
       await expect(await repay.amountEditable()).toBe(false);
       await repay.confirm();
       await expect(await repay.successText()).toMatch(/closed|repaid/i);
-      await expect((await walletBalance()).toFixed(2)).toBe(D(300_000).minus(TOTAL).toFixed(2));
+      await expect((await walletBalance()).toFixed(2)).toBe(D(300_000).minus(early.totalRepayable).toFixed(2));
       await reopen(id);
       await expect(await loan.stateLabel()).toMatch(/repaid/i);
       await expect(await loan.detail('mandateStatus')).toMatch(/cancel/i);

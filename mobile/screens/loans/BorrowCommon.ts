@@ -183,6 +183,10 @@ export class EarlySettlementScreen extends BaseScreen {
   principal() { return this.amount(`${this.m}.settlement.breakdown.principal`); }
   accruedInterest() { return this.amount(`${this.m}.settlement.breakdown.accrued`); }
   fee() { return this.amount(`${this.m}.settlement.breakdown.fee`); }
+  feeShown() { return this.exists(`${this.m}.settlement.breakdown.fee`, 1_500); }
+  /** Interest for the remaining months that early payoff waives (LOAN PRODUCT SPECIFICATIONS §4.4), if displayed. */
+  waivedInterestShown() { return this.exists(`${this.m}.settlement.breakdown.waived`, 1_500); }
+  waivedInterest() { return this.amount(`${this.m}.settlement.breakdown.waived`); }
   warning() { return this.text(`${this.m}.settlement.warning`); }
   continue() { return this.tap(`${this.m}.settlement.continue`); }
   chooseSource(s: 'wallet' | 'bankTransfer') { return this.tap(`${this.m}.settlement.source.${s}`); }

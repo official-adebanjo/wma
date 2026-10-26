@@ -29,13 +29,17 @@ export class NanoBookingScreen extends BaseScreen {
   amountRange() { return this.text('nano.booking.amount.range'); }
   tapChip(amount: number) { return this.tap(`nano.booking.amount.chip.${amount}`); }
   chipShown(amount: number) { return this.exists(`nano.booking.amount.chip.${amount}`, 1_500); }
-  // Step 2 — Tenor cards
-  tenorCard(days: number) {
-    const p = `nano.booking.tenor.${days}`;
+  // Step 2 — Tenor: flexible 1–30 days (LOAN PRODUCT SPECIFICATIONS §2.1) with a live prorated quote.
+  // ASSUMPTION (test-ID contract): a day input `nano.booking.tenor.days.input` (+ `.error`), range copy
+  // `nano.booking.tenor.days.range`, and a live quote `nano.booking.tenor.quote.{interest,total,days}`.
+  enterTenorDays(days: number) { return this.type('nano.booking.tenor.days.input', days); }
+  tenorDaysError() { return this.text('nano.booking.tenor.days.input.error'); }
+  tenorDaysRange() { return this.text('nano.booking.tenor.days.range'); }
+  tenorQuote() {
+    const p = 'nano.booking.tenor.quote';
     return {
       shown: () => this.exists(p, 2_000),
-      select: () => this.tap(p),
-      label: () => this.text(`${p}.label`),
+      days: () => this.text(`${p}.days`),
       interest: () => this.amount(`${p}.interest`),
       total: () => this.amount(`${p}.total`),
     };

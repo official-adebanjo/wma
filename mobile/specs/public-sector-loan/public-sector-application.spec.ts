@@ -1,12 +1,13 @@
 import { expect } from '@wdio/globals';
-import { addMonths } from '../../../shared/calc/money';
+import { D, addMonths } from '../../../shared/calc/money';
 import * as loans from '../../../shared/calc/loans';
 import { Tag, title } from '../../../shared/support/tags';
 import { testFiles } from '../../../shared/data/factories';
 import { QaHooks } from '../../../shared/api/qa-hooks';
 import { freshCustomer, requireHooks } from '../../helpers/session';
 import {
-  CORRIDORS, CorridorFixture, SYSTEM_CODE_OR_JARGON, daysFromNow, expectNoVisibleText, isoDate, nairaRe, notificationText,
+  CORRIDORS, CorridorFixture, INTEREST_MODELS, PUBLIC_SECTOR_DEFAULT_MODEL, SYSTEM_CODE_OR_JARGON, daysFromNow, expectNoVisibleText, isoDate,
+  modelTitle, nairaRe, notificationText,
   openBorrowTile, openLoan, seedCorridors, setCrossLoanBlock,
 } from '../../helpers/loans';
 import { expectInlineError } from '../../screens/BaseScreen';
@@ -107,10 +108,14 @@ describe('Public Sector Loan › Application', () => {
     await booking.continue();
   }
 
-  async function seedOffer(c: CorridorFixture, amount: number, tenorMonths: number) {
+  /** Monthly rate the engine applies for a corridor's quoted p.a. rate. */
+  const monthlyRate = (c: CorridorFixture) => loans.monthlyFromAnnual(c.ratePct);
+
+  async function seedOffer(c: CorridorFixture, amount: number, tenorMonths: number, model: loans.InterestModel = PUBLIC_SECTOR_DEFAULT_MODEL) {
+    await seedCorridors(hooks, {}, model);
     const { loanId } = await hooks.seedLoan({
       customerId, product: 'PUBLIC_SECTOR', state: 'OFFER_RETURNED', amount,
-      extra: { corridor: c.name, ratePct: c.ratePct, tenorMonths, approvedAmount: amount },
+      extra: { corridor: c.name, ratePct: c.ratePct, monthlyRatePct: monthlyRate(c).toNumber(), interestModel: model, tenorMonths, approvedAmount: amount },
     });
     await openLoan('PUBLIC_SECTOR', loanId);
     await offer.waitForShown();
@@ -251,30 +256,36 @@ describe('Public Sector Loan › Application', () => {
       await expect(await booking.yearsToRetirement()).toMatch(/\b5\b.*year|60 months/i);
     });
 
-    it(title('live affordability cap = salary basis × DTI − existing deductions (oracle); over-cap gives two-clause error', Tag.crit, Tag.spec('PublicSector§4'), Tag.spec('PublicSector§9')), async () => {
-      const gross = 300_000;
-      const tenor = 12;
-      await toAmountStep(LAG, { gross });
-      await booking.pickTenor(tenor);
-      const cap = loans.maxAffordablePrincipal(gross, LAG.dtiPct, 0, LAG.ratePct, tenor);
-      await expect((await booking.capAmount()).toFixed(2)).toBe(cap.toFixed(2));
-      await expect(await booking.capText()).toMatch(/calculated from your salary basis, DTI, and any existing deductions/i);
-      await booking.enterAmount(cap.plus(1).toFixed(0));
-      await expectInlineError('publicSector.booking.amount.input', new RegExp(`exceeds your affordability under ${LAG.name} rules\\. Try up to ${nairaRe(cap)}`, 'i'));
-      await expect(await booking.continueEnabled()).toBe(false);
-      await booking.enterAmount(cap.floor().toFixed(0));
-      await expect(await booking.continueEnabled()).toBe(true);
-    });
-
-    for (const tenor of [12, 24]) {
-      it(title(`live monthly repayment for ₦1,000,000 over ${tenor} months at the corridor rate matches the oracle`, Tag.crit, Tag.spec('PublicSector§4')), async () => {
-        await toAmountStep(FED, { gross: 1_500_000 });
+    for (const model of INTEREST_MODELS) {
+      it(title(`${modelTitle(model)}: live affordability cap = salary basis × DTI − existing deductions over month-1 instalment (oracle); over-cap gives two-clause error`, Tag.crit, Tag.spec('PublicSector§4'), Tag.spec('PublicSector§9'), Tag.spec('LoanSpec§4.2')), async () => {
+        const gross = 300_000;
+        const tenor = 12;
+        await seedCorridors(hooks, {}, model);
+        await toAmountStep(LAG, { gross });
         await booking.pickTenor(tenor);
-        await booking.enterAmount(1_000_000);
-        const expected = loans.monthlyInstalment(1_000_000, FED.ratePct, tenor);
-        await expect((await booking.monthlyEstimate()).toFixed(2)).toBe(expected.toFixed(2));
-        await expect(await booking.monthlyEstimateText()).toMatch(new RegExp(`Approximately ${nairaRe(expected)}/month at ~${FED.ratePct}% p\\.a\\.`, 'i'));
+        // Month-1 instalment is P/N + P×r under both models, so the cap is model-independent — asserted under each.
+        const cap = loans.maxAffordablePrincipal(gross, LAG.dtiPct, 0, monthlyRate(LAG), tenor);
+        expect(loans.firstInstalment(cap, monthlyRate(LAG), tenor, model).lte(D(gross).mul(LAG.dtiPct).div(100).plus(0.01))).toBe(true);
+        await expect((await booking.capAmount()).toFixed(2)).toBe(cap.toFixed(2));
+        await expect(await booking.capText()).toMatch(/calculated from your salary basis, DTI, and any existing deductions/i);
+        await booking.enterAmount(cap.plus(1).toFixed(0));
+        await expectInlineError('publicSector.booking.amount.input', new RegExp(`exceeds your affordability under ${LAG.name} rules\\. Try up to ${nairaRe(cap)}`, 'i'));
+        await expect(await booking.continueEnabled()).toBe(false);
+        await booking.enterAmount(cap.floor().toFixed(0));
+        await expect(await booking.continueEnabled()).toBe(true);
       });
+
+      for (const tenor of [12, 24]) {
+        it(title(`${modelTitle(model)}: live monthly repayment for ₦1,000,000 over ${tenor} months at the corridor rate = month-1 instalment from the oracle`, Tag.crit, Tag.spec('PublicSector§4'), Tag.spec('LoanSpec§4.2')), async () => {
+          await seedCorridors(hooks, {}, model);
+          await toAmountStep(FED, { gross: 1_500_000 });
+          await booking.pickTenor(tenor);
+          await booking.enterAmount(1_000_000);
+          const expected = loans.firstInstalment(1_000_000, monthlyRate(FED), tenor, model);
+          await expect((await booking.monthlyEstimate()).toFixed(2)).toBe(expected.toFixed(2));
+          await expect(await booking.monthlyEstimateText()).toMatch(new RegExp(`Approximately ${nairaRe(expected)}/month at ~${FED.ratePct}% p\\.a\\.`, 'i'));
+        });
+      }
     }
   });
 
@@ -347,18 +358,21 @@ describe('Public Sector Loan › Application', () => {
   });
 
   describe('Review, under review, offer, activation (§4 steps 7–10, §6, §8)', () => {
-    it(title('review shows corridor (employer name), amount, tenor, oracle monthly, salary basis, IPPIS, deduction method, documents', Tag.crit, Tag.spec('PublicSector§4')), async () => {
-      await toReview(FED, 1_000_000, 24);
-      await expect(await booking.reviewValue('corridor')).toContain(FED.name);
-      await expect((await booking.reviewAmount('amount')).toFixed(2)).toBe('1000000.00');
-      await expect(await booking.reviewValue('tenor')).toMatch(/24 months/i);
-      await expect((await booking.reviewAmount('monthly')).toFixed(2)).toBe(loans.monthlyInstalment(1_000_000, FED.ratePct, 24).toFixed(2));
-      await expect(await booking.reviewValue('salaryBasis')).toBeTruthy();
-      await expect(await booking.reviewValue('idNumber')).toContain(IPPIS_NO);
-      await expect(await booking.reviewValue('deductionMethod')).toMatch(/IPPIS|payroll/i);
-      await expect(await booking.reviewValue('documents')).toMatch(/consent letter/i);
-      await expectNoVisibleText(SYSTEM_CODE_OR_JARGON);
-    });
+    for (const model of INTEREST_MODELS) {
+      it(title(`${modelTitle(model)}: review shows corridor (employer name), amount, tenor, oracle monthly, salary basis, IPPIS, deduction method, documents`, Tag.crit, Tag.spec('PublicSector§4'), Tag.spec('LoanSpec§4.2')), async () => {
+        await seedCorridors(hooks, {}, model);
+        await toReview(FED, 1_000_000, 24);
+        await expect(await booking.reviewValue('corridor')).toContain(FED.name);
+        await expect((await booking.reviewAmount('amount')).toFixed(2)).toBe('1000000.00');
+        await expect(await booking.reviewValue('tenor')).toMatch(/24 months/i);
+        await expect((await booking.reviewAmount('monthly')).toFixed(2)).toBe(loans.firstInstalment(1_000_000, monthlyRate(FED), 24, model).toFixed(2));
+        await expect(await booking.reviewValue('salaryBasis')).toBeTruthy();
+        await expect(await booking.reviewValue('idNumber')).toContain(IPPIS_NO);
+        await expect(await booking.reviewValue('deductionMethod')).toMatch(/IPPIS|payroll/i);
+        await expect(await booking.reviewValue('documents')).toMatch(/consent letter/i);
+        await expectNoVisibleText(SYSTEM_CODE_OR_JARGON);
+      });
+    }
 
     it(title('submit → under review with "Validating IPPIS number…" then Underwriting and Authority steps', Tag.crit, Tag.smoke, Tag.spec('PublicSector§4'), Tag.spec('PublicSector§8')), async () => {
       await toReview(FED, 1_000_000, 24);
@@ -371,21 +385,21 @@ describe('Public Sector Loan › Application', () => {
       await expect(await notificationText(hooks, customerId, 3)).toMatch(/Public Sector Loan application is under review\. Response typically within 48 hours/i);
     });
 
-    it(title('offer shows amount, tenor, rate, oracle monthly and first payroll deduction date for the corridor', Tag.crit, Tag.spec('PublicSector§4')), async () => {
-      await seedOffer(FED, 2_000_000, 24);
+    for (const model of INTEREST_MODELS) it(title(`${modelTitle(model)}: offer shows amount, tenor, rate, oracle monthly and first payroll deduction date for the corridor`, Tag.crit, Tag.spec('PublicSector§4'), Tag.spec('LoanSpec§4.2')), async () => {
+      await seedOffer(FED, 2_000_000, 24, model);
       await expect((await offer.approvedAmount()).toFixed(2)).toBe('2000000.00');
       await expect(await offer.tenor()).toMatch(/24 months/i);
       await expect(await offer.rate()).toContain(`${FED.ratePct}%`);
-      await expect((await offer.monthly()).toFixed(2)).toBe(loans.monthlyInstalment(2_000_000, FED.ratePct, 24).toFixed(2));
+      await expect((await offer.monthly()).toFixed(2)).toBe(loans.firstInstalment(2_000_000, monthlyRate(FED), 24, model).toFixed(2));
       await expect(await offer.firstDeductionDate()).toBeTruthy();
       await expect(await offer.corridorContext()).toMatch(/Your first payroll deduction will happen on/i);
       await expect(await notificationText(hooks, customerId, 3)).toMatch(/Public Sector Loan offer is ready/i);
       await expectNoVisibleText(SYSTEM_CODE_OR_JARGON);
     });
 
-    it(title('accept → active, awaiting first payroll cycle state with 1–2 cycle note and notification', Tag.crit, Tag.smoke, Tag.spec('PublicSector§4'), Tag.spec('PublicSector§6'), Tag.spec('PublicSector§8')), async () => {
-      const id = await seedOffer(FED, 2_000_000, 24);
-      const monthly = loans.monthlyInstalment(2_000_000, FED.ratePct, 24);
+    for (const model of INTEREST_MODELS) it(title(`${modelTitle(model)}: accept → active, awaiting first payroll cycle state with 1–2 cycle note and notification`, Tag.crit, Tag.smoke, Tag.spec('PublicSector§4'), Tag.spec('PublicSector§6'), Tag.spec('PublicSector§8'), Tag.spec('LoanSpec§4.2')), async () => {
+      const id = await seedOffer(FED, 2_000_000, 24, model);
+      const monthly = loans.firstInstalment(2_000_000, monthlyRate(FED), 24, model);
       await offer.accept();
       await activation.waitForShown();
       await expect(await activation.successShown()).toBe(true);

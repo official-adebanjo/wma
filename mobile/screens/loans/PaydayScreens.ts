@@ -51,6 +51,10 @@ export class PaydayBookingScreen extends BaseScreen {
   capAmount() { return this.amount('payday.booking.amount.capIndicator.amount'); }
   feesInterest() { return this.amount('payday.booking.amount.fees.interest'); }
   feesTotal() { return this.amount('payday.booking.amount.fees.total'); }
+  // Step 2 — tenor 7–30 days (LOAN PRODUCT SPECIFICATIONS §3.1); fees preview follows the selected days.
+  // ASSUMPTION (test-ID contract): `payday.booking.amount.tenorDays.input` (+ `.error`).
+  enterTenorDays(days: number) { return this.type('payday.booking.amount.tenorDays.input', days); }
+  tenorDaysError() { return this.text('payday.booking.amount.tenorDays.input.error'); }
   // Step 3 — purpose (optional)
   pickPurpose(slug: string) { return this.tap(`payday.booking.purpose.option.${slug}`); }
   purposeOptionShown(slug: string) { return this.exists(`payday.booking.purpose.option.${slug}`, 1_500); }

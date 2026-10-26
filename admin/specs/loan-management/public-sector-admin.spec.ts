@@ -14,7 +14,9 @@ import { Tag, title } from '../../../shared/support/tags';
  *
  * Seeding assumptions: Public Sector config `corridors.<name>.{dtiPct,ratePct,consentLetterRequired,
  * controlGateThreshold,approvalBands,docFreshnessDays}`; seedLoan extra keys `corridor`, `salaryBasis`,
- * `retirementDate`, `controlGateDocs` ({name,status,uploadedDaysAgo}[]), `consentLetter`, `flag`.
+ * `retirementDate`, `controlGateDocs` ({name,status,uploadedDaysAgo}[]), `consentLetter`, `flag`, `monthlyRatePct`,
+ * `interestModel`. Product config `interestModel`: 'A' monthly equal | 'B' monthly reducing — the same admin-configurable
+ * engine as Personal (LOAN PRODUCT SPECIFICATIONS §4.2). Corridor `ratePct` is p.a.; the engine applies ratePct ÷ 12 monthly.
  */
 test.describe('Loan Management › Public Sector actions', () => {
   const IPPIS = 'Federal IPPIS';
@@ -29,9 +31,13 @@ test.describe('Loan Management › Public Sector actions', () => {
     return band === 'EXECUTIVE' ? 'gm' : roleForBand(band);
   };
   const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const DEFAULT_MODEL: loans.InterestModel = 'B';
+  const MODELS = ['A', 'B'] as const;
+  const modelTitle = (m: loans.InterestModel) => (m === 'A' ? 'Model A (monthly equal)' : 'Model B (monthly reducing)');
+  const monthlyRate = (corridor: keyof typeof CORRIDORS) => loans.monthlyFromAnnual(CORRIDORS[corridor].ratePct);
 
   test.beforeEach(async ({ hooks }) => {
-    await hooks.setProductConfig({ product: 'PUBLIC_SECTOR', patch: { corridors: CORRIDORS } });
+    await hooks.setProductConfig({ product: 'PUBLIC_SECTOR', patch: { corridors: CORRIDORS, interestModel: DEFAULT_MODEL } });
   });
   test.afterEach(closeRoleContexts);
 
@@ -43,12 +49,14 @@ test.describe('Loan Management › Public Sector actions', () => {
     await expect(m.root()).toContainText(/don.t currently serve|not (an )?eligible|no matching corridor/i);
   });
 
-  test(title('Book Public Sector on behalf: amount above corridor DTI affordability rejected with oracle max', Tag.crit, Tag.spec('AdminPRD:PublicSector'), Tag.spec('PublicSector§9')), async ({ asPersona, hooks }) => {
+  for (const model of MODELS) test(title(`${modelTitle(model)}: Book Public Sector on behalf — amount above corridor DTI affordability rejected with oracle max`, Tag.crit, Tag.spec('AdminPRD:PublicSector'), Tag.spec('PublicSector§9'), Tag.spec('LoanSpec§4.2')), async ({ asPersona, hooks }) => {
     const salaryBasis = 400_000;
     const deductions = 20_000;
     const tenor = 24;
     const cfg = CORRIDORS[LAGOS];
-    const max = loans.maxAffordablePrincipal(salaryBasis, cfg.dtiPct, deductions, cfg.ratePct, tenor);
+    await hooks.setProductConfig({ product: 'PUBLIC_SECTOR', patch: { interestModel: model } });
+    // Month-1 instalment (P/N + P×r) is the binding DTI constraint under both models.
+    const max = loans.maxAffordablePrincipal(salaryBasis, cfg.dtiPct, deductions, monthlyRate(LAGOS), tenor);
     const { customerId } = await hooks.seedCustomer({ tier: 3, walletBalance: 0, monthlySalary: salaryBasis, employer: LAGOS });
     const lm = new LoanManagementPage(await asPersona('loanAccountOfficer'));
     const m = await lm.bookOnBehalf(customerId, 'Public Sector');
@@ -270,12 +278,13 @@ test.describe('Loan Management › Public Sector actions', () => {
     await expect(lm.scheduleRows()).toHaveCount(cap);
   });
 
-  test(title('Salary change → Restructure recalculates instalment per oracle; Continue records risk acceptance', Tag.high, Tag.spec('AdminPRD:PublicSector')), async ({ asPersona, hooks }) => {
+  for (const model of MODELS) test(title(`${modelTitle(model)}: Salary change → Restructure recalculates instalment per oracle; Continue records risk acceptance`, Tag.high, Tag.spec('AdminPRD:PublicSector'), Tag.spec('LoanSpec§4.2')), async ({ asPersona, hooks }) => {
     const outstanding = 700_000;
-    const rate = CORRIDORS[LAGOS].ratePct;
+    const rate = monthlyRate(LAGOS);
     const newTenor = 24;
+    await hooks.setProductConfig({ product: 'PUBLIC_SECTOR', patch: { interestModel: model } });
     const { customerId } = await hooks.seedCustomer({ tier: 3, walletBalance: 0 });
-    const { loanId } = await hooks.seedLoan({ customerId, product: 'PUBLIC_SECTOR', state: 'LIVE_SERVICING', amount: outstanding, extra: { corridor: LAGOS, ratePct: rate, tenorMonths: 12, flag: 'SALARY_REDUCTION' } });
+    const { loanId } = await hooks.seedLoan({ customerId, product: 'PUBLIC_SECTOR', state: 'LIVE_SERVICING', amount: outstanding, extra: { corridor: LAGOS, ratePct: CORRIDORS[LAGOS].ratePct, monthlyRatePct: rate.toNumber(), interestModel: model, tenorMonths: 12, flag: 'SALARY_REDUCTION' } });
     const lm = new LoanManagementPage(await asPersona('headOfPublicSector'));
     await lm.openLoan(loanId);
     const m = await lm.startAction(/salary change/i);
@@ -285,7 +294,8 @@ test.describe('Loan Management › Public Sector actions', () => {
     await m.evidence.fillDefault();
     await m.submit();
     await m.expectApplied();
-    await expect(lm.detail.field('monthly-repayment')).toContainText(formatNaira(loans.monthlyInstalment(outstanding, rate, newTenor)));
+    // ASSUMPTION: "monthly repayment" shows the month-1 instalment (highest under Model B; constant under Model A).
+    await expect(lm.detail.field('monthly-repayment')).toContainText(formatNaira(loans.firstInstalment(outstanding, rate, newTenor, model)));
 
     const { loanId: l2 } = await hooks.seedLoan({ customerId, product: 'PUBLIC_SECTOR', state: 'LIVE_SERVICING', amount: outstanding, extra: { corridor: LAGOS, flag: 'SALARY_REDUCTION' } });
     await lm.openLoan(l2);
@@ -297,6 +307,35 @@ test.describe('Loan Management › Public Sector actions', () => {
     await m2.expectApplied();
     await lm.tab('Audit trail');
     await expect(lm.detail.auditRows().filter({ hasText: /risk accept/i }).first()).toBeVisible();
+  });
+
+  test(title('Configured interest model drives the loan-detail schedule: Model A (monthly equal) vs Model B (monthly reducing)', Tag.crit, Tag.spec('AdminPRD:PublicSector'), Tag.spec('LoanSpec§4.2'), Tag.spec('LoanSpec§4.3')), async ({ asPersona, hooks }) => {
+    const principal = 1_200_000;
+    const rate = monthlyRate(IPPIS);
+    const tenor = 12;
+    const lm = new LoanManagementPage(await asPersona('loanAccountOfficer'));
+    const lastRowText: Record<string, string> = {};
+    for (const model of MODELS) {
+      await hooks.setProductConfig({ product: 'PUBLIC_SECTOR', patch: { interestModel: model } });
+      const { customerId } = await hooks.seedCustomer({ tier: 3, walletBalance: 0 });
+      const { loanId } = await hooks.seedLoan({ customerId, product: 'PUBLIC_SECTOR', state: 'LIVE_SERVICING', amount: principal, extra: { corridor: IPPIS, ratePct: CORRIDORS[IPPIS].ratePct, monthlyRatePct: rate.toNumber(), interestModel: model, tenorMonths: tenor } });
+      const expected = loans.loanSchedule(principal, rate, tenor, model);
+      await lm.openLoan(loanId);
+      await lm.tab('Schedule');
+      await expect(lm.scheduleRows()).toHaveCount(tenor);
+      for (const [i, row] of expected.entries()) {
+        const ui = lm.scheduleRows().nth(i);
+        await expect(ui, `${modelTitle(model)} row ${row.n} total due`).toContainText(formatNaira(row.totalDue));
+        await expect(ui, `${modelTitle(model)} row ${row.n} interest`).toContainText(formatNaira(row.interest));
+        await expect(ui, `${modelTitle(model)} row ${row.n} principal`).toContainText(formatNaira(row.principal));
+        await expect(ui, `${modelTitle(model)} row ${row.n} balance`).toContainText(formatNaira(row.balanceAfter));
+      }
+      lastRowText[model] = (await lm.scheduleRows().last().innerText()).trim();
+    }
+    const a = loans.loanSchedule(principal, rate, tenor, 'A');
+    const b = loans.loanSchedule(principal, rate, tenor, 'B');
+    expect(a[tenor - 1].interest.gt(b[tenor - 1].interest)).toBe(true);
+    expect(lastRowText.A).not.toBe(lastRowText.B);
   });
 
   test(title('Loan account officer cannot reassign corridor or handle retirement approach', Tag.high, Tag.smoke, Tag.spec('AdminPRD:PublicSector')), async ({ asPersona, hooks }) => {

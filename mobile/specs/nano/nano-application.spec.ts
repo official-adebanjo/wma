@@ -31,7 +31,7 @@ describe('Nano › Application', () => {
     requireHooks(this);
     ({ hooks, customerId } = await freshCustomer({ tier: 2, walletBalance: WALLET }));
     await seedNanoTerms(hooks);
-    await seedNanoEligibility(hooks, customerId, { eligible: true, min: MIN, max: MAX, termRatePct: NANO_TERMS.termRatePctByTenor[30] });
+    await seedNanoEligibility(hooks, customerId, { eligible: true, min: MIN, max: MAX, dailyRatePct: NANO_TERMS.dailyRatePct });
     await hooks.stubProvider({ provider: 'BUREAU', outcome: 'CLEAN', customerId });
   });
 
@@ -51,9 +51,18 @@ describe('Nano › Application', () => {
     await booking.waitForShown();
     await booking.enterAmount(amount);
     await booking.continue();
-    await booking.tenorCard(tenorDays).select();
+    await booking.enterTenorDays(tenorDays);
     await booking.continue();
     await booking.skipPurpose();
+  }
+
+  /** Opens the booking flow and moves to the tenor step with `amount` entered. */
+  async function toTenorStep(amount: number) {
+    await openLanding();
+    await landing.apply();
+    await booking.waitForShown();
+    await booking.enterAmount(amount);
+    await booking.continue();
   }
 
   async function submitApplication(amount: number, tenorDays = 30) {
@@ -68,7 +77,8 @@ describe('Nano › Application', () => {
       await expect(await landing.eligibilityBadgeShown()).toBe(true);
       await expect((await landing.eligibleMin()).toFixed(2)).toBe(D(MIN).toFixed(2));
       await expect((await landing.eligibleMax()).toFixed(2)).toBe(D(MAX).toFixed(2));
-      await expect(await landing.eligibilityRate()).toContain(`${NANO_TERMS.termRatePctByTenor[30]}%`);
+      // Daily rate (LoanSpec §2.2) — "0.3%" or "0.30%" (per day).
+      await expect(await landing.eligibilityRate()).toMatch(new RegExp(`${D(NANO_TERMS.dailyRatePct).toFixed(2).replace('.', '\\.')}?%`));
       await expect(await landing.valueProps()).toMatch(/seconds/i);
       await expect(await landing.valueProps()).toMatch(/wallet/i);
       await expect(await landing.valueProps()).toMatch(/loyalty/i);
@@ -105,7 +115,12 @@ describe('Nano › Application', () => {
   });
 
   describe('Booking steps (§4)', () => {
-    it(title('amount is bounded to the eligible range (below min / above max rejected)', Tag.crit, Tag.spec('Nano§4')), async () => {
+    it(title('amount is bounded to ₦5,000–₦50,000 (below min / above max rejected)', Tag.crit, Tag.spec('Nano§4'), Tag.spec('LoanSpec§2.1')), async () => {
+      // Oracle: product bounds (LOAN_BOUNDS.NANO) — the seeded eligible range equals them.
+      expect(loans.checkBounds('NANO', MIN - 1, 14, 1)).toEqual({ ok: false, reason: 'AMOUNT_BELOW_MIN' });
+      expect(loans.checkBounds('NANO', MAX + 1, 14, 1)).toEqual({ ok: false, reason: 'AMOUNT_ABOVE_MAX' });
+      expect(loans.checkBounds('NANO', MIN, 14, 1)).toEqual({ ok: true });
+      expect(loans.checkBounds('NANO', MAX, 14, 1)).toEqual({ ok: true });
       await openLanding();
       await landing.apply();
       await booking.waitForShown();
@@ -137,28 +152,59 @@ describe('Nano › Application', () => {
     });
 
     for (const amount of [MIN, 20_000, MAX]) {
-      it(title(`tenor cards show interest + total repayment matching the flat-interest oracle for ₦${amount.toLocaleString()}`, Tag.crit, Tag.spec('Nano§4')), async () => {
-        await openLanding();
-        await landing.apply();
-        await booking.enterAmount(amount);
-        await booking.continue();
-        for (const days of NANO_TERMS.tenorsDays) {
-          const card = booking.tenorCard(days);
-          await expect(await card.shown()).toBe(true);
-          await expect(await card.label()).toContain(String(days));
-          const { interest, totalRepayment } = loans.flatInterest(amount, NANO_TERMS.termRatePctByTenor[days]);
-          await expect((await card.interest()).toFixed(2)).toBe(interest.toFixed(2));
-          await expect((await card.total()).toFixed(2)).toBe(totalRepayment.toFixed(2));
+      it(title(`flexible tenor: live quote shows prorated interest + total for 1/3/7/14/30 days on ₦${amount.toLocaleString()}`, Tag.crit, Tag.spec('Nano§4'), Tag.spec('LoanSpec§2.2')), async () => {
+        await toTenorStep(amount);
+        await expect(await booking.tenorDaysRange()).toMatch(/1.*30 days/i);
+        for (const days of NANO_TERMS.representativeDays) {
+          await booking.enterTenorDays(days);
+          const quote = booking.tenorQuote();
+          await expect(await quote.shown()).toBe(true);
+          await expect(await quote.days()).toContain(String(days));
+          const { interest, totalRepayable } = loans.proratedInterest(amount, NANO_TERMS.dailyRatePct, days);
+          await expect((await quote.interest()).toFixed(2)).toBe(interest.toFixed(2));
+          await expect((await quote.total()).toFixed(2)).toBe(totalRepayable.toFixed(2));
         }
       });
     }
 
+    it(title('worked example: ₦20,000 @ 0.30%/day → 3d ₦180, 7d ₦420, 14d ₦840, 30d ₦1,800', Tag.crit, Tag.spec('LoanSpec§2.3')), async () => {
+      const worked: Array<[number, number]> = [[3, 180], [7, 420], [14, 840], [30, 1_800]];
+      // Guard: the seeded rate is the spec's worked-example rate and the oracle reproduces the document.
+      expect(NANO_TERMS.dailyRatePct).toBe(0.3);
+      for (const [days, interest] of worked) {
+        expect(loans.proratedInterest(20_000, 0.3, days).interest.toFixed(2)).toBe(D(interest).toFixed(2));
+      }
+      await toTenorStep(20_000);
+      for (const [days, interest] of worked) {
+        await booking.enterTenorDays(days);
+        await expect((await booking.tenorQuote().interest()).toFixed(2)).toBe(D(interest).toFixed(2));
+        await expect((await booking.tenorQuote().total()).toFixed(2)).toBe(D(20_000 + interest).toFixed(2));
+      }
+    });
+
+    for (const days of [0, NANO_TERMS.maxDays + 1]) {
+      it(title(`tenor of ${days} days is rejected (allowed 1–30 days)`, Tag.crit, Tag.spec('Nano§4'), Tag.spec('LoanSpec§2.1')), async () => {
+        const expected = loans.checkBounds('NANO', 20_000, days, 1);
+        expect(expected.ok).toBe(false);
+        await toTenorStep(20_000);
+        await booking.enterTenorDays(days);
+        await expect(await booking.continueEnabled()).toBe(false);
+        await expect(await booking.tenorDaysError()).toMatch(expected.ok === false && expected.reason === 'TENOR_ABOVE_MAX' ? /30 days/i : /1 day/i);
+      });
+    }
+
+    for (const days of [NANO_TERMS.minDays, NANO_TERMS.maxDays]) {
+      it(title(`tenor boundary ${days} day(s) is accepted`, Tag.high, Tag.spec('LoanSpec§2.1')), async () => {
+        expect(loans.checkBounds('NANO', 20_000, days, 1)).toEqual({ ok: true });
+        await toTenorStep(20_000);
+        await booking.enterTenorDays(days);
+        await expect(await booking.continueEnabled()).toBe(true);
+      });
+    }
+
     it(title('purpose is optional and offers the predefined categories', Tag.low, Tag.spec('Nano§4')), async () => {
-      await openLanding();
-      await landing.apply();
-      await booking.enterAmount(10_000);
-      await booking.continue();
-      await booking.tenorCard(14).select();
+      await toTenorStep(10_000);
+      await booking.enterTenorDays(14);
       await booking.continue();
       for (const p of reasons.nanoPurpose) await expect(await booking.purposeOptionShown(optionSlug(p))).toBe(true);
       await expect(await booking.continueEnabled()).toBe(true); // nothing picked, still allowed
@@ -177,7 +223,7 @@ describe('Nano › Application', () => {
   });
 
   describe('Auto-decisioning (§4 steps 5–6)', () => {
-    it(title('approved: instant wallet credit of exactly the loan amount and approval details match the oracle', Tag.crit, Tag.smoke, Tag.spec('Nano§4'), Tag.spec('Nano§8')), async () => {
+    it(title('approved: instant wallet credit of exactly the loan amount and approval details match the oracle', Tag.crit, Tag.smoke, Tag.spec('Nano§4'), Tag.spec('Nano§8'), Tag.spec('LoanSpec§2.2')), async () => {
       const amount = 20_000;
       const before = await walletBalance();
       await submitApplication(amount, 30);
@@ -186,10 +232,10 @@ describe('Nano › Application', () => {
       await expect(await decision.approvedShown()).toBe(true);
       await expect(await decision.approvedHeadline()).toMatch(/Nano loan is approved/i);
       const a = decision.approved();
-      const { totalRepayment } = loans.flatInterest(amount, NANO_TERMS.termRatePctByTenor[30]);
+      const { totalRepayable } = loans.proratedInterest(amount, NANO_TERMS.dailyRatePct, 30);
       await expect((await a.amount()).toFixed(2)).toBe(D(amount).toFixed(2));
       await expect(await a.tenor()).toContain('30');
-      await expect((await a.total()).toFixed(2)).toBe(totalRepayment.toFixed(2));
+      await expect((await a.total()).toFixed(2)).toBe(totalRepayable.toFixed(2));
       await expect(await a.destination()).toMatch(/wallet/i);
       await expect(await a.dueDate()).toBeTruthy();
       const after = await walletBalance();
@@ -251,9 +297,27 @@ describe('Nano › Application', () => {
     });
   });
 
+  describe('Tier (LoanSpec §2.1)', () => {
+    it(title('Tier 1 customer can take a Nano loan (minimum tier = Tier 1)', Tag.crit, Tag.spec('LoanSpec§2.1'), Tag.spec('KYC§1')), async () => {
+      expect(loans.checkBounds('NANO', 10_000, 7, 1)).toEqual({ ok: true });
+      await hooks.dispose();
+      ({ hooks, customerId } = await freshCustomer({ tier: 1, walletBalance: WALLET }));
+      await seedNanoTerms(hooks);
+      await seedNanoEligibility(hooks, customerId, { eligible: true, min: MIN, max: MAX, dailyRatePct: NANO_TERMS.dailyRatePct });
+      await hooks.stubProvider({ provider: 'BUREAU', outcome: 'CLEAN', customerId });
+      const before = await walletBalance();
+      await submitApplication(10_000, 7);
+      await decision.waitForShown();
+      await expect(await decision.approvedShown()).toBe(true);
+      const { totalRepayable } = loans.proratedInterest(10_000, NANO_TERMS.dailyRatePct, 7);
+      await expect((await decision.approved().total()).toFixed(2)).toBe(totalRepayable.toFixed(2));
+      await expect((await walletBalance()).minus(before).toFixed(2)).toBe(D(10_000).toFixed(2));
+    });
+  });
+
   describe('Blocking rules (§3, §9, §11)', () => {
     it(title('one active Nano at a time: landing shows active loan card and blocks a new application', Tag.crit, Tag.spec('Nano§3'), Tag.spec('Nano§9')), async () => {
-      await hooks.seedLoan({ customerId, product: 'NANO', state: 'ACTIVE', amount: 20_000, extra: { tenorDays: 30, termRatePct: 9 } });
+      await hooks.seedLoan({ customerId, product: 'NANO', state: 'ACTIVE', amount: 20_000, extra: { tenorDays: 30, dailyRatePct: NANO_TERMS.dailyRatePct } });
       await openLanding();
       await expect(await landing.activeLoanShown()).toBe(true);
       await expect(await landing.constraint()).toMatch(/one active Nano.*Repay it to (unlock your next one|apply for a new one)/i);

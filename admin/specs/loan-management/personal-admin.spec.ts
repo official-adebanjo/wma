@@ -15,19 +15,23 @@ import { Tag, title } from '../../../shared/support/tags';
  * Restructure keeps the old schedule in history.
  *
  * Seeding assumptions: Personal config keys `approvalBands` (3 ceilings), `dualThreshold`,
- * `variants.<PLn>.{ratePct,dtiPct,topUp:{allowed,maxCount}}`; seedLoan extra keys `variant`,
- * `ratePct`, `tenorMonths`, `topUpCount`.
+ * `interestModel` ('A' monthly equal | 'B' monthly reducing — LOAN PRODUCT SPECIFICATIONS §4.2),
+ * `variants.<PLn>.{monthlyRatePct,dtiPct,topUp:{allowed,maxCount}}`; seedLoan extra keys `variant`,
+ * `monthlyRatePct`, `interestModel`, `tenorMonths`, `topUpCount`.
  */
 test.describe('Loan Management › Personal actions', () => {
   const BANDS: [number, number, number] = [500_000, 2_000_000, 5_000_000];
   const DUAL_THRESHOLD = 1_000_000;
+  const DEFAULT_MODEL: loans.InterestModel = 'B';
+  const MODELS = ['A', 'B'] as const;
+  const modelTitle = (m: loans.InterestModel) => (m === 'A' ? 'Model A (monthly equal)' : 'Model B (monthly reducing)');
   const VARIANTS = {
-    PL2: { ratePct: 30, dtiPct: 33, topUp: { allowed: true, maxCount: 2 } },
-    PL4: { ratePct: 26, dtiPct: 40, topUp: { allowed: false, maxCount: 0 } },
+    PL2: { monthlyRatePct: 2, dtiPct: 33, topUp: { allowed: true, maxCount: 2 } },
+    PL4: { monthlyRatePct: 1.75, dtiPct: 40, topUp: { allowed: false, maxCount: 0 } },
   };
 
   test.beforeEach(async ({ hooks }) => {
-    await hooks.setProductConfig({ product: 'PERSONAL', patch: { approvalBands: BANDS, dualThreshold: DUAL_THRESHOLD, variants: VARIANTS } });
+    await hooks.setProductConfig({ product: 'PERSONAL', patch: { approvalBands: BANDS, dualThreshold: DUAL_THRESHOLD, variants: VARIANTS, interestModel: DEFAULT_MODEL } });
   });
   test.afterEach(closeRoleContexts);
 
@@ -192,28 +196,62 @@ test.describe('Loan Management › Personal actions', () => {
     await lm.expectAuthorityBlocked(/top-up/i);
   });
 
-  test(title('Restructure Personal: schedule recalculated per oracle, old schedule preserved in history', Tag.crit, Tag.spec('AdminPRD:Personal'), Tag.spec('Personal§6')), async ({ asPersona, hooks }) => {
-    const outstanding = 480_000;
-    const rate = VARIANTS.PL2.ratePct;
-    const newTenor = 18;
-    const { customerId } = await hooks.seedCustomer({ tier: 3, walletBalance: 0 });
-    const { loanId } = await hooks.seedLoan({ customerId, product: 'PERSONAL', state: 'LIVE_SERVICING', amount: outstanding, extra: { variant: 'PL2', ratePct: rate, tenorMonths: 12 } });
-    const lm = new LoanManagementPage(await asPersona('headOfCredit'));
-    await lm.openLoan(loanId);
-    const m = await lm.startAction(/^restructure/i);
-    await m.select(/new tenor/i, `${newTenor} months`);
-    await m.reasonCode('Salary reduction');
-    await m.evidence.fillDefault();
-    await m.submit();
-    await m.expectApplied();
-    const expected = loans.amortisationSchedule(outstanding, rate, newTenor, new Date());
-    await lm.tab('Schedule');
-    await expect(lm.scheduleRows()).toHaveCount(newTenor);
-    await expect(lm.scheduleRows().first()).toContainText(formatNaira(expected[0].instalment));
-    await expect(lm.scheduleRows().last()).toContainText(formatNaira(expected[newTenor - 1].instalment));
-    await expect(lm.scheduleHistory()).toHaveCount(2);
-    const notes = await hooks.latestNotifications(customerId);
-    expect(notes.some((n) => /restructured/i.test(`${n.title} ${n.body}`))).toBe(true);
+  for (const model of MODELS) {
+    test(title(`${modelTitle(model)}: Restructure Personal — schedule recalculated per oracle, old schedule preserved in history`, Tag.crit, Tag.spec('AdminPRD:Personal'), Tag.spec('Personal§6'), Tag.spec('LoanSpec§4.2')), async ({ asPersona, hooks }) => {
+      const outstanding = 480_000;
+      const rate = VARIANTS.PL2.monthlyRatePct;
+      const newTenor = 18;
+      await hooks.setProductConfig({ product: 'PERSONAL', patch: { interestModel: model } });
+      const { customerId } = await hooks.seedCustomer({ tier: 3, walletBalance: 0 });
+      const { loanId } = await hooks.seedLoan({ customerId, product: 'PERSONAL', state: 'LIVE_SERVICING', amount: outstanding, extra: { variant: 'PL2', monthlyRatePct: rate, interestModel: model, tenorMonths: 12 } });
+      const lm = new LoanManagementPage(await asPersona('headOfCredit'));
+      await lm.openLoan(loanId);
+      const m = await lm.startAction(/^restructure/i);
+      await m.select(/new tenor/i, `${newTenor} months`);
+      await m.reasonCode('Salary reduction');
+      await m.evidence.fillDefault();
+      await m.submit();
+      await m.expectApplied();
+      const expected = loans.loanSchedule(outstanding, rate, newTenor, model);
+      await lm.tab('Schedule');
+      await expect(lm.scheduleRows()).toHaveCount(newTenor);
+      await expect(lm.scheduleRows().first()).toContainText(formatNaira(expected[0].totalDue));
+      await expect(lm.scheduleRows().last()).toContainText(formatNaira(expected[newTenor - 1].totalDue));
+      await expect(lm.scheduleHistory()).toHaveCount(2);
+      const notes = await hooks.latestNotifications(customerId);
+      expect(notes.some((n) => /restructured/i.test(`${n.title} ${n.body}`))).toBe(true);
+    });
+  }
+
+  test(title('Configured interest model drives the loan-detail schedule: Model A (monthly equal) vs Model B (monthly reducing)', Tag.crit, Tag.spec('AdminPRD:Personal'), Tag.spec('LoanSpec§4.2'), Tag.spec('LoanSpec§4.3')), async ({ asPersona, hooks }) => {
+    const principal = 1_200_000;
+    const rate = VARIANTS.PL2.monthlyRatePct;
+    const tenor = 12;
+    const lm = new LoanManagementPage(await asPersona('loanAccountOfficer'));
+    const lastRowText: Record<string, string> = {};
+    for (const model of MODELS) {
+      await hooks.setProductConfig({ product: 'PERSONAL', patch: { interestModel: model } });
+      const { customerId } = await hooks.seedCustomer({ tier: 3, walletBalance: 0 });
+      const { loanId } = await hooks.seedLoan({ customerId, product: 'PERSONAL', state: 'LIVE_SERVICING', amount: principal, extra: { variant: 'PL2', monthlyRatePct: rate, interestModel: model, tenorMonths: tenor } });
+      const expected = loans.loanSchedule(principal, rate, tenor, model);
+      await lm.openLoan(loanId);
+      await lm.tab('Schedule');
+      await expect(lm.scheduleRows()).toHaveCount(tenor);
+      for (const [i, row] of expected.entries()) {
+        const ui = lm.scheduleRows().nth(i);
+        await expect(ui, `${modelTitle(model)} row ${row.n} total due`).toContainText(formatNaira(row.totalDue));
+        await expect(ui, `${modelTitle(model)} row ${row.n} interest`).toContainText(formatNaira(row.interest));
+        await expect(ui, `${modelTitle(model)} row ${row.n} principal`).toContainText(formatNaira(row.principal));
+        await expect(ui, `${modelTitle(model)} row ${row.n} balance`).toContainText(formatNaira(row.balanceAfter));
+      }
+      await expect(lm.detail.field('total-interest')).toContainText(formatNaira(loans.scheduleTotals(expected).interest));
+      lastRowText[model] = (await lm.scheduleRows().last().innerText()).trim();
+    }
+    // Model A interest is flat every month; Model B's last-month interest is lower → the rendered schedules must differ.
+    const a = loans.loanSchedule(principal, rate, tenor, 'A');
+    const b = loans.loanSchedule(principal, rate, tenor, 'B');
+    expect(a[tenor - 1].interest.gt(b[tenor - 1].interest)).toBe(true);
+    expect(lastRowText.A).not.toBe(lastRowText.B);
   });
 
   test(title('Decline Personal with managed-vocab reason', Tag.high, Tag.spec('AdminPRD:Personal')), async ({ browser, hooks }) => {

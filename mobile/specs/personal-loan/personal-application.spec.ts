@@ -6,7 +6,7 @@ import { reasons, testFiles } from '../../../shared/data/factories';
 import { QaHooks } from '../../../shared/api/qa-hooks';
 import { freshCustomer, requireHooks } from '../../helpers/session';
 import {
-  PERSONAL_TERMS, VARIANT_LANGUAGE, expectNoVisibleText, moneyRe, nairaRe, notificationText, openBorrowTile, openLoan,
+  INTEREST_MODELS, PERSONAL_TERMS, VARIANT_LANGUAGE, expectNoVisibleText, modelTitle, moneyRe, nairaRe, notificationText, openBorrowTile, openLoan,
   optionSlug, seedPersonalTerms, setCrossLoanBlock, walletBalance,
 } from '../../helpers/loans';
 import { relaunchApp } from '../../screens/common/AuthScreens';
@@ -23,7 +23,9 @@ import {
 describe('Personal Loan › Application', () => {
   const SALARY = 600_000;
   const EMPLOYER = 'Dangote Cement';
-  const R = PERSONAL_TERMS.indicativeRatePct;
+  const R = PERSONAL_TERMS.monthlyRatePct; // % per month (LOAN PRODUCT SPECIFICATIONS §4.2)
+  /** Rate copy: "2% per month" / "2% monthly" / "2%/month". */
+  const monthlyRateRe = (pct: number) => `${pct}% ?(?:per month|monthly|/month|p\\.m\\.)`;
   const SMALL = 500_000;
   const LARGE = 5_000_000;
   let hooks: QaHooks;
@@ -106,11 +108,13 @@ describe('Personal Loan › Application', () => {
     await booking.continue();
   }
 
-  /** Offer seeded as returned by underwriting. */
-  async function seedOffer(o: { requested: number; approved: number; ratePct: number; tenorMonths: number; adminFee?: number; reducedReason?: string; activationSteps?: string[] }) {
+  /** Offer seeded as returned by underwriting. `ratePct` is the MONTHLY rate; `model` defaults to the product's configured model. */
+  async function seedOffer(o: { requested: number; approved: number; ratePct: number; tenorMonths: number; model?: loans.InterestModel; adminFee?: number; reducedReason?: string; activationSteps?: string[] }) {
+    const model = o.model ?? PERSONAL_TERMS.interestModel;
+    await seedPersonalTerms(hooks, { interestModel: model });
     const { loanId } = await hooks.seedLoan({
       customerId, product: 'PERSONAL', state: 'OFFER_RETURNED', amount: o.approved,
-      extra: { requestedAmount: o.requested, approvedAmount: o.approved, ratePct: o.ratePct, tenorMonths: o.tenorMonths, adminFee: o.adminFee ?? 0, reducedReason: o.reducedReason, activationSteps: o.activationSteps ?? [] },
+      extra: { requestedAmount: o.requested, approvedAmount: o.approved, monthlyRatePct: o.ratePct, interestModel: model, tenorMonths: o.tenorMonths, adminFee: o.adminFee ?? 0, reducedReason: o.reducedReason, activationSteps: o.activationSteps ?? [] },
     });
     await openLoan('PERSONAL', loanId);
     await offer.waitForShown();
@@ -120,14 +124,16 @@ describe('Personal Loan › Application', () => {
   describe('Landing (§3)', () => {
     it(title('landing shows rate range, value props, requirements and Apply now', Tag.high, Tag.spec('Personal§3')), async () => {
       await openLanding();
-      await expect(await landing.rateRange()).toMatch(/Rates from \d+(\.\d+)?% to \d+(\.\d+)?% p\.a\./i);
+      // ASSUMPTION: landing quotes the monthly rate range (engine applies a monthly rate, LoanSpec §4.2); p.a. still tolerated.
+      await expect(await landing.rateRange()).toMatch(/Rates from \d+(\.\d+)?% to \d+(\.\d+)?% ?(per month|monthly|\/month|p\.m\.|p\.a\.)/i);
       await expect(await landing.valueProps()).toMatch(/3 to 24 months/i);
       await expect(await landing.requirements()).toMatch(/salary account/i);
       await expect(await landing.requirements()).toMatch(/ID/);
       await expect(await landing.applyEnabled()).toBe(true);
     });
 
-    it(title('missing KYC (Tier 1) blocks the application with "complete your KYC upgrade"', Tag.crit, Tag.open('L-personal-min-tier'), Tag.spec('Personal§9'), Tag.spec('KYC§1')), async () => {
+    it(title('missing KYC (Tier 1) blocks the application with "complete your KYC upgrade"', Tag.crit, Tag.spec('Personal§9'), Tag.spec('KYC§1'), Tag.spec('LoanSpec§4.1')), async () => {
+      expect(loans.checkBounds('PERSONAL', 1_000_000, 12, 1)).toEqual({ ok: false, reason: 'TIER' });
       await hooks.dispose();
       await setup({ tier: 1 });
       await openLanding();
@@ -140,22 +146,38 @@ describe('Personal Loan › Application', () => {
   });
 
   describe('Step 1 — amount, tenor, live estimate (§4)', () => {
-    it(title('tenor picker offers exactly the configured set 3, 6, 9, 12, 18, 24 months', Tag.high, Tag.spec('Personal§4')), async () => {
+    it(title('tenor picker offers exactly the configured set 3, 6, 9, 12, 18, 24 months; nothing outside 3–24', Tag.high, Tag.spec('Personal§4'), Tag.spec('LoanSpec§4.1')), async () => {
+      expect(loans.checkBounds('PERSONAL', 1_000_000, PERSONAL_TERMS.minMonths - 1, 2)).toEqual({ ok: false, reason: 'TENOR_BELOW_MIN' });
+      expect(loans.checkBounds('PERSONAL', 1_000_000, PERSONAL_TERMS.maxMonths + 1, 2)).toEqual({ ok: false, reason: 'TENOR_ABOVE_MAX' });
       await step1(1_000_000, 12);
       for (const m of PERSONAL_TERMS.tenorsMonths) await expect(await booking.tenorOptionShown(m)).toBe(true);
-      for (const m of [1, 2, 15, 36]) await expect(await booking.tenorOptionShown(m)).toBe(false);
+      for (const m of [1, 2, 15, 25, 36]) await expect(await booking.tenorOptionShown(m)).toBe(false);
     });
 
-    for (const tenor of PERSONAL_TERMS.tenorsMonths) {
-      it(title(`live estimated monthly repayment for ₦1,200,000 over ${tenor} months matches the annuity oracle`, Tag.crit, Tag.spec('Personal§4'), Tag.spec('Personal§10')), async () => {
-        await step1(1_200_000, tenor);
-        const expected = loans.monthlyInstalment(1_200_000, R, tenor);
-        await expect((await booking.estimateAmount()).toFixed(2)).toBe(expected.toFixed(2));
-        await expect(await booking.estimateText()).toMatch(new RegExp(`Estimated monthly repayment ${nairaRe(expected)} at approximately ${R}% p\\.a\\..*Final rate confirmed after review`, 'i'));
-      });
+    for (const model of INTEREST_MODELS) {
+      for (const tenor of PERSONAL_TERMS.tenorsMonths) {
+        it(title(`${modelTitle(model)}: live estimated monthly repayment for ₦1,200,000 over ${tenor} months = month-1 instalment from the oracle`, Tag.crit, Tag.spec('Personal§4'), Tag.spec('Personal§10'), Tag.spec('LoanSpec§4.2')), async () => {
+          await seedPersonalTerms(hooks, { interestModel: model });
+          await step1(1_200_000, tenor);
+          // ASSUMPTION: under Model B instalments decline, so the estimate shows the first (highest) instalment.
+          const expected = loans.firstInstalment(1_200_000, R, tenor, model);
+          await expect((await booking.estimateAmount()).toFixed(2)).toBe(expected.toFixed(2));
+          await expect(await booking.estimateText()).toMatch(new RegExp(`Estimated monthly repayment ${nairaRe(expected)} at approximately ${monthlyRateRe(R)}.*Final rate confirmed after review`, 'i'));
+        });
+      }
     }
 
-    it(title('amount below minimum / above maximum is rejected with the bound in the error', Tag.crit, Tag.spec('Personal§4')), async () => {
+    it(title('amount above ₦30,000,000 is rejected', Tag.crit, Tag.spec('LoanSpec§4.1')), async () => {
+      expect(loans.checkBounds('PERSONAL', PERSONAL_TERMS.maxAmount + 1, 12, 2)).toEqual({ ok: false, reason: 'AMOUNT_ABOVE_MAX' });
+      expect(loans.checkBounds('PERSONAL', PERSONAL_TERMS.maxAmount, 12, 2)).toEqual({ ok: true });
+      await step1(PERSONAL_TERMS.maxAmount + 1, 24);
+      await expect(await booking.continueEnabled()).toBe(false);
+      await expect(await booking.amountError()).toMatch(moneyRe(PERSONAL_TERMS.maxAmount));
+      await booking.enterAmount(PERSONAL_TERMS.maxAmount);
+      await expect(await booking.continueEnabled()).toBe(true);
+    });
+
+    it(title('amount below minimum / above maximum is rejected with the bound in the error', Tag.crit, Tag.spec('Personal§4'), Tag.spec('LoanSpec§4.1')), async () => {
       await step1(PERSONAL_TERMS.minAmount - 1, 6);
       await expect(await booking.continueEnabled()).toBe(false);
       await expect(await booking.amountError()).toMatch(moneyRe(PERSONAL_TERMS.minAmount));
@@ -270,30 +292,35 @@ describe('Personal Loan › Application', () => {
   });
 
   describe('Steps 5–7 — mandate, review, submit, under review (§4, §8)', () => {
-    it(title('mandate consent explains monthly debit via Remita with late-fee warning and is required', Tag.crit, Tag.spec('Personal§4')), async () => {
-      await toMandate(1_200_000, 12);
-      const monthly = loans.monthlyInstalment(1_200_000, R, 12);
-      const text = await mandate.explanation();
-      await expect(text).toMatch(new RegExp(`debit ${nairaRe(monthly)} from your .* account monthly`, 'i'));
-      await expect(text).toMatch(/via Remita/i);
-      await expect(text).toMatch(/late fees/i);
-      await expect(await booking.continueEnabled()).toBe(false);
-      await mandate.tickConsent();
-      await expect(await booking.continueEnabled()).toBe(true);
-    });
+    for (const model of INTEREST_MODELS) {
+      it(title(`${modelTitle(model)}: mandate consent explains monthly debit via Remita with late-fee warning and is required`, Tag.crit, Tag.spec('Personal§4'), Tag.spec('LoanSpec§4.2')), async () => {
+        await seedPersonalTerms(hooks, { interestModel: model });
+        await toMandate(1_200_000, 12);
+        // ASSUMPTION: mandate copy quotes the month-1 instalment (highest under Model B).
+        const monthly = loans.firstInstalment(1_200_000, R, 12, model);
+        const text = await mandate.explanation();
+        await expect(text).toMatch(new RegExp(`debit ${nairaRe(monthly)} from your .* account monthly`, 'i'));
+        await expect(text).toMatch(/via Remita/i);
+        await expect(text).toMatch(/late fees/i);
+        await expect(await booking.continueEnabled()).toBe(false);
+        await mandate.tickConsent();
+        await expect(await booking.continueEnabled()).toBe(true);
+      });
 
-    it(title('review shows every field with oracle estimate and "final rate confirmed in the offer" note', Tag.crit, Tag.spec('Personal§4')), async () => {
-      await toReview(1_200_000, 12);
-      await expect((await booking.reviewAmount('amount')).toFixed(2)).toBe('1200000.00');
-      await expect(await booking.reviewValue('tenor')).toMatch(/12 months/i);
-      await expect((await booking.reviewAmount('monthly')).toFixed(2)).toBe(loans.monthlyInstalment(1_200_000, R, 12).toFixed(2));
-      await expect(await booking.reviewValue('rate')).toContain(`${R}%`);
-      await expect(await booking.reviewValue('employer')).toContain(EMPLOYER);
-      await expect(await booking.reviewValue('salaryAccount')).toBeTruthy();
-      await expect(await booking.reviewValue('documents')).toBeTruthy();
-      await expect(await booking.reviewValue('mandate')).toMatch(/authori[sz]ed|consent/i);
-      await expect(await booking.reviewNote()).toMatch(/Final rate and terms confirmed in the offer.*24-48 hours/i);
-    });
+      it(title(`${modelTitle(model)}: review shows every field with oracle estimate and "final rate confirmed in the offer" note`, Tag.crit, Tag.spec('Personal§4'), Tag.spec('LoanSpec§4.2')), async () => {
+        await seedPersonalTerms(hooks, { interestModel: model });
+        await toReview(1_200_000, 12);
+        await expect((await booking.reviewAmount('amount')).toFixed(2)).toBe('1200000.00');
+        await expect(await booking.reviewValue('tenor')).toMatch(/12 months/i);
+        await expect((await booking.reviewAmount('monthly')).toFixed(2)).toBe(loans.firstInstalment(1_200_000, R, 12, model).toFixed(2));
+        await expect(await booking.reviewValue('rate')).toMatch(new RegExp(monthlyRateRe(R), 'i'));
+        await expect(await booking.reviewValue('employer')).toContain(EMPLOYER);
+        await expect(await booking.reviewValue('salaryAccount')).toBeTruthy();
+        await expect(await booking.reviewValue('documents')).toBeTruthy();
+        await expect(await booking.reviewValue('mandate')).toMatch(/authori[sz]ed|consent/i);
+        await expect(await booking.reviewNote()).toMatch(/Final rate and terms confirmed in the offer.*24-48 hours/i);
+      });
+    }
 
     it(title('submit → under review with Bureau → Underwriting → Authority progress and notification', Tag.crit, Tag.smoke, Tag.spec('Personal§4'), Tag.spec('Personal§8'), Tag.spec('Personal§10')), async () => {
       await toReview(1_200_000, 12);
@@ -349,36 +376,46 @@ describe('Personal Loan › Application', () => {
   });
 
   describe('Step 8 — offer (§4, §6, §8)', () => {
-    it(title('standard offer: amount, tenor, confirmed rate, monthly repayment and fee breakdown match the oracle', Tag.crit, Tag.spec('Personal§4')), async () => {
-      const ratePct = 28;
-      await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct, tenorMonths: 12, adminFee: 10_000 });
-      const schedule = loans.amortisationSchedule(1_000_000, ratePct, 12, new Date());
-      const totalInterest = schedule.reduce((s, r) => s.plus(r.interest), D(0));
-      await expect((await offer.approvedAmount()).toFixed(2)).toBe('1000000.00');
-      await expect(await offer.tenor()).toMatch(/12 months/i);
-      await expect(await offer.rate()).toContain(`${ratePct}%`);
-      await expect((await offer.monthly()).toFixed(2)).toBe(loans.monthlyInstalment(1_000_000, ratePct, 12).toFixed(2));
-      await expect((await offer.fee('interest')).toFixed(2)).toBe(totalInterest.toFixed(2));
-      await expect((await offer.fee('admin')).toFixed(2)).toBe('10000.00');
-      await expect(await offer.firstRepaymentDate()).toBeTruthy();
-      await expect(await offer.reducedShown()).toBe(false);
-      await expect(await notificationText(hooks, customerId, 3)).toMatch(/Personal Loan offer is ready/i);
+    for (const model of INTEREST_MODELS) {
+      it(title(`${modelTitle(model)}: standard offer — amount, tenor, confirmed rate, monthly repayment and fee breakdown match the oracle`, Tag.crit, Tag.spec('Personal§4'), Tag.spec('LoanSpec§4.2'), Tag.spec('LoanSpec§4.3')), async () => {
+        await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: R, tenorMonths: 12, model, adminFee: 10_000 });
+        const totals = loans.scheduleTotals(loans.loanSchedule(1_000_000, R, 12, model));
+        await expect((await offer.approvedAmount()).toFixed(2)).toBe('1000000.00');
+        await expect(await offer.tenor()).toMatch(/12 months/i);
+        await expect(await offer.rate()).toMatch(new RegExp(monthlyRateRe(R), 'i'));
+        await expect((await offer.monthly()).toFixed(2)).toBe(loans.firstInstalment(1_000_000, R, 12, model).toFixed(2));
+        await expect((await offer.fee('interest')).toFixed(2)).toBe(totals.interest.toFixed(2));
+        await expect((await offer.fee('admin')).toFixed(2)).toBe('10000.00');
+        await expect(await offer.firstRepaymentDate()).toBeTruthy();
+        await expect(await offer.reducedShown()).toBe(false);
+        await expect(await notificationText(hooks, customerId, 3)).toMatch(/Personal Loan offer is ready/i);
+      });
+
+      it(title(`${modelTitle(model)}: reduced offer explains approved vs requested amount and the reason`, Tag.crit, Tag.spec('Personal§4'), Tag.spec('Personal§9'), Tag.spec('LoanSpec§4.2')), async () => {
+        const reason = 'Affordability based on your verified income';
+        await seedOffer({ requested: 1_000_000, approved: 700_000, ratePct: R, tenorMonths: 12, model, reducedReason: reason });
+        await expect(await offer.reducedShown()).toBe(true);
+        const msg = await offer.reducedMessage();
+        await expect(msg).toMatch(new RegExp(`offering ${nairaRe(700_000)} \\(less than your ${nairaRe(1_000_000)} request\\) over 12 months`, 'i'));
+        await expect(await offer.reducedReason()).toContain(reason);
+        await expect((await offer.monthly()).toFixed(2)).toBe(loans.firstInstalment(700_000, R, 12, model).toFixed(2));
+        await expect(await offer.acceptShown()).toBe(true);
+      });
+    }
+
+    it(title('Model A vs Model B: same principal/rate/tenor — Model B total interest is lower and offers differ accordingly', Tag.high, Tag.spec('LoanSpec§4.3')), async () => {
+      const a = loans.scheduleTotals(loans.loanSchedule(1_000_000, R, 12, 'A'));
+      const b = loans.scheduleTotals(loans.loanSchedule(1_000_000, R, 12, 'B'));
+      expect(b.interest.lt(a.interest)).toBe(true);
+      for (const [model, totals] of [['A', a], ['B', b]] as const) {
+        await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: R, tenorMonths: 12, model });
+        await expect((await offer.fee('interest')).toFixed(2)).toBe(totals.interest.toFixed(2));
+      }
     });
 
-    it(title('reduced offer explains approved vs requested amount and the reason', Tag.crit, Tag.spec('Personal§4'), Tag.spec('Personal§9')), async () => {
-      const reason = 'Affordability based on your verified income';
-      await seedOffer({ requested: 1_000_000, approved: 700_000, ratePct: 28, tenorMonths: 12, reducedReason: reason });
-      await expect(await offer.reducedShown()).toBe(true);
-      const msg = await offer.reducedMessage();
-      await expect(msg).toMatch(new RegExp(`offering ${nairaRe(700_000)} \\(less than your ${nairaRe(1_000_000)} request\\) over 12 months`, 'i'));
-      await expect(await offer.reducedReason()).toContain(reason);
-      await expect((await offer.monthly()).toFixed(2)).toBe(loans.monthlyInstalment(700_000, 28, 12).toFixed(2));
-      await expect(await offer.acceptShown()).toBe(true);
-    });
-
-    it(title('accept → "One more step" activation → active; wallet credited with the approved amount', Tag.crit, Tag.smoke, Tag.open('L-personal-fee-deduction'), Tag.spec('Personal§4'), Tag.spec('Personal§8')), async () => {
+    for (const model of INTEREST_MODELS) it(title(`${modelTitle(model)}: accept → "One more step" activation → active; wallet credited with the approved amount`, Tag.crit, Tag.smoke, Tag.open('L-personal-fee-deduction'), Tag.spec('Personal§4'), Tag.spec('Personal§8'), Tag.spec('LoanSpec§4.2')), async () => {
       const before = await walletBalance();
-      await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: 28, tenorMonths: 12, activationSteps: ['MANDATE_CONFIRMATION'] });
+      await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: R, tenorMonths: 12, model, activationSteps: ['MANDATE_CONFIRMATION'] });
       await offer.accept();
       await activation.waitForShown();
       await expect(await activation.title()).toMatch(/One more step/i);
@@ -388,7 +425,7 @@ describe('Personal Loan › Application', () => {
       await activation.finish();
       await expect(await activation.successShown()).toBe(true);
       await expect(await activation.successHeadline()).toMatch(/Your Personal Loan is active/i);
-      const monthly = loans.monthlyInstalment(1_000_000, 28, 12);
+      const monthly = loans.firstInstalment(1_000_000, R, 12, model);
       await expect((await activation.successAmount()).toFixed(2)).toBe('1000000.00');
       await expect((await activation.successMonthly()).toFixed(2)).toBe(monthly.toFixed(2));
       await expect(await activation.successFirstDate()).toBeTruthy();
@@ -398,7 +435,7 @@ describe('Personal Loan › Application', () => {
     });
 
     it(title('decline offer → "Offer declined. You can apply again after N days" and Apply is blocked', Tag.crit, Tag.spec('Personal§4')), async () => {
-      await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: 28, tenorMonths: 12 });
+      await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: R, tenorMonths: 12 });
       await offer.decline();
       await offer.confirmDecline();
       await expect(await offer.declinedText()).toMatch(new RegExp(`Offer declined\\. You can apply again after ${PERSONAL_TERMS.reapplyWaitDays} days`, 'i'));
@@ -407,7 +444,7 @@ describe('Personal Loan › Application', () => {
     });
 
     it(title('offer expires after the configured window: expired state, notification, re-apply allowed', Tag.crit, Tag.spec('Personal§6'), Tag.spec('Personal§8')), async () => {
-      const id = await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: 28, tenorMonths: 12 });
+      const id = await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: R, tenorMonths: 12 });
       await expect(await offer.expiresIn()).toMatch(new RegExp(`${PERSONAL_TERMS.offerExpiryDays} days`, 'i'));
       await hooks.advanceClock({ customerId, days: PERSONAL_TERMS.offerExpiryDays + 1 });
       await expect(await notificationText(hooks, customerId)).toMatch(/Personal Loan offer expired\. You can re-apply anytime/i);
@@ -420,7 +457,7 @@ describe('Personal Loan › Application', () => {
 
     it(title('activation fails (mandate setup): error copy, offer preserved, retry succeeds; no disbursement on failure', Tag.crit, Tag.spec('Personal§9')), async () => {
       const before = await walletBalance();
-      const id = await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: 28, tenorMonths: 12, activationSteps: ['MANDATE_CONFIRMATION'] });
+      const id = await seedOffer({ requested: 1_000_000, approved: 1_000_000, ratePct: R, tenorMonths: 12, activationSteps: ['MANDATE_CONFIRMATION'] });
       await hooks.stubProvider({ provider: 'REMITA', outcome: 'MANDATE_FAILED', customerId });
       await offer.accept();
       await activation.waitForShown();

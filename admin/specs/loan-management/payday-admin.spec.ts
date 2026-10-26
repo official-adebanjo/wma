@@ -10,20 +10,22 @@ import { Tag, title } from '../../../shared/support/tags';
 /**
  * Admin PRD › Loan Management › Payday-specific actions.
  * Referral matrix (config-driven): LOW auto-approves; MEDIUM → CRM; HIGH → Credit Manager + MD.
- * Amount capped at salaryCapPct of monthly salary; 30-day term. Mandate failure: retry / wallet
+ * Amount capped at salaryCapPct of monthly salary and at ₦500,000; tenor 7–30 days with interest prorated
+ * daily on the selected days (LOAN PRODUCT SPECIFICATIONS §3). Mandate failure: retry / wallet
  * fallback / escalate to Collections. Declines use managed vocab per tier.
  *
- * Seeding assumptions: Payday config keys `referral.{mediumFrom,highFrom}`, `salaryCapPct`, `termRatePct`;
+ * Seeding assumptions: Payday config keys `referral.{mediumFrom,highFrom}`, `salaryCapPct`, `dailyRatePct`;
  * seedLoan PAYDAY states UNDERWRITING (extra.referralTier) and MANDATE_FAILED; stubProvider REMITA
  * outcomes 'DEBIT_OK' | 'DEBIT_FAILED'.
  */
 test.describe('Loan Management › Payday actions', () => {
   const REFERRAL = { mediumFrom: 100_000, highFrom: 250_000 };
-  const TERM_RATE_PCT = 10;
+  const DAILY_RATE_PCT = 0.3; // % per day (LoanSpec §3.3 worked example)
+  const TENOR_DAYS = 30;
   const SALARY = 600_000;
 
   test.beforeEach(async ({ hooks }) => {
-    await hooks.setProductConfig({ product: 'PAYDAY', patch: { referral: REFERRAL, salaryCapPct: productConfig.payday.salaryCapPct, termRatePct: TERM_RATE_PCT } });
+    await hooks.setProductConfig({ product: 'PAYDAY', patch: { referral: REFERRAL, salaryCapPct: productConfig.payday.salaryCapPct, dailyRatePct: DAILY_RATE_PCT } });
   });
   test.afterEach(closeRoleContexts);
 
@@ -34,12 +36,41 @@ test.describe('Loan Management › Payday actions', () => {
     const lm = new LoanManagementPage(page);
     const m = await lm.bookOnBehalf(customerId, 'Payday');
     await expect(m.root()).toContainText(formatNaira(cap));
-    await expect(m.field(/term|tenor/i)).toHaveValue(/30/);
+    await expect(m.field(/term|tenor/i)).toBeVisible();
     await m.fill(/amount/i, cap.plus(1).toNumber());
     await m.expectValidationError(/cap|maximum/i);
     await m.fill(/amount/i, 50_000);
+    await m.fill(/term|tenor/i, TENOR_DAYS);
     await m.submit();
     await m.expectValidationError(/evidence/i);
+  });
+
+  for (const days of [6, 31]) {
+    test(title(`Book Payday on behalf: tenor of ${days} days is rejected (allowed 7–30)`, Tag.crit, Tag.spec('AdminPRD:Payday'), Tag.spec('LoanSpec§3.1')), async ({ asPersona, hooks }) => {
+      expect(loans.checkBounds('PAYDAY', 50_000, days, 2).ok).toBe(false);
+      const { customerId } = await hooks.seedCustomer({ tier: 2, walletBalance: 0, salaryDetected: true, monthlySalary: SALARY, employer: 'QA Employer Ltd' });
+      const lm = new LoanManagementPage(await asPersona('loanAccountOfficer'));
+      const m = await lm.bookOnBehalf(customerId, 'Payday');
+      await m.fill(/amount/i, 50_000);
+      await m.fill(/term|tenor/i, days);
+      await m.evidence.fillDefault();
+      await m.submit();
+      await m.expectValidationError(/7.*30 days|tenor/i);
+    });
+  }
+
+  test(title('Book Payday on behalf: amount above ₦500,000 is rejected even when the salary cap is higher', Tag.crit, Tag.spec('AdminPRD:Payday'), Tag.spec('LoanSpec§3.1')), async ({ asPersona, hooks }) => {
+    // Salary chosen so cap % of salary is 20% above the ₦500,000 product max.
+    const salary = Math.ceil(((loans.LOAN_BOUNDS.PAYDAY.maxAmount * 100) / productConfig.payday.salaryCapPct) * 1.2);
+    const cap = loans.paydayCap(salary, productConfig.payday.salaryCapPct);
+    expect(cap.toNumber()).toBe(loans.LOAN_BOUNDS.PAYDAY.maxAmount);
+    const { customerId } = await hooks.seedCustomer({ tier: 2, walletBalance: 0, salaryDetected: true, monthlySalary: salary, employer: 'QA Employer Ltd' });
+    const lm = new LoanManagementPage(await asPersona('loanAccountOfficer'));
+    const m = await lm.bookOnBehalf(customerId, 'Payday');
+    await expect(m.root()).toContainText(formatNaira(cap));
+    await m.fill(/amount/i, cap.plus(1).toNumber());
+    await m.fill(/term|tenor/i, TENOR_DAYS);
+    await m.expectValidationError(/cap|maximum|500,000/i);
   });
 
   for (const amount of [50_000, 150_000, 280_000]) {
@@ -49,7 +80,9 @@ test.describe('Loan Management › Payday actions', () => {
       const page = await asPersona('loanAccountOfficer');
       const lm = new LoanManagementPage(page);
       const m = await lm.bookOnBehalf(customerId, 'Payday');
+      const days = 21;
       await m.fill(/amount/i, amount);
+      await m.fill(/term|tenor/i, days);
       await m.evidence.fillDefault();
       await m.submit();
       const audit = await hooks.auditEntries({ action: 'payday.book', limit: 1 });
@@ -58,8 +91,10 @@ test.describe('Loan Management › Payday actions', () => {
       await expect(lm.decisioning('referral-tier')).toHaveText(new RegExp(tier, 'i'));
       if (tier === 'LOW') {
         await lm.expectState(/live servicing|disbursed/i);
-        const { totalRepayment } = loans.flatInterest(amount, TERM_RATE_PCT);
-        await expect(lm.detail.field('total-repayment')).toContainText(formatNaira(totalRepayment));
+        // LoanSpec §3.2: I = P × r × d on the selected days.
+        const { interest, totalRepayable } = loans.proratedInterest(amount, DAILY_RATE_PCT, days);
+        await expect(lm.detail.field('interest')).toContainText(formatNaira(interest));
+        await expect(lm.detail.field('total-repayment')).toContainText(formatNaira(totalRepayable));
       } else {
         await lm.expectState(/underwriting|in review/i);
         await expect(lm.detail.field('approver-queue')).toContainText(tier === 'MEDIUM' ? /CRM/ : /credit manager/i);
@@ -149,7 +184,7 @@ test.describe('Loan Management › Payday actions', () => {
   test(title('Handle mandate failure → Retry re-triggers Remita debit and sends SMS', Tag.high, Tag.spec('AdminPRD:Payday'), Tag.spec('Payday§7')), async ({ asPersona, hooks }) => {
     const amount = 80_000;
     const { customerId } = await hooks.seedCustomer({ tier: 2, walletBalance: 0, salaryDetected: true, monthlySalary: SALARY });
-    const { loanId } = await hooks.seedLoan({ customerId, product: 'PAYDAY', state: 'MANDATE_FAILED', amount, extra: { termRatePct: TERM_RATE_PCT } });
+    const { loanId } = await hooks.seedLoan({ customerId, product: 'PAYDAY', state: 'MANDATE_FAILED', amount, extra: { dailyRatePct: DAILY_RATE_PCT } });
     await hooks.stubProvider({ provider: 'REMITA', outcome: 'DEBIT_OK', customerId });
     const lm = new LoanManagementPage(await asPersona('loanAccountOfficer'));
     await lm.openLoan(loanId);
@@ -166,9 +201,9 @@ test.describe('Loan Management › Payday actions', () => {
 
   test(title('Handle mandate failure → Wallet fallback debits full repayment from wallet', Tag.crit, Tag.spec('AdminPRD:Payday')), async ({ asPersona, hooks }) => {
     const amount = 80_000;
-    const { totalRepayment } = loans.flatInterest(amount, TERM_RATE_PCT);
-    const { customerId } = await hooks.seedCustomer({ tier: 2, walletBalance: totalRepayment.toNumber(), salaryDetected: true, monthlySalary: SALARY });
-    const { loanId } = await hooks.seedLoan({ customerId, product: 'PAYDAY', state: 'MANDATE_FAILED', amount, extra: { termRatePct: TERM_RATE_PCT } });
+    const { totalRepayable } = loans.proratedInterest(amount, DAILY_RATE_PCT, TENOR_DAYS);
+    const { customerId } = await hooks.seedCustomer({ tier: 2, walletBalance: totalRepayable.toNumber(), salaryDetected: true, monthlySalary: SALARY });
+    const { loanId } = await hooks.seedLoan({ customerId, product: 'PAYDAY', state: 'MANDATE_FAILED', amount, extra: { dailyRatePct: DAILY_RATE_PCT } });
     const lm = new LoanManagementPage(await asPersona('loanAccountOfficer'));
     await lm.openLoan(loanId);
     const m = await lm.startAction(/handle mandate failure/i);
@@ -177,7 +212,7 @@ test.describe('Loan Management › Payday actions', () => {
     await m.submit();
     await m.expectApplied();
     await lm.tab('Transactions');
-    await expect(lm.transactionRows().filter({ hasText: /wallet/i }).filter({ hasText: formatNaira(totalRepayment) })).toHaveCount(1);
+    await expect(lm.transactionRows().filter({ hasText: /wallet/i }).filter({ hasText: formatNaira(totalRepayable) })).toHaveCount(1);
     await expect(lm.detail.field('outstanding')).toContainText(formatNaira(0));
   });
 

@@ -13,14 +13,14 @@ import { NanoLoanScreen, NanoStreakScreen } from '../../screens/loans/NanoScreen
  * Nano — on-loan view, states, repay now, partial repayment, auto-debit, notifications
  * (Nano_Customer_App_Spec §5–§9). Risk: repayment / debit = CRIT.
  *
- * Seeded loan `extra` contract: tenorDays, termRatePct, dueInDays (days until due date from the
+ * Seeded loan `extra` contract: tenorDays, dailyRatePct, dueInDays (days until due date from the
  * business date), streak (loyalty streak before this loan), overdueDays.
  */
 describe('Nano › Repayment & servicing', () => {
   const AMOUNT = 20_000;
   const TENOR = 30;
-  const RATE = NANO_TERMS.termRatePctByTenor[TENOR];
-  const { interest: INTEREST, totalRepayment: TOTAL } = loans.flatInterest(AMOUNT, RATE);
+  const RATE = NANO_TERMS.dailyRatePct; // %/day — interest prorated daily (LOAN PRODUCT SPECIFICATIONS §2.2)
+  const { interest: INTEREST, totalRepayable: TOTAL } = loans.proratedInterest(AMOUNT, RATE, TENOR);
   let hooks: QaHooks;
   let customerId: string;
 
@@ -39,13 +39,13 @@ describe('Nano › Repayment & servicing', () => {
   });
 
   async function openActive(extra: Record<string, unknown> = {}, state: 'ACTIVE' | 'OVERDUE' | 'IN_COLLECTIONS' | 'WRITTEN_OFF' | 'REPAID' = 'ACTIVE') {
-    const id = await openSeededLoan(hooks, customerId, 'NANO', state, AMOUNT, { tenorDays: TENOR, termRatePct: RATE, dueInDays: 20, streak: 3, ...extra });
+    const id = await openSeededLoan(hooks, customerId, 'NANO', state, AMOUNT, { tenorDays: TENOR, dailyRatePct: RATE, dueInDays: 20, streak: 3, ...extra });
     await loan.waitForShown();
     return id;
   }
 
   describe('On-loan view (§5)', () => {
-    it(title('hero and details: outstanding, total to repay, interest and countdown match the oracle', Tag.crit, Tag.smoke, Tag.spec('Nano§5')), async () => {
+    it(title('hero and details: outstanding, total to repay, interest and countdown match the prorated oracle', Tag.crit, Tag.smoke, Tag.spec('Nano§5'), Tag.spec('LoanSpec§2.2')), async () => {
       await openActive({ dueInDays: 20 });
       await expect(await loan.reference()).toBeTruthy();
       await expect(await loan.countdown()).toMatch(/\b20\b/);
@@ -57,6 +57,15 @@ describe('Nano › Repayment & servicing', () => {
       await expect(await loan.actionExists('repayNow')).toBe(true);
       await expect(await loan.actionExists('viewSchedule')).toBe(true);
     });
+
+    for (const days of NANO_TERMS.representativeDays) {
+      it(title(`${days}-day loan: interest and total to repay are prorated on the selected days`, Tag.crit, Tag.spec('Nano§5'), Tag.spec('LoanSpec§2.2')), async () => {
+        const { interest, totalRepayable } = loans.proratedInterest(AMOUNT, RATE, days);
+        await openActive({ tenorDays: days, dueInDays: days });
+        await expect((await loan.detailAmount('interest')).toFixed(2)).toBe(interest.toFixed(2));
+        await expect((await loan.totalToRepay()).toFixed(2)).toBe(totalRepayable.toFixed(2));
+      });
+    }
 
     it(title('loyalty streak indicator shows current streak and the next tier to unlock', Tag.med, Tag.spec('Nano§5'), Tag.spec('Nano§7')), async () => {
       await openActive({ streak: 3 });

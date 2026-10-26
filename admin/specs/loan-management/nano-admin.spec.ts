@@ -13,16 +13,19 @@ import { Tag, title } from '../../../shared/support/tags';
  *
  * Seeding assumptions: hooks.stubProvider BUREAU outcomes 'GOOD_SCORE' | 'POOR_SCORE' | 'TIMEOUT' | 'OK';
  * seedLoan NANO states AUTO_DECLINED, AUTO_APPROVED (pre-disbursement), BUREAU_TIMEOUT, DTI_EDGE;
- * Nano config keys `dtiLimitPct` / `dtiTolerancePct` / `termRatePct` via setProductConfig.
+ * Nano config keys `dtiLimitPct` / `dtiTolerancePct` / `dailyRatePct` via setProductConfig.
+ * Nano tenor is flexible 1–30 days with interest prorated daily (LOAN PRODUCT SPECIFICATIONS §2): the
+ * book-on-behalf tenor is a free day input (ASSUMPTION: field labelled "Tenor (days)").
  */
 test.describe('Loan Management › Nano actions', () => {
-  const NANO_CFG = { dtiLimitPct: 40, dtiTolerancePct: 5, termRatePct: 5 };
+  const NANO_CFG = { dtiLimitPct: 40, dtiTolerancePct: 5, dailyRatePct: 0.3 };
+  const TENOR_DAYS = 14;
 
   test.beforeEach(async ({ hooks }) => {
     await hooks.setProductConfig({ product: 'NANO', patch: NANO_CFG });
   });
 
-  test(title('Book Nano on behalf: evidence mandatory; auto-approve creates loan and disburses to wallet', Tag.crit, Tag.spec('AdminPRD:Nano')), async ({ asPersona, hooks }) => {
+  test(title('Book Nano on behalf: evidence mandatory; auto-approve creates loan, disburses to wallet, prorated total', Tag.crit, Tag.spec('AdminPRD:Nano'), Tag.spec('LoanSpec§2.2')), async ({ asPersona, hooks }) => {
     const { customerId } = await hooks.seedCustomer({ tier: 2, walletBalance: 0, salaryDetected: true, monthlySalary: 300_000 });
     await hooks.stubProvider({ provider: 'BUREAU', outcome: 'GOOD_SCORE', customerId });
     const page = await asPersona('loanAccountOfficer');
@@ -30,7 +33,7 @@ test.describe('Loan Management › Nano actions', () => {
     const m = await lm.bookOnBehalf(customerId, 'Nano');
     const amount = 20_000;
     await m.fill(/amount/i, amount);
-    await m.select(/tenor/i, '30 days');
+    await m.fill(/tenor/i, TENOR_DAYS);
     await m.submit();
     await m.expectValidationError(/evidence/i);
     await m.evidence.fillDefault();
@@ -43,8 +46,9 @@ test.describe('Loan Management › Nano actions', () => {
     await lm.openLoan(loanId);
     await lm.expectState(/live servicing|disbursed/i);
     await expect(lm.detail.sourcePill().first()).toContainText(/admin_action|admin/i);
-    const { totalRepayment } = loans.flatInterest(amount, NANO_CFG.termRatePct);
-    await expect(lm.detail.field('total-repayment')).toContainText(formatNaira(totalRepayment));
+    const { interest, totalRepayable } = loans.proratedInterest(amount, NANO_CFG.dailyRatePct, TENOR_DAYS);
+    await expect(lm.detail.field('interest')).toContainText(formatNaira(interest));
+    await expect(lm.detail.field('total-repayment')).toContainText(formatNaira(totalRepayable));
     const notes = await hooks.latestNotifications(customerId);
     expect(notes.some((n) => /approved|disbursed|wallet/i.test(`${n.title} ${n.body}`))).toBe(true);
   });
@@ -56,7 +60,7 @@ test.describe('Loan Management › Nano actions', () => {
     const lm = new LoanManagementPage(page);
     const m = await lm.bookOnBehalf(customerId, 'Nano');
     await m.fill(/amount/i, 20_000);
-    await m.select(/tenor/i, '30 days');
+    await m.fill(/tenor/i, TENOR_DAYS);
     await m.evidence.fillDefault();
     await m.submit();
     await expect(page.getByRole('status').or(page.getByTestId('toast')).first()).toContainText(/declined/i);

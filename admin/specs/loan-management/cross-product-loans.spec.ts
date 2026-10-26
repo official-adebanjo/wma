@@ -12,7 +12,8 @@ import { Tag, title } from '../../../shared/support/tags';
  * write-off (Head of Credit + Compliance, prominent) and penalty waiver (Head of CRM + Compliance, prominent).
  *
  * Seeding assumptions: loan config key `dualThreshold` (shared LOANS config); seedLoan extra keys
- * `dpd`, `penalty`, `ratePct`, `tenorMonths`, `disbursementTarget` ('WALLET' | 'SALARY_ACCOUNT').
+ * `dpd`, `penalty`, `monthlyRatePct`, `interestModel` ('A' | 'B', LOAN PRODUCT SPECIFICATIONS §4.2), `tenorMonths`,
+ * `disbursementTarget` ('WALLET' | 'SALARY_ACCOUNT').
  */
 test.describe('Loan Management › Cross-product actions', () => {
   const DUAL_THRESHOLD = 1_000_000;
@@ -116,12 +117,13 @@ test.describe('Loan Management › Cross-product actions', () => {
     });
   }
 
-  test(title('Restructure (any product) above dual threshold: self-approval blocked; old schedule preserved', Tag.crit, Tag.spec('AdminPRD:LoanCrossProduct'), Tag.spec('AdminPRD:ApprovalQueue')), async ({ browser, asPersona, hooks }) => {
+  for (const model of ['A', 'B'] as const) test(title(`${model === 'A' ? 'Model A (monthly equal)' : 'Model B (monthly reducing)'}: Restructure (any product) above dual threshold — self-approval blocked; old schedule preserved`, Tag.crit, Tag.spec('AdminPRD:LoanCrossProduct'), Tag.spec('AdminPRD:ApprovalQueue'), Tag.spec('LoanSpec§4.2')), async ({ browser, asPersona, hooks }) => {
     const outstanding = 1_500_000;
-    const rate = 28;
+    const rate = 2; // % per month
     const newTenor = 24;
+    await hooks.setProductConfig({ product: 'PUBLIC_SECTOR', patch: { interestModel: model } });
     const { customerId } = await hooks.seedCustomer({ tier: 3, walletBalance: 0 });
-    const { loanId, reference } = await hooks.seedLoan({ customerId, product: 'PUBLIC_SECTOR', state: 'LIVE_SERVICING', amount: outstanding, extra: { ratePct: rate, tenorMonths: 12 } });
+    const { loanId, reference } = await hooks.seedLoan({ customerId, product: 'PUBLIC_SECTOR', state: 'LIVE_SERVICING', amount: outstanding, extra: { monthlyRatePct: rate, interestModel: model, tenorMonths: 12 } });
     const proposer = await asPersona('headOfCredit');
     const lm = new LoanManagementPage(proposer);
     await lm.openLoan(loanId);
@@ -147,7 +149,9 @@ test.describe('Loan Management › Cross-product actions', () => {
     await lm.openLoan(loanId);
     await lm.tab('Schedule');
     await expect(lm.scheduleRows()).toHaveCount(newTenor);
-    await expect(lm.scheduleRows().first()).toContainText(formatNaira(loans.monthlyInstalment(outstanding, rate, newTenor)));
+    const expected = loans.loanSchedule(outstanding, rate, newTenor, model);
+    await expect(lm.scheduleRows().first()).toContainText(formatNaira(expected[0].totalDue));
+    await expect(lm.scheduleRows().last()).toContainText(formatNaira(expected[newTenor - 1].totalDue));
     await expect(lm.scheduleHistory()).toHaveCount(2);
     const notes = await hooks.latestNotifications(customerId);
     expect(notes.some((n) => /restructured/i.test(`${n.title} ${n.body}`))).toBe(true);

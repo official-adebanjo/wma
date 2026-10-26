@@ -1,8 +1,9 @@
 import Decimal from 'decimal.js';
 import { driver, expect } from '@wdio/globals';
 import { QaHooks } from '../../shared/api/qa-hooks';
-import { D, formatNaira } from '../../shared/calc/money';
+import { formatNaira } from '../../shared/calc/money';
 import { productConfig } from '../../shared/config/env';
+import { InterestModel, LOAN_BOUNDS } from '../../shared/calc/loans';
 import { links, openDeepLink } from './deeplink';
 import { openTab } from './session';
 import { BorrowHomeScreen } from '../screens/common/HomeScreens';
@@ -19,7 +20,7 @@ import { WalletScreen } from '../screens/common/WalletScreens';
  *  - `setProductConfig({ product: 'NANO' | 'PAYDAY' | 'PERSONAL' | 'PUBLIC_SECTOR' | 'LOANS', patch })`
  *    accepts the keys used here; 'LOANS' holds cross-product rules (cross-loan block).
  *  - `seedLoan({ state, extra })` accepts the lifecycle states and `extra` keys documented on
- *    `LoanState` / each spec (termRatePct, dueInDays, instalmentsPaid, corridor, …).
+ *    `LoanState` / each spec (dailyRatePct, tenorDays, monthlyRatePct, interestModel, dueInDays, instalmentsPaid, corridor, …).
  *  - Per-customer Nano pre-check eligibility is forced with `qaEligibilityOverride`.
  */
 
@@ -49,38 +50,64 @@ export const moduleOf: Record<LoanProduct, LoanModule> = {
 // Seeded product terms (values are test fixtures, NOT production terms)
 // ──────────────────────────────────────────────────────────────────────────────
 
-/** Nano §4 step 2: fixed tenor set with a flat term rate per tenor. */
+/**
+ * Nano (LoanSpec §2): flexible tenor 1–30 days, interest prorated daily (I = P × r × d).
+ * Bounds mirror LOAN_BOUNDS.NANO; daily rate = the spec's worked-example 0.30 %/day.
+ */
 export const NANO_TERMS = {
-  tenorsDays: [14, 30] as const,
-  termRatePctByTenor: { 14: 5, 30: 9 } as Record<number, number>,
+  minAmount: LOAN_BOUNDS.NANO.minAmount,
+  maxAmount: LOAN_BOUNDS.NANO.maxAmount,
+  minDays: LOAN_BOUNDS.NANO.minDays,
+  maxDays: LOAN_BOUNDS.NANO.maxDays,
+  minTier: LOAN_BOUNDS.NANO.minTier,
+  dailyRatePct: 0.3,
+  /** Representative tenors exercised by the specs (LoanSpec §2.3 worked example uses 3/7/14/30). */
+  representativeDays: [1, 3, 7, 14, 30] as const,
   reapplyWaitHours: 24,
   autoDebitRetries: 3, // Nano §9 "e.g., 3 retries over 3 days"
   partialRepaymentAllowed: false,
 };
 
-/** Payday §4: cap % of salary, 30-day flat term rate, referral matrix thresholds. */
+/** Payday (LoanSpec §3): 7–30 days, prorated daily interest, ≤ ₦500,000 and ≤ cap % of salary, Tier 2. */
 export const PAYDAY_TERMS = {
   salaryCapPct: productConfig.payday.salaryCapPct,
+  /** Default tenor the booking flow pre-selects (env); any 7–30 is valid. */
   termDays: productConfig.payday.termDays,
-  termRatePct: 10,
+  minDays: LOAN_BOUNDS.PAYDAY.minDays,
+  maxDays: LOAN_BOUNDS.PAYDAY.maxDays,
+  maxAmount: LOAN_BOUNDS.PAYDAY.maxAmount,
+  minTier: LOAN_BOUNDS.PAYDAY.minTier,
+  dailyRatePct: 0.3,
   referralThresholds: { mediumFrom: 100_000, highFrom: 200_000 },
   reviewHours: 4,
   debitRetries: 3,
 };
 
-/** Personal §4 / §7: indicative rate for the live estimate; confirmed rate comes with the offer. */
+/**
+ * Personal (LoanSpec §4): 3–24 months, ≤ ₦30,000,000, MONTHLY rate (2 %/month as in the spec's
+ * worked example), admin-configurable interest model A (monthly equal) / B (monthly reducing).
+ * Early repayment carries no penalty/fee (LoanSpec §4.4).
+ */
 export const PERSONAL_TERMS = {
-  indicativeRatePct: 30,
+  monthlyRatePct: 2,
+  interestModel: 'B' as InterestModel,
   minAmount: productConfig.personal.minAmount,
-  maxAmount: 10_000_000,
+  maxAmount: LOAN_BOUNDS.PERSONAL.maxAmount,
+  minMonths: LOAN_BOUNDS.PERSONAL.minMonths,
+  maxMonths: LOAN_BOUNDS.PERSONAL.maxMonths,
   tenorsMonths: productConfig.personal.tenorsMonths,
   largerAmountDocsFrom: 2_000_000,
   offerExpiryDays: 7,
   reapplyWaitDays: 30,
-  earlySettlementFeePct: 2,
   lateFeePerMissedInstalment: 5_000,
   reminderDaysBefore: productConfig.personal.reminderDaysBefore,
 };
+
+/** Both interest models, for parameterising Personal / Public Sector schedule assertions (LoanSpec §4.2). */
+export const INTEREST_MODELS = ['A', 'B'] as const;
+
+/** Test-title label: "Model A (monthly equal)" / "Model B (monthly reducing)". */
+export const modelTitle = (m: InterestModel): string => (m === 'A' ? 'Model A (monthly equal)' : 'Model B (monthly reducing)');
 
 export interface CorridorFixture {
   key: 'federal' | 'lagos' | 'unibadan';
@@ -89,6 +116,7 @@ export interface CorridorFixture {
   group: 'federal' | 'state' | 'tertiary';
   idField: 'ippis' | 'staffNumber';
   deductionMethod: string;
+  /** Quoted p.a. rate; the engine applies monthlyFromAnnual(ratePct) under the product interest model (A/B). */
   ratePct: number;
   dtiPct: number;
   salaryBasis: 'GROSS' | 'NET' | 'GROSS_EXCL_TRANSPORT';
@@ -97,7 +125,6 @@ export interface CorridorFixture {
   consentLetterRequired: boolean;
   mandateRequired: boolean;
   controlGateFrom: number;
-  earlySettlementFeePct: number;
   bankTransferSettlementFrom: number;
   outOfCycleRepayment: boolean;
 }
@@ -107,20 +134,20 @@ export const CORRIDORS: Record<CorridorFixture['key'], CorridorFixture> = {
   federal: {
     key: 'federal', name: 'Federal IPPIS', subLabel: 'federal government via IPPIS', group: 'federal', idField: 'ippis',
     deductionMethod: 'IPPIS', ratePct: 22, dtiPct: 33, salaryBasis: 'NET', maxTenorMonths: 48, tenorsMonths: [6, 12, 18, 24, 36, 48],
-    consentLetterRequired: true, mandateRequired: false, controlGateFrom: 3_000_000, earlySettlementFeePct: 1,
+    consentLetterRequired: true, mandateRequired: false, controlGateFrom: 3_000_000,
     bankTransferSettlementFrom: 5_000_000, outOfCycleRepayment: false,
   },
   lagos: {
     key: 'lagos', name: 'Lagos State', subLabel: 'Lagos State Government', group: 'state', idField: 'staffNumber',
     deductionMethod: 'Lagos State payroll', ratePct: 24, dtiPct: 40, salaryBasis: 'GROSS_EXCL_TRANSPORT', maxTenorMonths: 36,
     tenorsMonths: [6, 12, 18, 24, 36], consentLetterRequired: false, mandateRequired: true, controlGateFrom: 2_000_000,
-    earlySettlementFeePct: 1.5, bankTransferSettlementFrom: 5_000_000, outOfCycleRepayment: true,
+    bankTransferSettlementFrom: 5_000_000, outOfCycleRepayment: true,
   },
   unibadan: {
     key: 'unibadan', name: 'University of Ibadan', subLabel: 'University of Ibadan staff', group: 'tertiary', idField: 'staffNumber',
     deductionMethod: 'University of Ibadan payroll', ratePct: 25, dtiPct: 33, salaryBasis: 'GROSS', maxTenorMonths: 24,
     tenorsMonths: [6, 12, 18, 24], consentLetterRequired: false, mandateRequired: true, controlGateFrom: 1_500_000,
-    earlySettlementFeePct: 1, bankTransferSettlementFrom: 5_000_000, outOfCycleRepayment: false,
+    bankTransferSettlementFrom: 5_000_000, outOfCycleRepayment: false,
   },
 };
 
@@ -134,7 +161,7 @@ export type NanoIneligibleReason = 'KYC_INCOMPLETE' | 'INSUFFICIENT_HISTORY' | '
 export async function seedNanoEligibility(
   hooks: QaHooks,
   customerId: string,
-  e: { eligible: true; min: number; max: number; termRatePct?: number; streak?: number } | { eligible: false; reason: NanoIneligibleReason },
+  e: { eligible: true; min: number; max: number; dailyRatePct?: number; streak?: number } | { eligible: false; reason: NanoIneligibleReason },
 ) {
   await hooks.setProductConfig({ product: 'NANO', patch: { qaEligibilityOverride: { customerId, ...e } } });
 }
@@ -147,9 +174,17 @@ export async function seedPersonalTerms(hooks: QaHooks, patch: Partial<typeof PE
   await hooks.setProductConfig({ product: 'PERSONAL', patch: { ...PERSONAL_TERMS, ...patch } });
 }
 
-export async function seedCorridors(hooks: QaHooks, overrides: Partial<Record<CorridorFixture['key'], Partial<CorridorFixture>>> = {}) {
+/** Default interest model for Public Sector when a spec does not parameterise it (configurable, LoanSpec §4.2). */
+export const PUBLIC_SECTOR_DEFAULT_MODEL: InterestModel = 'B';
+
+/** Seeds the corridors plus the product-level interest engine (Model A / B), same engine as Personal. */
+export async function seedCorridors(
+  hooks: QaHooks,
+  overrides: Partial<Record<CorridorFixture['key'], Partial<CorridorFixture>>> = {},
+  interestModel: InterestModel = PUBLIC_SECTOR_DEFAULT_MODEL,
+) {
   const corridors = Object.values(CORRIDORS).map((c) => ({ ...c, ...(overrides[c.key] ?? {}) }));
-  await hooks.setProductConfig({ product: 'PUBLIC_SECTOR', patch: { corridors } });
+  await hooks.setProductConfig({ product: 'PUBLIC_SECTOR', patch: { corridors, interestModel } });
 }
 
 /** Cross-loan constraint (Payday §9, Personal §9) — config-driven, off by default. */
@@ -250,15 +285,6 @@ export function daysFromNow(n: number): Date {
 }
 
 export const isoDate = (d: Date) => d.toISOString().slice(0, 10);
-
-/**
- * Interest accrued since the last instalment date, simple Actual/365 on the outstanding principal.
- * ASSUMPTION — loan accrual basis not stated in the loan specs; Actual/365 follows the Calculator
- * Spec §3 / Clarity X2 convention used for investments. Personal §7 / Public Sector §7.
- */
-export function accruedSinceLastDue(outstanding: Decimal.Value, annualRatePct: Decimal.Value, days: number): Decimal {
-  return D(outstanding).mul(annualRatePct).div(100).mul(days).div(365).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-}
 
 /** "Airtime & Data" → "airtime-and-data" — option test-ID suffix for purpose / category chips. */
 export function optionSlug(label: string): string {

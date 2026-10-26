@@ -54,5 +54,11 @@ export const openQuestions: Record<string, { summary: string; defaultAssumed: st
   'TIER1-LIMITS': { summary: 'KYC V4: Tier 1 single transfer ₦300,000 exceeds its ₦20,000 daily limit — likely transposed', defaultAssumed: 'As published', confirmed: false },
   TM1: { summary: 'Admin PRD [M]/[C] approve markers never defined', defaultAssumed: 'Separate "approve [M]" / "approve [C]" grants per module', confirmed: false },
   'RTN-INV': { summary: 'Rate-matrix "invariants enforced" not listed', defaultAssumed: 'Non-negative; non-decreasing by tenor and by amount band', confirmed: false },
-  'L-*': { summary: 'Loan money rules not in specs (streak reset on late repayment, Payday early-repay rebate, settlement accrual basis, upfront fees, out-of-cycle allocation)', defaultAssumed: 'See @open:L-… tagged tests', confirmed: false },
+  // Answered by LOAN PRODUCT SPECIFICATIONS.docx: Nano/Payday prorated daily (I = P×r×d); Payday early settlement on
+  // days used; Personal & Public Sector Model A (monthly equal, flat) / Model B (monthly reducing); early payoff =
+  // remaining principal + current month interest, no penalty. Still open below:
+  'L-*': { summary: 'Loan rules still not in any spec: Nano streak reset on late repayment, upfront fee deduction at disbursement, out-of-cycle allocation', defaultAssumed: 'See @open:L-… tagged tests', confirmed: false },
+  'L-PERSONAL-TIER': { summary: 'Personal Loan minimum KYC tier not stated in LoanSpec', defaultAssumed: 'Tier 2', confirmed: false },
+  'L-RATE-BASIS': { summary: 'Loan detail "INTEREST RATE x%" — per month (spec examples) or per annum? Live Model A loan #169 matches neither reading', defaultAssumed: 'Per month, as in LoanSpec §4.3', confirmed: false },
+  'L-LIQUIDATION-CHARGE': { summary: 'Admin Personal/Public Sector forms carry a "Liquidation charge %" (default 3%) but LoanSpec §4.1 says early repayment has no penalty', defaultAssumed: 'No penalty (spec)', confirmed: false },
 };
