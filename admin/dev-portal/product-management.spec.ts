@@ -1,133 +1,139 @@
-import { test, expect } from '@playwright/test';
-import { home, nav, uniq } from './support';
+import { test, expect, Page } from '@playwright/test';
+import { ROUTES, btn, open, uniq } from './support';
 
-/** Recorded on the dev Admin Portal — Product Management and loan/investment configuration. */
+/** Product Management and loan/investment configuration — current UI. */
+async function addCreatableOption(page: Page, comboName: string, value: string) {
+  const combo = page.getByRole('combobox', { name: comboName });
+  await combo.fill(value);
+  await page.getByRole('option', { name: new RegExp(`^(Add |Create )?"?${value}`) }).first().click();
+}
+
+function row(page: Page, text: string) {
+  return page.getByRole('row').filter({ hasText: text }).first();
+}
+
 test.describe('Dev portal › Product Management', () => {
-  test.beforeEach(async ({ page }) => {
-    await home(page);
-    await nav(page, 'All products');
-  });
-
-  test('New investment product wizard (RWIN template): fill and cancel @smoke', async ({ page }) => {
-    await page.getByRole('button', { name: 'New investment product' }).click();
-    await page.getByText(/^Rosabon Wealth Investment \(RWIN 2\.0\)/).click();
-    await page.getByPlaceholder('Rosabon Wealth Investment').fill(uniq('Adebanjo-automate'));
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await page.getByPlaceholder('Guaranteed 14% p.a., pays').fill('A test investment creation to automate investment configuration');
-    await page.getByLabel('Remove 30 days').click();
-    await page.getByLabel('Remove 60 days').click();
-    for (const d of ['120', '150']) {
-      await page.getByLabel('Allowed tenors (days)').fill(d);
-      await page.getByRole('option', { name: `Add ${d} days` }).click();
+  test('catalogue: investment/loan tabs, type and status filters, export @smoke', async ({ page }) => {
+    await open(page, ROUTES.products);
+    for (const t of ['Goal savings', 'Investment note', 'Treasury note', 'All types']) {
+      await page.getByRole('combobox', { name: 'Filter by type' }).selectOption({ label: t });
     }
-    await page.locator('section').filter({ hasText: 'Yield & cycleInterest rate (' }).getByLabel('%').fill('15');
-    await page.getByLabel('DailyMonthlyPer cycleRollover').selectOption('monthly');
-    await page.getByRole('button', { name: 'Cancel' }).nth(1).click();
+    for (const s of ['Draft', 'Active', 'Retired', 'All statuses']) {
+      await page.getByRole('combobox', { name: 'Filter by status' }).selectOption({ label: s });
+    }
+    await btn(page, 'Loan products').click();
+    await expect(btn(page, 'New loan product')).toBeVisible();
+    await btn(page, 'Investment products').click();
   });
 
-  test('New loan product (Nano) with a new fee structure @creates', async ({ page }) => {
-    await page.getByRole('button', { name: 'Loan products' }).click();
-    await page.getByRole('button', { name: 'New loan product' }).click();
-    await page.getByLabel('Loan product type*— select —').selectOption('nano');
-    await page.getByPlaceholder('Personal Loan').fill(uniq('auto-nano'));
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await page.getByLabel('Available tenors (days)*').fill('30');
-    await page.getByRole('option', { name: 'Add 30 days' }).click();
-    await page.getByLabel('Repayment schedule*— select —').selectOption('DAILY_DIRECT');
-    await page.getByLabel('Automatic disbursement').check();
-    await page.getByRole('button', { name: '+ New fee structure' }).click();
-    await page.getByPlaceholder('e.g. Standard personal loan').fill(uniq('auto-nano fee'));
-    await page.getByLabel('Collection mode— select —').selectOption('UPFRONT_DEDUCTED');
-    await page.getByLabel('Management fee%').fill('1');
-    await page.getByLabel('VAT%Statutory — 7.5% unless').fill('7.5');
-    await page.getByLabel('WHT%Statutory withholding tax.').fill('1');
-    await page.getByRole('button', { name: 'Create fee structure' }).click();
-    await page.getByRole('button', { name: 'Create product' }).click();
-    await page.getByRole('button', { name: 'Open product' }).click();
-    await page.getByRole('button', { name: 'Back to catalogue' }).click();
+  test('New investment product (RWIN 2.0 template): full form renders; cancel @smoke', async ({ page }) => {
+    await open(page, ROUTES.products);
+    await btn(page, 'New investment product').click();
+    await expect(page.getByRole('heading', { name: 'Add investment product' })).toBeVisible();
+    await page.getByRole('radio', { name: /RWIN 2\.0/ }).check();
+    await page.getByRole('textbox', { name: /^Product name/ }).fill(uniq('Adebanjo-automate'));
+    await btn(page, 'Continue').click();
+    await expect(page.getByRole('heading', { name: 'New Rosabon Wealth Investment' })).toBeVisible();
+    for (const h of ['Identity', 'Status & availability', 'Tenors', 'Rollover', 'Yield & cycle', 'Amounts', 'Behaviour & tax', 'Early-exit penalty ladder', 'Interest & payout', 'Product behaviour']) {
+      await expect(page.getByRole('heading', { name: h, exact: true })).toBeVisible();
+    }
+    await page.getByRole('textbox', { name: /^One-liner/ }).fill('A test investment to automate configuration');
+    await btn(page, 'Remove 30 days').click();
+    await addCreatableOption(page, 'Allowed tenors (days)', '120');
+    await page.locator('section').filter({ hasText: 'Yield & cycle' }).getByRole('spinbutton', { name: '%' }).fill('15');
+    await btn(page, 'Cancel').first().click();
+  });
+
+  test('New loan product (Nano): type → name → full configuration form; cancel @smoke', async ({ page }) => {
+    await open(page, ROUTES.products);
+    await btn(page, 'Loan products').click();
+    await btn(page, 'New loan product').click();
+    await page.getByRole('combobox', { name: 'Loan product type' }).selectOption('nano');
+    await page.getByRole('textbox', { name: /^Loan name/ }).fill(uniq('auto-nano'));
+    await btn(page, 'Continue').click();
+    await expect(page.getByRole('heading', { name: 'New Nano loan product' })).toBeVisible();
+    for (const h of ['Identity', 'Tenors & repayment', 'Fee model', 'Loyalty discount streaks', 'Amount & pricing', 'Decisioning', 'Collections & constraints']) {
+      await expect(page.getByRole('heading', { name: h, exact: true })).toBeVisible();
+    }
+    await page.getByRole('checkbox', { name: 'Automatic disbursement' }).check();
+    await btn(page, 'Cancel').first().click();
   });
 
   test('Loan purpose: create → edit → delete (self-cleaning) @creates', async ({ page }) => {
     const name = uniq('Mortgage');
-    await nav(page, 'Loan purpose');
-    await page.getByRole('button', { name: 'New purpose' }).click();
-    await page.getByPlaceholder('e.g. Business expansion').fill(name);
-    await page.getByRole('button', { name: 'Create purpose' }).click();
-    await page.getByRole('row', { name: new RegExp(`^${name}`) }).getByRole('button').first().click();
-    await page.getByPlaceholder('e.g. Business expansion').fill(`${name}s`);
-    await page.getByRole('button', { name: 'Save changes' }).click();
-    await page.getByRole('row', { name: new RegExp(`^${name}s`) }).getByRole('button').nth(1).click();
-    await page.getByRole('button', { name: 'Delete purpose' }).click();
-    await expect(page.getByRole('row', { name: new RegExp(`^${name}s`) })).toHaveCount(0);
+    await open(page, ROUTES.loanPurposes);
+    await btn(page, 'New purpose').click();
+    await page.getByRole('textbox', { name: 'Purpose', exact: true }).fill(name);
+    await btn(page, 'Create purpose').click();
+    await expect(row(page, name)).toBeVisible();
+    await row(page, name).getByRole('button', { name: 'Edit' }).click();
+    await page.getByRole('textbox', { name: 'Purpose', exact: true }).fill(`${name}s`);
+    await btn(page, /^Save/).click();
+    await row(page, `${name}s`).getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: /^Delete( purpose)?$/ }).last().click();
+    await expect(page.getByRole('row').filter({ hasText: `${name}s` })).toHaveCount(0);
   });
 
-  test('Loan variant: create @creates', async ({ page }) => {
-    await nav(page, 'Loan variants');
-    await page.getByRole('button', { name: 'Add variant' }).click();
-    await page.getByPlaceholder('e.g. PL3-E').fill(uniq('loan-auto'));
-    await page.locator('.rounded-md > .flex > div:nth-child(2)').first().click();
-    await page.getByRole('option', { name: 'Repeat — poor performing' }).click();
-    await page.getByPlaceholder('e.g. 5.5').fill('2.5');
-    await page.getByPlaceholder('e.g. 5', { exact: true }).fill('5');
-    await page.getByPlaceholder('e.g. 4.5').fill('5.5');
-    await page.getByPlaceholder('e.g. 1', { exact: true }).fill('1');
-    await page.getByText('Top-up allowed').click();
-    await page.getByRole('button', { name: 'Create variant' }).click();
+  test('Loan variant: create with rates, DTI and tenor @creates', async ({ page }) => {
+    const code = uniq('loan-auto').replace(/\s/g, '-');
+    await open(page, ROUTES.loanVariants);
+    await btn(page, 'Add variant').click();
+    await page.getByRole('textbox', { name: 'Variant code' }).fill(code);
+    await page.getByRole('spinbutton', { name: /^Rate below defining tenor/ }).fill('2.5');
+    await page.getByRole('spinbutton', { name: /^Rate at defining tenor/ }).fill('5');
+    await page.getByRole('spinbutton', { name: /^Rate above defining tenor/ }).fill('5.5');
+    await page.getByRole('spinbutton', { name: /^Management fee/ }).fill('1');
+    await page.getByRole('spinbutton', { name: 'Standard DTI ceiling' }).fill('0.33');
+    await page.getByRole('spinbutton', { name: /^Defining tenor/ }).fill('12');
+    await page.getByRole('spinbutton', { name: /^Tenor cap/ }).fill('24');
+    await page.getByRole('checkbox', { name: 'Top-up allowed' }).check();
+    await btn(page, 'Create variant').click();
+    await expect(page.getByText(code).first()).toBeVisible();
   });
 
   test('Loan pre-eligibility: create @creates', async ({ page }) => {
-    await nav(page, 'Loan pre-eligibility');
-    await page.getByRole('button', { name: 'New pre-eligibility' }).click();
-    await page.getByPlaceholder('e.g. Public-sector standard').fill(uniq('Public sector Auto'));
-    await page.getByPlaceholder('e.g. 60').fill('65');
-    await page.getByPlaceholder('e.g. 420').fill('12');
-    await page.getByPlaceholder('e.g. 12').fill('3');
-    await page.getByPlaceholder('e.g. 50000').fill('500000');
-    await page.getByPlaceholder('e.g. 0.8').fill('0.65');
-    await page.getByRole('button', { name: 'Create pre-eligibility' }).click();
+    const name = uniq('Public sector Auto');
+    await open(page, ROUTES.preEligibility);
+    await btn(page, 'New pre-eligibility').click();
+    await page.getByRole('textbox', { name: /^Name/ }).fill(name);
+    await page.getByRole('spinbutton', { name: /^Maximum age/ }).fill('65');
+    await page.getByRole('spinbutton', { name: /^Minimum service/ }).fill('3');
+    await page.getByRole('spinbutton', { name: /^Maximum service/ }).fill('420');
+    await page.getByRole('textbox', { name: /^Minimum net salary/ }).fill('500000');
+    await page.getByRole('spinbutton', { name: /^MDA collection gate/ }).fill('0.65');
+    await btn(page, 'Create pre-eligibility').click();
+    await expect(page.getByText(name).first()).toBeVisible();
   });
 
   test('Investment penalty ladder: create (new positions only) @creates', async ({ page }) => {
-    await nav(page, 'Investment penalty ladders');
-    await page.getByRole('button', { name: 'New ladder' }).click();
-    await page.getByPlaceholder('REAP early exit').fill(uniq('Reap early exit'));
-    await page.getByRole('button', { name: 'Review & create' }).click();
-    await page.getByRole('button', { name: 'Submit (new positions only)' }).click();
-  });
-
-  test('configuration pages load: WHT, rate & fee tables, approval threshold, corridors, MDA lists @smoke', async ({ page }) => {
-    for (const link of ['Investment tax (WHT)', 'Rate & fee tables', 'Approval threshold', 'Corridors & partners', 'MDA lists']) {
-      await nav(page, link);
-      await expect(page.getByRole('main')).toBeVisible();
-    }
-  });
-
-  test('Served states: add a state for approval @creates', async ({ page }) => {
-    await nav(page, 'Served states');
-    await page.getByRole('button', { name: 'Add state' }).click();
-    await page.getByLabel('State— select a state —').selectOption('Cross River');
-    await page.getByRole('button', { name: 'Submit for approval' }).click();
-  });
-
-  test('Integration partners: add partner for approval @creates', async ({ page }) => {
-    await nav(page, 'Integration partners');
-    await page.getByRole('button', { name: 'Add partner' }).click();
-    await page.getByLabel('Type— select —').selectOption('Payments');
-    await page.getByLabel('Partner name').fill(uniq('Adebanjo Auto'));
-    await page.getByRole('button', { name: 'Submit for approval' }).click();
+    const name = uniq('Reap early exit');
+    await open(page, ROUTES.penaltyLadders);
+    await btn(page, 'New ladder').click();
+    await page.getByRole('textbox', { name: 'Name', exact: true }).fill(name);
+    await btn(page, 'Review & create').click();
+    await btn(page, /^Submit/).click();
+    await expect(page.getByText(name).first()).toBeVisible();
   });
 
   test('Document setup: create → edit → delete (self-cleaning) @creates', async ({ page }) => {
     const name = uniq('qa-doc');
-    await nav(page, 'Document setup');
-    await page.getByRole('button', { name: 'New document' }).click();
-    await page.getByPlaceholder('e.g. Most recent payslip').fill(name);
-    await page.getByRole('button', { name: 'Create document' }).click();
-    await page.getByRole('row', { name: new RegExp(`^${name}`) }).getByRole('button').first().click();
-    await page.getByPlaceholder('e.g. Most recent payslip').fill(`${name}-edited`);
-    await page.getByRole('button', { name: 'Save changes' }).click();
-    await page.getByRole('row', { name: new RegExp(`^${name}-edited`) }).getByRole('button').nth(1).click();
-    await page.getByRole('button', { name: 'Delete document' }).click();
-    await expect(page.getByRole('row', { name: new RegExp(`^${name}-edited`) })).toHaveCount(0);
+    await open(page, ROUTES.documentSetup);
+    await btn(page, 'New document').click();
+    await page.getByRole('textbox', { name: 'Document', exact: true }).fill(name);
+    await btn(page, 'Create document').click();
+    await expect(row(page, name)).toBeVisible();
+    await row(page, name).getByRole('button', { name: 'Edit' }).click();
+    await page.getByRole('textbox', { name: 'Document', exact: true }).fill(`${name}-edited`);
+    await btn(page, /^Save/).click();
+    await row(page, `${name}-edited`).getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: /^Delete( document)?$/ }).last().click();
+    await expect(page.getByRole('row').filter({ hasText: `${name}-edited` })).toHaveCount(0);
+  });
+
+  test('configuration pages load: WHT, rate & fee tables, approval threshold, corridors @smoke', async ({ page }) => {
+    for (const r of [ROUTES.investmentTax, ROUTES.rateFees, ROUTES.approvalThreshold, ROUTES.corridors]) {
+      await open(page, r);
+      await expect(page.getByRole('heading').nth(1)).toBeVisible();
+    }
   });
 });

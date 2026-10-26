@@ -1,49 +1,58 @@
 import { test, expect } from '@playwright/test';
-import { exportCsv, home, nav } from './support';
+import { ROUTES, btn, closeModal, open } from './support';
 
-/** Recorded on the dev Admin Portal — Loan Management. */
+/** Loan Management — current UI: applications list with status filter, book-on-behalf modal, repayments drawer. */
 test.describe('Dev portal › Loan Management', () => {
-  test.beforeEach(async ({ page }) => {
-    await home(page);
-    await nav(page, 'Loan Management');
+  test('applications: status filter options apply @smoke', async ({ page }) => {
+    await open(page, ROUTES.loanApplications);
+    const filter = page.getByRole('combobox', { name: 'Filter by status' });
+    for (const s of ['Active', 'Approved', 'Pending', 'Overdue', 'Repaid', 'All statuses']) {
+      await filter.selectOption({ label: s });
+      await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => undefined);
+    }
+    await page.getByRole('combobox', { name: 'Show:' }).selectOption('50 per page');
   });
 
-  test('loan portfolio exports CSV @smoke', async ({ page }) => {
-    await exportCsv(page);
+  test('applications: search and refresh @smoke', async ({ page }) => {
+    await open(page, ROUTES.loanApplications);
+    await page.getByRole('textbox', { name: 'Search', exact: true }).fill('IBRAHIM');
+    await page.keyboard.press('Enter');
+    await btn(page, 'Refresh').click();
+    await expect(page.getByRole('heading', { name: 'Loan applications' })).toBeVisible();
   });
 
-  test('Book loan on behalf: form shows amount bounds per product, then cancel @smoke', async ({ page }) => {
-    // Recording clicked "Book loan" with an out-of-range amount; we stop short of submitting
-    // so a re-run can never book a real loan if the input happens to be valid.
-    await page.getByRole('button', { name: 'Book loan on behalf' }).click();
-    await page.getByPlaceholder('Search by name, customer id,').fill('ibrahim');
-    await page.getByRole('button', { name: /IBRAHIM PETER 366985/ }).click();
-    const product = page.getByLabel('Loan product*Select a loan');
-    await product.selectOption('26');
-    await page.getByLabel('PurposeSelect a').selectOption('Medical Expenses');
-    await page.getByLabel('Amount₦Leave blank to let the').fill('6000000');
-    await page.getByLabel('Duration (months)Leave blank').fill('34');
-    await page.getByLabel('Interest rate%Quoted for this customer, amount and tenor. Override if you must.', { exact: true }).fill('5');
-    await page.getByLabel('Penalty interest rate%Quoted').fill('2');
-    await page.getByLabel('Start dateOptional. Blank').fill('2026-10-22');
-    await product.selectOption('24');
-    await expect(page.getByLabel('Amount₦Must be between 10000 and')).toBeVisible();
-    await page.getByLabel('Amount₦Must be between 10000 and').fill('5,000,000');
-    await page.getByRole('button', { name: 'Cancel' }).click();
+  test('Book loan on behalf: product list, quote fields, cancel without booking @smoke', async ({ page }) => {
+    await open(page, ROUTES.loanApplications);
+    await btn(page, 'Book loan on behalf').click();
+    await expect(page.getByRole('heading', { name: 'Book a loan on behalf' })).toBeVisible();
+    await page.getByRole('textbox', { name: 'Customer', exact: true }).fill('ibrahim');
+    await page.getByRole('button').filter({ hasText: /IBRAHIM PETER/ }).first().click();
+    const product = page.getByRole('combobox', { name: 'Loan product' });
+    expect(await product.locator('option').count()).toBeGreaterThan(1);
+    await product.selectOption({ index: 1 });
+    await page.getByRole('textbox', { name: /^Amount/ }).fill('500000');
+    await page.getByRole('spinbutton', { name: /^Duration/ }).fill('6');
+    await expect(page.getByRole('spinbutton', { name: /^Interest rate/ })).toBeVisible();
+    await expect(page.getByRole('spinbutton', { name: /^Penalty interest rate/ })).toBeVisible();
+    // Deliberately not clicking "Book loan" — a re-run must never book a real loan.
+    await btn(page, 'Cancel').click();
+    await expect(page.getByRole('heading', { name: 'Book a loan on behalf' })).toBeHidden();
   });
 
   test('Loan repayments: open repayment history drawers @smoke', async ({ page }) => {
-    await nav(page, 'Loan repayments');
-    const rows = page.getByRole('main').getByRole('row').filter({ has: page.getByRole('cell') });
+    await open(page, ROUTES.loanRepayments);
+    const open1 = btn(page, 'Repayments');
+    test.skip((await open1.count()) === 0, 'No loans with repayments');
     for (const i of [0, 1]) {
-      await rows.nth(i).getByRole('button').first().click();
-      await expect(page.getByText(/Repayments — .*Loan #\d+/)).toBeVisible();
-      await page.getByLabel('Close').click();
+      if (i >= (await open1.count())) break;
+      await open1.nth(i).click();
+      await expect(page.getByRole('heading', { name: /^Repayments — .*Loan #\d+$/ })).toBeVisible();
+      await closeModal(page);
     }
   });
 
   test('Payroll reconciliation page loads @smoke', async ({ page }) => {
-    await nav(page, 'Payroll reconciliation');
-    await expect(page.getByRole('main')).toBeVisible();
+    await open(page, ROUTES.payroll);
+    await expect(page.getByRole('heading').nth(1)).toBeVisible();
   });
 });

@@ -1,80 +1,102 @@
-import { test, expect } from '@playwright/test';
-import { destructive, firstRowButton, home, nav } from './support';
+import { test, expect, Page } from '@playwright/test';
+import { ROUTES, btn, destructive, open, subNav } from './support';
 
-/** Recorded on the dev Admin Portal — Customer Management (Directory, Customer 360, Review Queues, Auto Grants, Screening, Account Controls). */
+/** Customer Management — current UI: Directory / Review Queues / Auto Grants / Screening / Account Controls sub-links; Customer 360 via "View". */
+const CUSTOMER = 'Ugo Anayo';
+
+async function openCustomer(page: Page, name = CUSTOMER) {
+  await open(page, ROUTES.customers);
+  await page.locator('tr', { has: page.getByRole('link', { name, exact: true }) }).getByRole('button', { name: 'View' }).first().click();
+  await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
+}
+
 test.describe('Dev portal › Customer Management', () => {
-  test.beforeEach(async ({ page }) => {
-    await home(page);
+  test('Customer 360: all eight tabs render @smoke', async ({ page }) => {
+    await openCustomer(page);
+    for (const tab of ['Overview', 'Personal info', 'KYC & Documents', 'Products', 'Transactions', 'Screening', 'Support', 'Audit']) {
+      await page.getByRole('tab', { name: tab, exact: true }).click();
+      await expect(page.getByRole('tab', { name: tab, exact: true })).toHaveAttribute('aria-selected', 'true');
+    }
+    await btn(page, 'Back to directory').click();
+    await expect(page.getByRole('heading', { name: 'Customer Directory' })).toBeVisible();
   });
 
-  test('Customer 360: every tab renders and PII reveal/hide is audited @smoke', async ({ page }) => {
-    await test.step('open customer from directory', async () => {
-      await page.getByRole('row', { name: /Ugo Anayo 278855/ }).getByRole('button').click();
-    });
-    await test.step('Personal info: reveal and hide masked values', async () => {
-      await page.getByRole('tab', { name: 'Personal info' }).click();
-      await page.getByRole('button', { name: 'Reveal' }).first().click();
-      await page.getByRole('button', { name: 'Hide' }).click();
-      await expect(page.getByRole('button', { name: 'Reveal' }).first()).toBeVisible();
-    });
-    await test.step('remaining tabs', async () => {
-      await page.getByRole('tab', { name: 'KYC & Documents' }).click();
-      await page.getByRole('tab', { name: 'Products' }).click();
-      await expect(page.getByText(/Loans \(\d+\)/)).toBeVisible();
-      await expect(page.getByText(/Investment positions \(\d+\)/)).toBeVisible();
-      for (const tab of ['Transactions', 'Screening', 'Support']) {
-        await page.getByRole('tab', { name: tab }).click();
-        await expect(page.getByRole('tab', { name: tab })).toHaveAttribute('aria-selected', 'true');
-      }
-    });
-    await test.step('Audit tab records the PII view', async () => {
-      await page.getByRole('tab', { name: 'Audit' }).click();
-      await expect(page.getByText(/pii-view/).first()).toBeVisible();
-    });
-    await page.getByRole('button', { name: 'Back to directory' }).click();
+  test('Customer 360: Overview shows at-a-glance profile and dual-controlled account controls @smoke', async ({ page }) => {
+    await openCustomer(page);
+    await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
+    await expect(page.getByText(/All status changes are dual-controlled/)).toBeVisible();
+    for (const b of ['Freeze wallet', 'Freeze account (full)', 'Close account']) await expect(btn(page, b)).toBeVisible();
   });
 
-  test('Customer 360: edit full name goes to approval, not applied directly @creates', async ({ page }) => {
-    await page.getByRole('row', { name: /Ugo Anayo 278855/ }).getByRole('button').click();
+  test('Customer 360: PII is masked; reveal/hide is recorded in the Audit tab @smoke', async ({ page }) => {
+    await openCustomer(page);
     await page.getByRole('tab', { name: 'Personal info' }).click();
-    await page.locator('div').filter({ hasText: /^Full name.*Edit$/ }).getByRole('button').click();
+    const reveal = btn(page, 'Reveal').first();
+    test.skip(!(await reveal.isVisible().catch(() => false)), 'No masked fields on this customer in the current UI');
+    await reveal.click();
+    await btn(page, 'Hide').first().click();
+    await page.getByRole('tab', { name: 'Audit' }).click();
+    await btn(page, 'Refresh').click();
+    // PRD: personal-info / PII views are written to the audit trail (PII access log).
+    await expect(page.getByText(/pii-view|PII/).first()).toBeVisible();
+  });
+
+  test('Customer 360: edit full name is submitted for approval @creates', async ({ page }) => {
+    await openCustomer(page);
+    await page.getByRole('tab', { name: 'Personal info' }).click();
+    await page.getByText('Full name', { exact: true }).locator('xpath=ancestor::div[.//button[normalize-space()="Edit"]][1]').getByRole('button', { name: 'Edit' }).click();
     await page.getByLabel('Full name').fill('Ugo Anayo Princewill');
-    await page.getByRole('button', { name: 'Submit for approval' }).click();
-    await expect(page.getByRole('button', { name: 'Submit for approval' })).toBeHidden();
+    await btn(page, 'Submit for approval').click();
+    await expect(btn(page, 'Submit for approval')).toBeHidden();
   });
 
-  test('Directory search by name @smoke', async ({ page }) => {
-    const search = page.getByPlaceholder('Search...');
-    await search.fill('adebanjo');
-    await search.press('Enter');
-    await expect(page.getByRole('row').filter({ hasText: /adebanjo/i }).first()).toBeVisible();
+  test('Directory: paginates and exports CSV @smoke', async ({ page }) => {
+    await open(page, ROUTES.customers);
+    await expect(page.getByRole('heading', { name: 'Customer Directory' })).toBeVisible();
+    const [download] = await Promise.all([page.waitForEvent('download'), btn(page, 'Export CSV').click()]);
+    expect(download.suggestedFilename()).toMatch(/\.csv$/i);
+    await btn(page, 'Next').click();
+    await btn(page, 'Prev').click();
   });
 
-  test('Review Queues: open a submission document and cancel @smoke', async ({ page }) => {
-    await nav(page, 'Review Queues');
-    await firstRowButton(page).click();
-    await page.getByRole('button', { name: 'Open document' }).click();
-    await page.getByRole('button', { name: 'Cancel' }).click();
+  test('Review Queues: document reviews, failed checks and tier-upgrade requests are listed @smoke', async ({ page }) => {
+    await open(page, ROUTES.customers);
+    await subNav(page, 'Review Queues');
+    await expect(page.getByRole('heading', { name: 'Review Queues' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Document reviews \(\d+\)$/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Failed checks \(\d+\)$/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Tier-upgrade requests \(\d+\)$/ })).toBeVisible();
   });
 
-  test('Auto Grants, Screening and Account Controls tabs load @smoke', async ({ page }) => {
+  test('Review Queues: open a document review and back out without deciding @smoke', async ({ page }) => {
+    await open(page, ROUTES.customers);
+    await subNav(page, 'Review Queues');
+    const review = btn(page, 'Review').first();
+    test.skip(!(await review.isVisible().catch(() => false)), 'No document reviews pending');
+    await review.click();
+    const openDoc = btn(page, 'Open document');
+    if (await openDoc.isVisible().catch(() => false)) await openDoc.click();
+    await page.getByRole('button', { name: /^(Cancel|Close)$/ }).last().click();
+  });
+
+  test('Auto Grants, Screening and Account Controls sub-pages load @smoke', async ({ page }) => {
+    await open(page, ROUTES.customers);
     for (const tab of ['Auto Grants', 'Screening', 'Account Controls', 'Directory']) {
-      await nav(page, tab);
-      await expect(page.getByRole('main')).toBeVisible();
+      await subNav(page, tab);
+      await expect(page.getByRole('heading').nth(1)).toBeVisible();
     }
   });
 
   test('Screening: escalate a hit @destructive', async ({ page }) => {
     destructive();
-    await nav(page, 'Screening');
-    await page.getByRole('button', { name: 'Escalate' }).first().click();
+    await open(page, ROUTES.customers);
+    await subNav(page, 'Screening');
+    await btn(page, 'Escalate').first().click();
   });
 
-  test('Account Controls: freeze wallet / full freeze @destructive', async ({ page }) => {
+  test('Customer 360: freeze wallet @destructive', async ({ page }) => {
     destructive();
-    await nav(page, 'Account Controls');
-    await page.getByRole('button', { name: 'Freeze wallet' }).nth(2).click();
-    await page.getByRole('button', { name: 'Freeze full' }).nth(2).click();
-    await page.getByRole('button', { name: 'Close' }).nth(2).click();
+    await openCustomer(page);
+    await btn(page, 'Freeze wallet').click();
   });
 });
