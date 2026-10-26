@@ -1,0 +1,54 @@
+import type { Options } from '@wdio/types';
+import * as path from 'path';
+import '../../shared/config/env';
+
+/**
+ * Shared WebdriverIO config for the Rosabon Unified mobile app.
+ * Platform/cloud configs spread this and add capabilities.
+ *
+ * Suites map 1:1 to app modules so a Class B change can run a targeted sweep
+ * (QA Strategy §8): e.g. `--suite rwin`.
+ */
+export const sharedConfig: Options.Testrunner = {
+  runner: 'local',
+  tsConfigPath: path.resolve(__dirname, '../../tsconfig.json'),
+  specs: [path.resolve(__dirname, '../specs/**/*.spec.ts')],
+  suites: {
+    auth: ['../specs/auth/**/*.spec.ts'],
+    kyc: ['../specs/kyc/**/*.spec.ts'],
+    wallet: ['../specs/wallet/**/*.spec.ts'],
+    grow: ['../specs/grow/**/*.spec.ts'],
+    reap: ['../specs/reap/**/*.spec.ts'],
+    rwin: ['../specs/rwin/**/*.spec.ts'],
+    rtn: ['../specs/rtn/**/*.spec.ts'],
+    borrow: ['../specs/borrow/**/*.spec.ts'],
+    nano: ['../specs/nano/**/*.spec.ts'],
+    payday: ['../specs/payday/**/*.spec.ts'],
+    personal: ['../specs/personal-loan/**/*.spec.ts'],
+    publicSector: ['../specs/public-sector-loan/**/*.spec.ts'],
+    resilience: ['../specs/resilience/**/*.spec.ts'],
+  },
+  maxInstances: 1,
+  logLevel: 'warn',
+  bail: 0,
+  waitforTimeout: 15_000,
+  connectionRetryTimeout: 120_000,
+  connectionRetryCount: 2,
+  framework: 'mocha',
+  mochaOpts: { ui: 'bdd', timeout: 300_000, retries: 0 },
+  specFileRetries: 1,
+  reporters: [
+    'spec',
+    ['junit', {
+      outputDir: path.resolve(__dirname, '../../reports/mobile-junit'),
+      outputFileFormat: (opts: { cid: string }) => `results-${opts.cid}.xml`,
+      addFileAttribute: true,
+    }],
+  ],
+  afterTest: async function (test, _context, { passed }) {
+    if (!passed) {
+      const safe = test.title.replace(/[^a-z0-9]+/gi, '_').slice(0, 80);
+      await browser.saveScreenshot(path.resolve(__dirname, `../../reports/mobile-screens/${safe}.png`)).catch(() => undefined);
+    }
+  },
+};

@@ -1,0 +1,142 @@
+name: QA automation
+
+# QA Strategy §13: commit → shift-left API → shift-right UI on real devices → TestRail → Jira.
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      mobile_suite:
+        description: 'WDIO suite (auth, kyc, wallet, grow, reap, rwin, rtn, borrow, nano, payday, personal, publicSector, resilience) or "all"'
+        default: 'all'
+  schedule:
+    - cron: '0 1 * * 1-5' # nightly full regression, 02:00 WAT
+
+concurrency:
+  group: qa-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEST_ENV: ${{ vars.TEST_ENV || 'dev' }}
+  API_BASE_URL: ${{ vars.API_BASE_URL }}
+  ADMIN_BASE_URL: ${{ vars.ADMIN_BASE_URL }}
+  QA_HOOKS_BASE_URL: ${{ vars.QA_HOOKS_BASE_URL }}
+  QA_HOOKS_TOKEN: ${{ secrets.QA_HOOKS_TOKEN }}
+  TEST_OTP: ${{ secrets.TEST_OTP }}
+
+jobs:
+  static-and-oracle:
+    name: Type-check + calculation oracle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx playwright test --project=unit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: oracle-junit, path: reports/playwright-junit }
+
+  api:
+    name: Shift-left API contract
+    needs: static-and-oracle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx playwright test --project=api
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: api-junit, path: reports/playwright-junit }
+
+  admin:
+    name: Admin portal E2E
+    needs: api
+    runs-on: ubuntu-latest
+    env:
+      ADMIN_SUPER_ADMIN_EMAIL: ${{ secrets.ADMIN_SUPER_ADMIN_EMAIL }}
+      ADMIN_SUPER_ADMIN_PASSWORD: ${{ secrets.ADMIN_SUPER_ADMIN_PASSWORD }}
+      ADMIN_COMPLIANCE_EMAIL: ${{ secrets.ADMIN_COMPLIANCE_EMAIL }}
+      ADMIN_COMPLIANCE_PASSWORD: ${{ secrets.ADMIN_COMPLIANCE_PASSWORD }}
+      ADMIN_KYC_REVIEWER_EMAIL: ${{ secrets.ADMIN_KYC_REVIEWER_EMAIL }}
+      ADMIN_KYC_REVIEWER_PASSWORD: ${{ secrets.ADMIN_KYC_REVIEWER_PASSWORD }}
+      ADMIN_TREASURY_OFFICER_EMAIL: ${{ secrets.ADMIN_TREASURY_OFFICER_EMAIL }}
+      ADMIN_TREASURY_OFFICER_PASSWORD: ${{ secrets.ADMIN_TREASURY_OFFICER_PASSWORD }}
+      ADMIN_HEAD_OF_CRM_EMAIL: ${{ secrets.ADMIN_HEAD_OF_CRM_EMAIL }}
+      ADMIN_HEAD_OF_CRM_PASSWORD: ${{ secrets.ADMIN_HEAD_OF_CRM_PASSWORD }}
+      ADMIN_HEAD_OF_OPS_EMAIL: ${{ secrets.ADMIN_HEAD_OF_OPS_EMAIL }}
+      ADMIN_HEAD_OF_OPS_PASSWORD: ${{ secrets.ADMIN_HEAD_OF_OPS_PASSWORD }}
+      ADMIN_HEAD_OF_CREDIT_EMAIL: ${{ secrets.ADMIN_HEAD_OF_CREDIT_EMAIL }}
+      ADMIN_HEAD_OF_CREDIT_PASSWORD: ${{ secrets.ADMIN_HEAD_OF_CREDIT_PASSWORD }}
+      ADMIN_LOAN_ACCOUNT_OFFICER_EMAIL: ${{ secrets.ADMIN_LOAN_ACCOUNT_OFFICER_EMAIL }}
+      ADMIN_LOAN_ACCOUNT_OFFICER_PASSWORD: ${{ secrets.ADMIN_LOAN_ACCOUNT_OFFICER_PASSWORD }}
+      ADMIN_MARKETING_EMAIL: ${{ secrets.ADMIN_MARKETING_EMAIL }}
+      ADMIN_MARKETING_PASSWORD: ${{ secrets.ADMIN_MARKETING_PASSWORD }}
+      # …add the remaining personas from .env.example as repository secrets
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium firefox
+      - name: Smoke on PRs, full regression on main / nightly
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx playwright test --project=admin-chromium --grep "@smoke|@crit"
+          else
+            npx playwright test --project=admin-chromium --project=admin-firefox
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: admin-report, path: reports/ }
+
+  mobile-cloud:
+    name: Mobile on TestMu AI / LambdaTest real devices
+    needs: api
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      LT_USERNAME: ${{ secrets.LT_USERNAME }}
+      LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
+      LT_APP_ID_ANDROID: ${{ vars.LT_APP_ID_ANDROID }}
+      LT_APP_ID_IOS: ${{ vars.LT_APP_ID_IOS }}
+      LT_PARALLEL_SESSIONS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - name: Run WDIO suite
+        run: |
+          SUITE="${{ github.event.inputs.mobile_suite || 'all' }}"
+          if [ "$SUITE" = "all" ]; then npm run test:mobile:cloud; else npx wdio run mobile/config/wdio.lambdatest.conf.ts --suite "$SUITE"; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: mobile-report, path: reports/ }
+
+  testrail:
+    name: Publish results to TestRail
+    needs: [admin, mobile-cloud]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: results }
+      - name: Upload JUnit to TestRail (trcli)
+        env:
+          TR_HOST: ${{ vars.TESTRAIL_HOST }}
+          TR_USER: ${{ secrets.TESTRAIL_USER }}
+          TR_KEY: ${{ secrets.TESTRAIL_API_KEY }}
+          TR_PROJECT: ${{ vars.TESTRAIL_PROJECT }}
+        run: |
+          pip install trcli
+          for f in $(find results -name "*.xml"); do
+            trcli -y -h "$TR_HOST" --project "$TR_PROJECT" -u "$TR_USER" -k "$TR_KEY" \
+              parse_junit --title "CI ${{ github.run_number }} (${{ github.ref_name }})" \
+              --case-matcher name -f "$f" || true
+          done

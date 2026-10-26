@@ -1,0 +1,36 @@
+{
+  "name": "rosabon-unified-automation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Automation suite for the Rosabon Unified mobile app (WebdriverIO + Appium) and Admin Portal (Playwright), with an independent financial-calculation oracle.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "playwright test --project=unit",
+    "test:api": "playwright test --project=api",
+    "test:admin": "playwright test --project=admin-chromium",
+    "test:admin:smoke": "playwright test --project=admin-chromium --grep @smoke",
+    "test:admin:crit": "playwright test --project=admin-chromium --grep @crit",
+    "test:mobile:android": "wdio run mobile/config/wdio.android.conf.ts",
+    "test:mobile:ios": "wdio run mobile/config/wdio.ios.conf.ts",
+    "test:mobile:cloud": "wdio run mobile/config/wdio.lambdatest.conf.ts",
+    "test:mobile:smoke": "wdio run mobile/config/wdio.android.conf.ts --mochaOpts.grep @smoke",
+    "report:admin": "playwright show-report reports/playwright-html"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "@types/mocha": "10.0.9",
+    "@types/node": "22.9.0",
+    "@wdio/appium-service": "9.6.4",
+    "@wdio/cli": "9.6.4",
+    "@wdio/globals": "9.6.4",
+    "@wdio/junit-reporter": "9.6.3",
+    "@wdio/local-runner": "9.6.4",
+    "@wdio/mocha-framework": "9.6.4",
+    "@wdio/spec-reporter": "9.6.3",
+    "@wdio/types": "9.6.3",
+    "decimal.js": "10.4.3",
+    "dotenv": "16.4.5",
+    "ts-node": "10.9.2",
+    "typescript": "5.6.3"
+  }
+}
