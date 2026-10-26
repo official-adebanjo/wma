@@ -15,7 +15,8 @@
     "test:mobile:cloud": "wdio run mobile/config/wdio.lambdatest.conf.ts",
     "test:mobile:smoke": "wdio run mobile/config/wdio.android.conf.ts --mochaOpts.grep @smoke",
     "test:admin:dev": "playwright test --project=admin-dev",
-    "report:admin": "playwright show-report reports/playwright-html"
+    "report:admin": "playwright show-report reports/playwright-html",
+    "report:summary": "node scripts/build-summary.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.2",
