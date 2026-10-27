@@ -178,7 +178,8 @@ const areaRows = Object.entries(AREAS)
   })
   .join('');
 
-const findingCards = findings
+/** pub = public (Netlify) build: no screenshots, because they show customer names and contact details. */
+const findingCards = (pub) => findings
   .map((f, i) => `
     <article class="card finding">
       <header>
@@ -191,7 +192,7 @@ const findingCards = findings
         <dt>What we saw</dt><dd>${esc(f.saw)}</dd>
         <dt>What should happen</dt><dd>${esc(f.expected)}</dd>
       </dl>
-      ${f.shot ? `<details><summary>Show screenshot</summary><a href="${f.shot}" target="_blank" rel="noopener"><img src="${f.shot}" alt="Screenshot taken when problem ${i + 1} was found" loading="lazy"></a></details>` : ''}
+      ${f.shot && !pub ? `<details><summary>Show screenshot</summary><a href="${f.shot}" target="_blank" rel="noopener"><img src="${f.shot}" alt="Screenshot taken when problem ${i + 1} was found" loading="lazy"></a></details>` : ''}
     </article>`)
   .join('');
 
@@ -205,12 +206,13 @@ const notRunRows = tests
 
 /* ------------------------------------------------------------------ page */
 
-const html = `<!doctype html>
+const render = (pub) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin Portal Test Results</title>
+${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
 <style>
   :root {
     --bg: #f6f7f9; --surface: #ffffff; --text: #1d2433; --muted: #5d6677; --line: #e3e6ec;
@@ -304,7 +306,7 @@ const html = `<!doctype html>
 
   <h2>Problems found</h2>
   <p class="muted">These did not behave the way the product documents say they should. “High priority” means it affects customers’ money or a compliance requirement.</p>
-  ${findingCards || '<p>No problems were found.</p>'}
+  ${findingCards(pub) || '<p>No problems were found.</p>'}
 
   <h2>Differences from the documents (not failures)</h2>
   <p class="muted">These work, but don’t match what the specifications say. Product should confirm which is correct.</p>
@@ -317,8 +319,9 @@ const html = `<!doctype html>
   <ul class="clean">${notRunRows || '<li>Everything was run.</li>'}</ul>
 
   <h2>Need the technical detail?</h2>
-  <p class="muted">The full technical report has every step of every check, with screenshots, recordings and timings.</p>
-  <a class="tech" href="report.html">Open the technical report →</a>
+  ${pub
+    ? '<p class="muted">Screenshots and the full technical report (every step, with recordings and timings) are kept internally because they contain customer details and system access data. Ask the QA team for access.</p>'
+    : '<p class="muted">The full technical report has every step of every check, with screenshots, recordings and timings.</p>\n  <a class="tech" href="report.html">Open the technical report →</a>'}
 
   <footer>
     Generated automatically from the test results by <code>scripts/build-summary.js</code>. Sources: Admin PRD, Investment and Loan product specifications, KYC specification, QA Strategy.
@@ -328,6 +331,13 @@ const html = `<!doctype html>
 </html>
 `;
 
-fs.writeFileSync(path.join(outDir, 'index.html'), html);
+fs.writeFileSync(path.join(outDir, 'index.html'), render(false));
 console.log(`Wrote ${path.relative(root, path.join(outDir, 'index.html'))} — ${passed} passed, ${problems.length} problems, ${notRun} not run`);
 console.log(`Technical report: ${path.relative(root, path.join(outDir, 'report.html'))}`);
+
+// Public site for Netlify: the summary page only — no screenshots, traces, videos or technical report.
+const siteDir = path.join(root, 'reports/site');
+fs.rmSync(siteDir, { recursive: true, force: true });
+fs.mkdirSync(siteDir, { recursive: true });
+fs.writeFileSync(path.join(siteDir, 'index.html'), render(true));
+console.log(`Public site (Netlify): ${path.relative(root, siteDir)}/index.html`);

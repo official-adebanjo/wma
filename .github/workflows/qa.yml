@@ -140,3 +140,40 @@ jobs:
               parse_junit --title "CI ${{ github.run_number }} (${{ github.ref_name }})" \
               --case-matcher name -f "$f" || true
           done
+
+  dev-portal-report:
+    name: Dev Admin Portal run → public summary on Netlify
+    # Live dev portal: not on PRs (it creates approval requests on the shared dev system).
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      DEV_ADMIN_URL: ${{ vars.DEV_ADMIN_URL }}
+      DEV_ADMIN_EMAIL: ${{ secrets.DEV_ADMIN_EMAIL }}
+      DEV_ADMIN_PASSWORD: ${{ secrets.DEV_ADMIN_PASSWORD }}
+      DEV_ALLOW_DESTRUCTIVE: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run dev portal suite
+        continue-on-error: true # failures are findings — still publish the summary
+        env:
+          PW_TEST_HTML_REPORT_OPEN: never
+          PLAYWRIGHT_HTML_REPORT: reports/playwright-html
+          PLAYWRIGHT_JSON_OUTPUT_NAME: reports/dev-final.json
+        run: npx playwright test --project=admin-dev --reporter=json,html
+      - name: Build summary (internal + public)
+        if: always()
+        run: npm run report:summary
+      - name: Keep the full report internal (GitHub artifact, not Netlify)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: dev-portal-report, path: reports/summary, retention-days: 30 }
+      - name: Deploy public summary to Netlify
+        if: always()
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: npx --yes netlify-cli@17.38.1 deploy --dir=reports/site --prod --message "QA run ${{ github.run_number }}"
