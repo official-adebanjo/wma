@@ -105,7 +105,12 @@ const SKIP_REASONS = [
 
 /* ================================================================== MOBILE — plain-English vocabulary */
 
-const MOBILE_CONTEXT = 'Android emulator (Pixel 9a, Android 17) · app build 1.1.55 of 29 October 2026 · dev environment';
+/** Header line for the mobile tab, from what the run recorded (device from Appium, app from MOBILE_APP_LABEL). */
+const mobileContext = (rows) => {
+  const device = rows.find((r) => r.device)?.device;
+  const app = rows.find((r) => r.app)?.app;
+  return [device ? `Device: ${device}` : 'Android device', app ? `app ${app}` : null, 'dev environment'].filter(Boolean).join(' · ');
+};
 
 const MOBILE_AREAS = {
   'persona-login.spec.ts': { name: 'Signing in', what: 'Each test customer can sign in with email and password, or with phone number and passcode.' },
@@ -275,7 +280,7 @@ function readMobile() {
     id: 'mobile',
     label: 'Mobile app',
     heading: 'Mobile App Test Results',
-    context: MOBILE_CONTEXT,
+    context: mobileContext(rows),
     runText: `Automated check run on ${fmt(times[0])} (WAT) · took about ${mins} minutes`,
     intro: 'An automated tester used the Rosabon app on an Android phone the way a customer would — signing in, moving between screens and checking what they show against the product documents. Nothing was booked, borrowed or paid during these checks.',
     tests, findings, extraCount: MOBILE_EXTRA_FINDINGS.length,

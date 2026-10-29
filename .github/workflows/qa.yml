@@ -141,10 +141,100 @@ jobs:
               --case-matcher name -f "$f" || true
           done
 
-  dev-portal-report:
-    name: Dev Admin Portal run → public summary on Netlify
-    # Live dev portal: not on PRs (it creates approval requests on the shared dev system).
+  mobile-dev:
+    name: Mobile app on an Android emulator (dev build)
+    # Uses shared dev customer accounts — not on PRs. Results feed the summary page's Mobile app tab.
     if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      MOBILE_ID_STRATEGY: resource-id
+      APP_PACKAGE: com.optisoft.rosabon
+      ANDROID_APP_PATH: ./apps/rosabon-dev.apk
+      MOBILE_HOLD_PERSONAS: ${{ vars.MOBILE_HOLD_PERSONAS }}
+      MOBILE_SUITES: ${{ (github.event.inputs.mobile_suite && github.event.inputs.mobile_suite != 'all') && github.event.inputs.mobile_suite || 'auth navigation' }}
+      CUSTOMER_T1_EMAIL: ${{ secrets.CUSTOMER_T1_EMAIL }}
+      CUSTOMER_T1_PASSWORD: ${{ secrets.CUSTOMER_T1_PASSWORD }}
+      CUSTOMER_T1_PHONE: ${{ secrets.CUSTOMER_T1_PHONE }}
+      CUSTOMER_T1_PIN: ${{ secrets.CUSTOMER_T1_PIN }}
+      CUSTOMER_T2_EMAIL: ${{ secrets.CUSTOMER_T2_EMAIL }}
+      CUSTOMER_T2_PASSWORD: ${{ secrets.CUSTOMER_T2_PASSWORD }}
+      CUSTOMER_T2_PHONE: ${{ secrets.CUSTOMER_T2_PHONE }}
+      CUSTOMER_T2_PIN: ${{ secrets.CUSTOMER_T2_PIN }}
+      CUSTOMER_T3_EMAIL: ${{ secrets.CUSTOMER_T3_EMAIL }}
+      CUSTOMER_T3_PASSWORD: ${{ secrets.CUSTOMER_T3_PASSWORD }}
+      CUSTOMER_T3_PHONE: ${{ secrets.CUSTOMER_T3_PHONE }}
+      CUSTOMER_T3_PIN: ${{ secrets.CUSTOMER_T3_PIN }}
+      QA_HOOKS_BASE_URL: ${{ vars.QA_HOOKS_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      # The APK is too large for git: CI downloads it from a link kept in the MOBILE_APK_URL secret
+      # (e.g. a signed storage URL or the mobile team's build artifact link).
+      - name: Fetch the app build
+        id: apk
+        env:
+          MOBILE_APK_URL: ${{ secrets.MOBILE_APK_URL }}
+          MOBILE_APK_TOKEN: ${{ secrets.MOBILE_APK_TOKEN }}
+        run: |
+          if [ -z "$MOBILE_APK_URL" ]; then
+            echo "::warning::MOBILE_APK_URL secret is not set — mobile run skipped; the Mobile app tab will show 'No results yet'."
+            echo "available=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          mkdir -p apps
+          if [ -n "$MOBILE_APK_TOKEN" ]; then AUTH=(-H "Authorization: Bearer $MOBILE_APK_TOKEN"); else AUTH=(); fi
+          curl -fsSL --retry 3 "${AUTH[@]}" -o apps/rosabon-dev.apk "$MOBILE_APK_URL"
+          AAPT="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2"
+          VER="$("$AAPT" dump badging apps/rosabon-dev.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")"
+          CODE="$("$AAPT" dump badging apps/rosabon-dev.apk | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")"
+          echo "MOBILE_APP_LABEL=build $VER ($CODE)" >> "$GITHUB_ENV"
+          echo "available=true" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        if: steps.apk.outputs.available == 'true'
+        with: { node-version: 20, cache: npm }
+      - uses: actions/setup-java@v4
+        if: steps.apk.outputs.available == 'true'
+        with: { distribution: temurin, java-version: 17 }
+      - name: Install dependencies, Appium and the Android driver
+        if: steps.apk.outputs.available == 'true'
+        run: |
+          npm ci
+          npm i -g appium@3.9.0
+          appium driver install uiautomator2@8.7.3
+      - name: Enable KVM (hardware-accelerated emulator)
+        if: steps.apk.outputs.available == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run mobile suites on the emulator
+        if: steps.apk.outputs.available == 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          disk-size: 8G
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot-save
+          disable-animations: true
+          script: bash scripts/ci-mobile-run.sh
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.apk.outputs.available == 'true'
+        with:
+          name: mobile-results
+          path: |
+            reports/mobile-results
+            reports/mobile-screens
+          retention-days: 30
+
+  dev-portal-report:
+    name: Dev Admin Portal run → public summary on Netlify (Admin + Mobile tabs)
+    # Live dev portal: not on PRs (it creates approval requests on the shared dev system).
+    # Waits for the mobile run so both tabs are filled; still publishes if that job fails or is skipped.
+    needs: mobile-dev
+    if: always() && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     env:
       DEV_ADMIN_URL: ${{ vars.DEV_ADMIN_URL }}
@@ -164,8 +254,15 @@ jobs:
           PLAYWRIGHT_HTML_REPORT: reports/playwright-html
           PLAYWRIGHT_JSON_OUTPUT_NAME: reports/dev-final.json
         run: npx playwright test --project=admin-dev --reporter=json,html
+      - name: Get the mobile results (if the mobile run produced any)
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: { name: mobile-results, path: reports }
       - name: Build summary (internal + public)
         if: always()
+        env:
+          MOBILE_HOLD_PERSONAS: ${{ vars.MOBILE_HOLD_PERSONAS }}
         run: npm run report:summary
       - name: Keep the full report internal (GitHub artifact, not Netlify)
         if: always()
