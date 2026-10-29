@@ -5,7 +5,8 @@
  *   index.html    — a plain-English results page for non-technical readers, with an
  *                   Admin portal | Mobile app switch
  *   screenshots/  — the screenshot taken at the moment each admin problem was found
- * and reports/site/index.html — the same page for Netlify, without screenshots or technical report.
+ * and site/index.html — the same page for Netlify / Vercel, without screenshots or technical report.
+ * site/ is committed (reports/ is git-ignored) so git-linked hosts can publish it without a build.
  *
  *   node scripts/build-summary.js [admin-results.json]   (default: reports/dev-final.json)
  *
@@ -134,7 +135,7 @@ const MOBILE_FINDINGS = [
     severity: 'Medium',
     owner: 'Engineering (mobile app)',
     impact: 'Customers who type their number the usual way (080…) are stuck on the sign-in screen with no explanation.',
-    saw: 'Entering a number like 0810 634 2311 and tapping Continue does nothing — no next screen and no error. Only the +234 form of the same number works.',
+    saw: 'Entering a mobile number in the usual 080… form and tapping Continue does nothing — no next screen and no error. Only the +234 form of the same number works.',
     expected: 'The app should accept the usual Nigerian format, or clearly say which format it needs.',
   },
   {
@@ -551,8 +552,7 @@ console.log(`  Mobile app:   ${summarise(mobile)}`);
 if (admin) console.log(`Technical report: ${path.relative(root, path.join(outDir, 'report.html'))}`);
 
 // Public site for Netlify: the summary page only — no screenshots, traces, videos or technical report.
-const siteDir = path.join(root, 'reports/site');
-fs.rmSync(siteDir, { recursive: true, force: true });
+const siteDir = path.join(root, 'site');
 fs.mkdirSync(siteDir, { recursive: true });
 fs.writeFileSync(path.join(siteDir, 'index.html'), render(true));
-console.log(`Public site (Netlify): ${path.relative(root, siteDir)}/index.html`);
+console.log(`Public site (Netlify / Vercel — commit it to publish): ${path.relative(root, siteDir)}/index.html`);

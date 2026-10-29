@@ -236,6 +236,8 @@ jobs:
     needs: mobile-dev
     if: always() && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # commits the refreshed site/index.html, which Netlify / Vercel deploy from git
     env:
       DEV_ADMIN_URL: ${{ vars.DEV_ADMIN_URL }}
       DEV_ADMIN_EMAIL: ${{ secrets.DEV_ADMIN_EMAIL }}
@@ -268,9 +270,15 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with: { name: dev-portal-report, path: reports/summary, retention-days: 30 }
-      - name: Deploy public summary to Netlify
+      # Netlify / Vercel are linked to this repo and publish site/ (see netlify.toml, vercel.json).
+      # Committing the refreshed page triggers their deploy; commits made with GITHUB_TOKEN don't re-run this workflow.
+      - name: Publish the public summary (commit site/index.html)
         if: always()
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        run: npx --yes netlify-cli@17.38.1 deploy --dir=reports/site --prod --message "QA run ${{ github.run_number }}"
+        run: |
+          if git diff --quiet -- site/index.html; then echo "Public summary unchanged."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/index.html
+          git commit -m "QA results: refresh public summary (run ${{ github.run_number }})"
+          for i in 1 2 3; do git pull --rebase --autostash && git push && exit 0; sleep 5; done
+          echo "::error::Could not push the refreshed summary"; exit 1

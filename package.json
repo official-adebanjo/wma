@@ -17,7 +17,7 @@
     "test:admin:dev": "playwright test --project=admin-dev",
     "report:admin": "playwright show-report reports/playwright-html",
     "report:summary": "node scripts/build-summary.js",
-    "deploy:report": "npm run report:summary && npx --yes netlify-cli@17.38.1 deploy --dir=reports/site --prod --message \"QA summary\""
+    "deploy:report": "npm run report:summary && npx --yes netlify-cli@17.38.1 deploy --dir=site --prod --message \"QA summary\""
   },
   "devDependencies": {
     "@playwright/test": "^1.48.2",

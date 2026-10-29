@@ -86,3 +86,12 @@ docs/            test-hook contract, selector contract, traceability
 ## Traceability
 
 [docs/TRACEABILITY.md](docs/TRACEABILITY.md) maps each source document section to its spec files, risk level and test count.
+
+## Publishing the results page (Netlify or Vercel)
+
+`npm run report:summary` builds two copies of the plain-English results page (Admin portal | Mobile app tabs):
+
+- `reports/summary/index.html` is the internal copy, with screenshots and a link to the technical report. It's git-ignored.
+- `site/index.html` is the public copy, with no screenshots, names or emails. It **is committed**.
+
+Netlify (`netlify.toml`) and Vercel (`vercel.json`) both publish `site/` straight from the repo with no build step. In either host, import the GitHub repo and keep the defaults; the config files set everything. CI refreshes and commits `site/index.html` after each main or nightly run, and the host redeploys on that commit. To publish a local run, run `npm run report:summary`, then commit `site/index.html` and push.
