@@ -32,7 +32,7 @@ export class QaHooks {
 
   /** Customer with wallet balance at a given KYC tier. Returns credentials for login. */
   seedCustomer(opts: { tier: 1 | 2 | 3; walletBalance?: number; accountType?: 'INDIVIDUAL' | 'CORPORATE'; salaryDetected?: boolean; monthlySalary?: number; employer?: string }) {
-    return this.call<{ customerId: string; phone: string; pin: string; accessToken: string }>('/seed/customer', opts);
+    return this.call<{ customerId: string; email: string; password: string; phone: string; pin: string; accessToken: string }>('/seed/customer', opts);
   }
 
   setWalletBalance(customerId: string, balance: number) {

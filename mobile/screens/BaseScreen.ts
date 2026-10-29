@@ -2,6 +2,7 @@ import { $, browser, driver, expect } from '@wdio/globals';
 import type { ChainablePromiseElement } from 'webdriverio';
 import Decimal from 'decimal.js';
 import { parseNaira } from '../../shared/calc/money';
+import { LIVE_IDS, liveSelector } from './live-ids';
 
 /**
  * Selector strategy.
@@ -16,6 +17,7 @@ import { parseNaira } from '../../shared/calc/money';
  * to resource-id instead, set MOBILE_ID_STRATEGY=resource-id.
  */
 export function byId(testId: string): ChainablePromiseElement {
+  if (driver.isAndroid && LIVE_IDS[testId]) return $(liveSelector(LIVE_IDS[testId]));
   if (driver.isAndroid && process.env.MOBILE_ID_STRATEGY === 'resource-id') {
     return $(`android=new UiSelector().resourceIdMatches(".*${testId.replace(/\./g, '\\\\.')}$")`);
   }
@@ -49,6 +51,13 @@ export abstract class BaseScreen {
   protected async tap(id: string): Promise<void> {
     const e = byId(id);
     await e.waitForDisplayed();
+    // RN views carrying the testID are often not `clickable` themselves (the touchable is a
+    // parent/child), and UiAutomator element clicks on them are dropped — tap the centre instead.
+    if (driver.isAndroid && (await e.getAttribute('clickable')) !== 'true') {
+      const { x, y, width, height } = await driver.getElementRect(await e.elementId);
+      await driver.execute('mobile: clickGesture', { x: Math.round(x + width / 2), y: Math.round(y + height / 2) });
+      return;
+    }
     await e.click();
   }
 

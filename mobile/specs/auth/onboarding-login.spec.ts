@@ -5,7 +5,7 @@ import { QaHooks } from '../../../shared/api/qa-hooks';
 import { Tag, title } from '../../../shared/support/tags';
 import { requireHooks, loginAs } from '../../helpers/session';
 import {
-  AccountBlockedScreen, CreatePinScreen, LoginScreen, OtpScreen, SignupScreen, WelcomeScreen,
+  AccountBlockedScreen, CreatePinScreen, Credentials, LoginScreen, OtpScreen, SignupScreen, WelcomeScreen,
   backgroundApp, isLoggedIn, relaunchApp,
 } from '../../screens/common/AuthScreens';
 import { KycHubScreen } from '../../screens/kyc/KycScreens';
@@ -130,14 +130,15 @@ describe('Auth › Onboarding to Tier 1', () => {
 
 describe('Auth › Login and session', () => {
   let hooks: QaHooks;
-  let creds: { phone: string; pin: string; customerId: string };
+  let seeded: Awaited<ReturnType<QaHooks['seedCustomer']>>;
   const login = new LoginScreen();
+  const byEmail = (): Credentials => ({ email: seeded.email, password: seeded.password });
+  const byPhone = (): Credentials => ({ phone: seeded.phone, pin: seeded.pin });
 
   beforeEach(async function () {
     requireHooks(this);
     hooks = await QaHooks.create();
-    const c = await hooks.seedCustomer({ tier: 2, walletBalance: 10_000 });
-    creds = { phone: c.phone, pin: c.pin, customerId: c.customerId };
+    seeded = await hooks.seedCustomer({ tier: 2, walletBalance: 10_000 });
     await relaunchApp();
     const welcome = new WelcomeScreen();
     if (await welcome.isShown()) await welcome.tapLogin();
@@ -148,27 +149,47 @@ describe('Auth › Login and session', () => {
     await hooks?.dispose();
   });
 
-  it(title('valid credentials log in', Tag.crit, Tag.smoke, Tag.spec('QAStrategy§14')), async () => {
-    await login.login(creds.phone, creds.pin);
+  it(title('valid email + password logs in', Tag.crit, Tag.smoke, Tag.spec('QAStrategy§14')), async () => {
+    await login.login(byEmail());
     await expect(await isLoggedIn()).toBe(true);
   });
 
-  it(title('wrong PIN shows generic error (no account enumeration)', Tag.crit, Tag.spec('QAStrategy§17')), async () => {
-    await login.login(creds.phone, creds.pin === '0000' ? '1111' : '0000');
+  it(title('valid phone + passcode/PIN logs in', Tag.crit, Tag.smoke, Tag.spec('QAStrategy§14')), async () => {
+    await login.login(byPhone());
+    await expect(await isLoggedIn()).toBe(true);
+  });
+
+  it(title('wrong password shows generic error (no account enumeration)', Tag.crit, Tag.spec('QAStrategy§17')), async () => {
+    await login.login({ email: seeded.email, password: `${seeded.password}x` });
     const err = await login.errorText();
     await expect(err).toMatch(/incorrect|invalid/i);
     await expect(err).not.toMatch(/not registered|no account/i);
   });
 
-  it(title('account locks after repeated wrong PINs', Tag.crit, Tag.spec('QAStrategy§17')), async () => {
-    for (let i = 0; i < 5; i++) await login.login(creds.phone, '9999');
-    await expect(await login.errorText()).toMatch(/locked|too many/i);
-    await login.login(creds.phone, creds.pin);
+  it(title('wrong PIN shows generic error (no account enumeration)', Tag.crit, Tag.spec('QAStrategy§17')), async () => {
+    await login.login({ phone: seeded.phone, pin: seeded.pin === '0000' ? '1111' : '0000' });
+    const err = await login.errorText();
+    await expect(err).toMatch(/incorrect|invalid/i);
+    await expect(err).not.toMatch(/not registered|no account/i);
+  });
+
+  // Live build: 4 attempts ("Incorrect passcode. 3 attempt(s) left." after the first), on the same screen.
+  it(title('account locks after repeated wrong passwords — and the phone route is locked too', Tag.crit, Tag.spec('QAStrategy§17')), async () => {
+    const wrong = `${seeded.password}x`;
+    await login.login({ email: seeded.email, password: wrong });
+    await expect(await login.errorText()).toMatch(/3 attempt/i);
+    for (let i = 0; i < 4; i++) await login.retryPassword(wrong);
+    await expect(await login.errorText()).toMatch(/locked|too many|0 attempt/i);
+    await relaunchApp();
+    await loginAs(byEmail()).catch(() => undefined);
+    await expect(await isLoggedIn()).toBe(false);
+    await relaunchApp();
+    await loginAs(byPhone()).catch(() => undefined);
     await expect(await isLoggedIn()).toBe(false);
   });
 
   it(title('session survives short backgrounding but requires re-auth after relaunch', Tag.high, Tag.spec('QAStrategy§19')), async () => {
-    await loginAs(creds);
+    await loginAs(byEmail());
     await backgroundApp(5);
     await expect(await isLoggedIn()).toBe(true);
     await relaunchApp();
@@ -176,8 +197,8 @@ describe('Auth › Login and session', () => {
   });
 
   it(title('account frozen by Compliance blocks login with support message', Tag.crit, Tag.spec('AdminPRD:Screening')), async () => {
-    await hooks.setAccountRestriction({ customerId: creds.customerId, restriction: 'FROZEN' });
-    await login.login(creds.phone, creds.pin);
+    await hooks.setAccountRestriction({ customerId: seeded.customerId, restriction: 'FROZEN' });
+    await login.login(byEmail());
     const blocked = new AccountBlockedScreen();
     await blocked.waitForShown();
     await expect(await blocked.message()).toMatch(/under review.*contact support/i);
