@@ -619,7 +619,27 @@ if (admin) console.log(`Technical report: ${path.relative(root, path.join(outDir
 
 // Public site for Netlify: the summary page only — no screenshots, traces, videos or technical report.
 const siteDir = path.join(root, 'site');
-fs.mkdirSync(siteDir, { recursive: true });
-fs.writeFileSync(path.join(siteDir, 'index.html'), render(true));
-writeIcons(siteDir);
-console.log(`Public site (Netlify / Vercel — commit it to publish): ${path.relative(root, siteDir)}/index.html`);
+const sitePage = path.join(siteDir, 'index.html');
+
+// PUBLISH_GUARD=1 (CI): never replace a good public page with a broken run.
+// No admin check passing means sign-in or setup failed (e.g. missing DEV_ADMIN_* secrets), and a run
+// without mobile results must not blank out mobile results that are already published.
+function publishBlockers() {
+  const blockers = [];
+  if (!admin) blockers.push('no admin results were produced');
+  else if (!count('passed', admin.tests)) blockers.push('no admin check passed: sign-in or setup likely failed (check DEV_ADMIN_URL, DEV_ADMIN_EMAIL, DEV_ADMIN_PASSWORD)');
+  const current = fs.existsSync(sitePage) ? fs.readFileSync(sitePage, 'utf8') : '';
+  if (!mobile && current.includes('id="panel-mobile"') && !current.includes(tabs[1].empty)) {
+    blockers.push('no mobile results were produced and the published page already has some (check MOBILE_APK_URL)');
+  }
+  return blockers;
+}
+const blockers = process.env.PUBLISH_GUARD === '1' ? publishBlockers() : [];
+if (blockers.length) {
+  for (const b of blockers) console.log(`${process.env.GITHUB_ACTIONS ? '::warning::' : ''}Public page kept as it was: ${b}`);
+} else {
+  fs.mkdirSync(siteDir, { recursive: true });
+  fs.writeFileSync(sitePage, render(true));
+  writeIcons(siteDir);
+  console.log(`Public site (Netlify / Vercel — commit it to publish): ${path.relative(root, siteDir)}/index.html`);
+}

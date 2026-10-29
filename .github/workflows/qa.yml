@@ -265,6 +265,7 @@ jobs:
         if: always()
         env:
           MOBILE_HOLD_PERSONAS: ${{ vars.MOBILE_HOLD_PERSONAS }}
+          PUBLISH_GUARD: '1' # keeps the published page when admin sign-in failed or mobile produced nothing
         run: npm run report:summary
       - name: Keep the full report internal (GitHub artifact, not Netlify)
         if: always()
