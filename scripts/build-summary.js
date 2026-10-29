@@ -22,6 +22,23 @@ const resultsFile = path.resolve(root, process.argv[2] || 'reports/dev-final.jso
 const mobileResultsDir = path.join(root, 'reports/mobile-results');
 const htmlReportDir = path.join(root, 'reports/playwright-html');
 const outDir = path.join(root, 'reports/summary');
+const assetsDir = path.join(root, 'report-assets'); // favicons (scripts/make-favicons.js)
+
+/** Copy the icons next to a built page and write its web manifest ("Add to home screen"). */
+function writeIcons(dir) {
+  for (const f of ['favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png']) {
+    if (fs.existsSync(path.join(assetsDir, f))) fs.copyFileSync(path.join(assetsDir, f), path.join(dir, f));
+  }
+  fs.writeFileSync(path.join(dir, 'site.webmanifest'), JSON.stringify({
+    name: 'Rosabon Test Results', short_name: 'Test Results', start_url: './', display: 'standalone',
+    background_color: '#f6f7f9', theme_color: '#1f3a6d',
+    icons: [
+      { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+      { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
+    ],
+  }, null, 2) + '\n');
+}
 
 /* ================================================================== ADMIN — plain-English vocabulary */
 
@@ -419,6 +436,12 @@ const render = (pub) => `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rosabon Test Results</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#1f3a6d" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11151c" media="(prefers-color-scheme: dark)">
 ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
 <style>
   :root {
@@ -588,6 +611,7 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
 
 const summarise = (d) => (d ? `${count('passed', d.tests)} passed, ${count('problem', d.tests)} problems, ${count('not-run', d.tests)} not run` : 'no results');
 fs.writeFileSync(path.join(outDir, 'index.html'), render(false));
+writeIcons(outDir);
 console.log(`Wrote ${path.relative(root, path.join(outDir, 'index.html'))}`);
 console.log(`  Admin portal: ${summarise(admin)}`);
 console.log(`  Mobile app:   ${summarise(mobile)}`);
@@ -597,4 +621,5 @@ if (admin) console.log(`Technical report: ${path.relative(root, path.join(outDir
 const siteDir = path.join(root, 'site');
 fs.mkdirSync(siteDir, { recursive: true });
 fs.writeFileSync(path.join(siteDir, 'index.html'), render(true));
+writeIcons(siteDir);
 console.log(`Public site (Netlify / Vercel — commit it to publish): ${path.relative(root, siteDir)}/index.html`);
