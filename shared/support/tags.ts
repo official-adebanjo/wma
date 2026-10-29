@@ -58,6 +58,7 @@ export const openQuestions: Record<string, { summary: string; defaultAssumed: st
   // days used; Personal & Public Sector Model A (monthly equal, flat) / Model B (monthly reducing); early payoff =
   // remaining principal + current month interest, no penalty. Still open below:
   'L-*': { summary: 'Loan rules still not in any spec: Nano streak reset on late repayment, upfront fee deduction at disbursement, out-of-cycle allocation', defaultAssumed: 'See @open:L-… tagged tests', confirmed: false },
+  'TIER-PROGRESS': { summary: 'Home "Complete your profile" shows 2/3 (1 identity step left) for the Tier 3 dev persona — persona not Tier 3, or card not tied to tier?', defaultAssumed: 'Tier 3 ⇒ all steps done', confirmed: false },
   'L-PERSONAL-TIER': { summary: 'Personal Loan minimum KYC tier not stated in LoanSpec', defaultAssumed: 'Tier 2', confirmed: false },
   'L-RATE-BASIS': { summary: 'Loan detail "INTEREST RATE x%" — per month (spec examples) or per annum? Live Model A loan #169 matches neither reading', defaultAssumed: 'Per month, as in LoanSpec §4.3', confirmed: false },
   'L-LIQUIDATION-CHARGE': { summary: 'Admin Personal/Public Sector forms carry a "Liquidation charge %" (default 3%) but LoanSpec §4.1 says early repayment has no penalty', defaultAssumed: 'No penalty (spec)', confirmed: false },

@@ -1,4 +1,6 @@
-import { BaseScreen, byId } from '../BaseScreen';
+import Decimal from 'decimal.js';
+import { parseNaira } from '../../../shared/calc/money';
+import { BaseScreen, allById, byId, driver, swipeUp } from '../BaseScreen';
 
 export type Tab = 'home' | 'grow' | 'borrow' | 'wallet' | 'profile';
 
@@ -8,21 +10,76 @@ export class TabBar extends BaseScreen {
 }
 
 /** Grow tab — investment product tiles (REAP / RWIN / RTN) and discovery banner. */
+export type ActivePlan = { name: string; productCode: string; amount: Decimal; nextPayoutDays: number | null; ratePctPa: Decimal | null };
+
+/** Live row content-desc: "Adebanjo Test (RWIN_2_0), ₦10,000.00, Next Payout: 57 days, 14% p.a." */
+export function parseActivePlan(desc: string): ActivePlan {
+  const m = desc.match(/^(.*?)\s*\(([^)]+)\),\s*(₦[\d,.]+)(?:,\s*Next Payout:\s*(\d+)\s*days?)?(?:,\s*([\d.]+)%\s*p\.a\.)?/i);
+  if (!m) throw new Error(`Unrecognised active-plan row: "${desc}"`);
+  return {
+    name: m[1], productCode: m[2], amount: parseNaira(m[3]),
+    nextPayoutDays: m[4] ? Number(m[4]) : null, ratePctPa: m[5] ? new Decimal(m[5]) : null,
+  };
+}
+
 export class GrowHomeScreen extends BaseScreen {
   protected readonly root = 'grow.home.screen';
-  openTile(product: 'reap' | 'rwin' | 'rtn') { return this.tap(`grow.home.tile.${product}`); }
+  openTile(product: 'reap' | 'rwin' | 'rtn') { return this.tap(`grow.home.tile.${product}.open`); }
+  tileShown(product: 'reap' | 'rwin' | 'rtn') { return this.exists(`grow.home.tile.${product}`); }
   tileMetric(product: 'reap' | 'rwin' | 'rtn') { return this.text(`grow.home.tile.${product}.metric`); }
   tileHasNewBadge(product: 'reap' | 'rwin' | 'rtn') { return this.exists(`grow.home.tile.${product}.newBadge`); }
   bannerShown() { return this.exists('grow.home.banner'); }
   tapBanner() { return this.tap('grow.home.banner'); }
+  totalCapital() { return this.amount('grow.home.totalCapital'); }
+  accruedText() { return this.text('grow.home.accrued'); }
+  /** The "Active Plans (n)" header count. */
+  async activePlanCount(): Promise<number> {
+    await this.scrollTo('grow.home.activePlans.header');
+    return Number((await this.text('grow.home.activePlans.header')).match(/\((\d+)\)/)?.[1] ?? NaN);
+  }
+  /**
+   * Active plan rows visible after scrolling to the end of the page. Rows can be identical
+   * (same name/amount/days), so they can't be de-duplicated across scroll positions —
+   * callers compare the result length with activePlanCount() to know whether it's complete.
+   */
+  async activePlansAtEnd(): Promise<ActivePlan[]> {
+    let prev = '';
+    for (let i = 0; i < 10; i++) {
+      const src = await driver.getPageSource();
+      if (src === prev) break;
+      prev = src;
+      await swipeUp();
+    }
+    const rows = await allById('grow.home.activePlan.row');
+    const out: ActivePlan[] = [];
+    for (const r of rows) out.push(parseActivePlan(await r.getAttribute('content-desc')));
+    return out;
+  }
 }
 
-/** Borrow tab — loan product tiles. */
+export type LoanTile = 'nano' | 'payday' | 'personal' | 'publicSector';
+
+/** Borrow tab — loan product tiles (names come from Admin product setup). */
 export class BorrowHomeScreen extends BaseScreen {
   protected readonly root = 'borrow.home.screen';
-  openTile(product: 'nano' | 'payday' | 'personal' | 'publicSector') { return this.tap(`borrow.home.tile.${product}`); }
-  tileShown(product: 'nano' | 'payday' | 'personal' | 'publicSector') { return this.exists(`borrow.home.tile.${product}`); }
+  openTile(product: LoanTile) { return this.tap(`borrow.home.tile.${product}`); }
+  async tileShown(product: LoanTile) {
+    if (await this.exists(`borrow.home.tile.${product}`)) return true;
+    await swipeUp();
+    return this.exists(`borrow.home.tile.${product}`);
+  }
   tileStreak() { return this.text('borrow.home.tile.nano.streak'); }
+  /** content-desc of every visible tile: "<product name>, <tagline>". */
+  async tileLabels(): Promise<string[]> {
+    const out: string[] = [];
+    for (const t of await allById('borrow.home.tile.any')) out.push(await t.getAttribute('content-desc'));
+    return out;
+  }
+  recommendedShown() { return this.exists('borrow.home.recommended.title'); }
+  recommendedTitle() { return this.text('borrow.home.recommended.title'); }
+  recommendedSubtitle() { return this.text('borrow.home.recommended.subtitle'); }
+  applyRecommended() { return this.tap('borrow.home.recommended.apply'); }
+  groupShown(g: 'fastCash' | 'longTerm') { return this.exists(`borrow.home.group.${g}`); }
 }
 
 export class SearchScreen extends BaseScreen {

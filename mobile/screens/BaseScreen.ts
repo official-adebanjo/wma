@@ -1,4 +1,4 @@
-import { $, browser, driver, expect } from '@wdio/globals';
+import { $, $$, browser, driver, expect } from '@wdio/globals';
 import type { ChainablePromiseElement } from 'webdriverio';
 import Decimal from 'decimal.js';
 import { parseNaira } from '../../shared/calc/money';
@@ -22,6 +22,15 @@ export function byId(testId: string): ChainablePromiseElement {
     return $(`android=new UiSelector().resourceIdMatches(".*${testId.replace(/\./g, '\\\\.')}$")`);
   }
   return $(`~${testId}`);
+}
+
+/** Every element matching a test ID (rows in a list). */
+export function allById(testId: string) {
+  if (driver.isAndroid && LIVE_IDS[testId]) return $$(liveSelector(LIVE_IDS[testId]));
+  if (driver.isAndroid && process.env.MOBILE_ID_STRATEGY === 'resource-id') {
+    return $$(`android=new UiSelector().resourceIdMatches(".*${testId.replace(/\./g, '\\\\.')}$")`);
+  }
+  return $$(`~${testId}`);
 }
 
 /** Visible-text lookup for copy assertions (copy is "EXAMPLE COPY (NOT FINAL)" — prefer partial matches). */

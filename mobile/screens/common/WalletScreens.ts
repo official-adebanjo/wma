@@ -1,4 +1,4 @@
-import { BaseScreen } from '../BaseScreen';
+import { BaseScreen, allById } from '../BaseScreen';
 
 export class WalletScreen extends BaseScreen {
   protected readonly root = 'wallet.home.screen';
@@ -7,6 +7,25 @@ export class WalletScreen extends BaseScreen {
   tapTransfer() { return this.tap('wallet.home.transfer'); }
   tapHistory() { return this.tap('wallet.home.history'); }
   tierBadge() { return this.text('wallet.home.tierBadge'); }
+  // Live Home tab (see live-ids.ts)
+  greeting() { return this.text('wallet.home.greeting'); }
+  customerName() { return this.text('wallet.home.customerName'); }
+  earnedText() { return this.text('wallet.home.earned'); }
+  tapBills() { return this.tap('wallet.home.bills'); }
+  tapInvest() { return this.tap('wallet.home.invest'); }
+  quickActionShown(a: 'transfer' | 'fund' | 'bills' | 'invest') { return this.exists(`wallet.home.${a}`); }
+  openSegment(s: 'home' | 'loans' | 'invest') { return this.tap(`wallet.home.segment.${s}`); }
+  /** "Complete your profile" progress as { done, total }, or null when the card isn't shown (all steps done). */
+  async kycProgress(): Promise<{ done: number; total: number } | null> {
+    if (!(await this.exists('wallet.home.kycProgress.card', 8_000))) return null;
+    // Card is up — its n/n count must be readable, otherwise fail rather than pass vacuously.
+    const [done, total] = (await this.text('wallet.home.kycProgress')).split('/').map(Number);
+    if (!Number.isInteger(done) || !Number.isInteger(total)) throw new Error('Profile progress card shown but count unreadable');
+    return { done, total };
+  }
+  async recentActivityCount(): Promise<number> {
+    return (await allById('wallet.home.recent.item')).length;
+  }
 }
 
 export class FundWalletScreen extends BaseScreen {
