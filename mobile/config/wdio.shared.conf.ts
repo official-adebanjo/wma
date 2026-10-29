@@ -2,6 +2,7 @@ import type { Options } from '@wdio/types';
 import * as path from 'path';
 import * as fs from 'fs';
 import '../../shared/config/env';
+import JsonlReporter, { RESULTS_DIR } from './jsonl-reporter';
 
 /**
  * Shared WebdriverIO config for the Rosabon Unified mobile app.
@@ -41,14 +42,21 @@ export const sharedConfig: Options.Testrunner = {
   specFileRetries: 1,
   reporters: [
     'spec',
+    // Plain-English report input (scripts/build-summary.js)
+    [JsonlReporter, {}],
     ['junit', {
       outputDir: path.resolve(__dirname, '../../reports/mobile-junit'),
       outputFileFormat: (opts: { cid: string }) => `results-${opts.cid}.xml`,
       addFileAttribute: true,
     }],
   ],
-  afterTest: async function (test, _context, { passed }) {
-    if (!passed && !test.pending) {
+  onPrepare: function () {
+    fs.rmSync(RESULTS_DIR, { recursive: true, force: true });
+    fs.mkdirSync(RESULTS_DIR, { recursive: true });
+  },
+  afterTest: async function (test, _context, { passed, error }) {
+    const skipped = test.pending || /skip/i.test(String(error?.message ?? ''));
+    if (!passed && !skipped) {
       const safe = test.title.replace(/[^a-z0-9]+/gi, '_').slice(0, 80);
       const dir = path.resolve(__dirname, '../../reports/mobile-screens');
       fs.mkdirSync(dir, { recursive: true });

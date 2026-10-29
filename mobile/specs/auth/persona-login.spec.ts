@@ -10,6 +10,8 @@ import { byId, driver } from '../../screens/BaseScreen';
  * Sign-in is email + password or phone + passcode/PIN — each method runs when its .env pair is set.
  */
 const PERSONAS: Persona[] = ['T1', 'T2', 'T3'];
+// Accounts close to lock-out (e.g. "1 attempt(s) left") — sign-in tests for them are held back.
+const HELD = (process.env.MOBILE_HOLD_PERSONAS ?? '').split(',').map((s) => s.trim()).filter(Boolean);
 
 describe('Auth › Persona sign-in (static dev accounts)', () => {
   beforeEach(async () => {
@@ -33,13 +35,13 @@ describe('Auth › Persona sign-in (static dev accounts)', () => {
 
   for (const p of PERSONAS) {
     it(title(`${p} customer signs in with email + password`, Tag.crit, Tag.smoke, Tag.spec('QAStrategy§14')), async function () {
-      if (!hasPersona(p, 'email')) this.skip();
+      if (!hasPersona(p, 'email') || HELD.includes(p)) this.skip();
       await loginAs(personaCreds(p, 'email'));
       await expect(await isLoggedIn()).toBe(true);
     });
 
     it(title(`${p} customer signs in with phone + passcode/PIN`, Tag.crit, Tag.spec('QAStrategy§14')), async function () {
-      if (!hasPersona(p, 'phone')) this.skip();
+      if (!hasPersona(p, 'phone') || HELD.includes(p)) this.skip();
       await loginAs(personaCreds(p, 'phone'));
       await expect(await isLoggedIn()).toBe(true);
     });
