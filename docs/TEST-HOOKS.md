@@ -17,7 +17,7 @@ All endpoints use `POST`, take JSON and return JSON. They sit under `QA_HOOKS_BA
 
 | Path | Body | Returns | Used for |
 |---|---|---|---|
-| `/seed/customer` | `{ tier, walletBalance?, accountType?, salaryDetected?, monthlySalary?, employer? }` | `{ customerId, phone, pin, accessToken }` | A fresh, isolated customer for every test |
+| `/seed/customer` | `{ tier, walletBalance?, accountType?, salaryDetected?, monthlySalary?, employer? }` | `{ customerId, email, password, phone, pin, accessToken }` (both sign-in methods usable) | A fresh, isolated customer for every test |
 | `/seed/wallet-balance` | `{ customerId, balance }` | — | Funding and insufficient-balance cases |
 | `/seed/investment` | `{ customerId, product, state, principal, ratePct?, fundedDaysAgo?, extra? }` | `{ investmentId, reference }` | Back-dated plans and placements (day 29 / day 30, T-7, maturity) |
 | `/seed/loan` | `{ customerId, product, state, amount, extra? }` | `{ loanId, reference }` | Loans in any lifecycle state |

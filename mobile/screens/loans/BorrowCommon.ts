@@ -263,7 +263,7 @@ export class DocUploadCard extends BaseScreen {
     const data = fs.readFileSync(abs(relPath)).toString('base64');
     const remote = driver.isAndroid
       ? `/sdcard/Download/${name}`
-      : `@${process.env.APP_BUNDLE_ID ?? 'com.rosabon.unified'}:documents/${name}`;
+      : `@${process.env.APP_BUNDLE_ID ?? 'com.optisoft.rosabon'}:documents/${name}`;
     await driver.pushFile(remote, data);
     await this.tap(`${this.prefix}.picker`);
     const file = byText(name);

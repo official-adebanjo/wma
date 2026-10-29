@@ -14,7 +14,7 @@ export const config: WebdriverIO.Config = {
       'appium:deviceName': process.env.IOS_DEVICE_NAME ?? 'iPhone 15',
       'appium:platformVersion': process.env.IOS_PLATFORM_VERSION ?? '17.5',
       'appium:app': path.resolve(process.env.IOS_APP_PATH ?? './apps/rosabon-dev.app'),
-      'appium:bundleId': process.env.APP_BUNDLE_ID ?? 'com.rosabon.unified',
+      'appium:bundleId': process.env.APP_BUNDLE_ID ?? 'com.optisoft.rosabon',
       'appium:autoAcceptAlerts': true,
       'appium:newCommandTimeout': 240,
     },

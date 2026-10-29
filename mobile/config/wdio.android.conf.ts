@@ -12,9 +12,11 @@ export const config: WebdriverIO.Config = {
       platformName: 'Android',
       'appium:automationName': 'UiAutomator2',
       'appium:deviceName': process.env.ANDROID_DEVICE_NAME ?? 'Android Emulator',
-      'appium:platformVersion': process.env.ANDROID_PLATFORM_VERSION ?? '14',
+      // Optional: pin a version / let Appium boot a named emulator (AVD) when none is running.
+      ...(process.env.ANDROID_PLATFORM_VERSION ? { 'appium:platformVersion': process.env.ANDROID_PLATFORM_VERSION } : {}),
+      ...(process.env.ANDROID_AVD ? { 'appium:avd': process.env.ANDROID_AVD, 'appium:avdLaunchTimeout': 180_000 } : {}),
       'appium:app': path.resolve(process.env.ANDROID_APP_PATH ?? './apps/rosabon-dev.apk'),
-      'appium:appPackage': process.env.APP_PACKAGE ?? 'com.rosabon.unified',
+      'appium:appPackage': process.env.APP_PACKAGE ?? 'com.optisoft.rosabon',
       'appium:autoGrantPermissions': true,
       'appium:newCommandTimeout': 240,
       'appium:noReset': false,

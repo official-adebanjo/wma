@@ -12,7 +12,7 @@ Automated tests for the **Rosabon Unified mobile app** and the **Admin Portal**.
 | Calculation oracle and its self-tests | TypeScript + `decimal.js`, Playwright Test runner | [shared/calc/](shared/calc/), [unit/](unit/) |
 | API contract (shift-left) | Playwright `request` | [api-tests/](api-tests/) |
 | Admin Portal E2E | Playwright | [admin/](admin/) |
-| Mobile app E2E (Android + iOS) | WebdriverIO 9 + Appium 2 + Mocha; TestMu AI / LambdaTest real devices | [mobile/](mobile/) |
+| Mobile app E2E (Android + iOS) | WebdriverIO 9 + Appium 3 + Mocha; TestMu AI / LambdaTest real devices | [mobile/](mobile/) |
 | CI | GitHub Actions → TestRail (`trcli`) | [.github/workflows/qa.yml](.github/workflows/qa.yml) |
 
 ## Quick start
@@ -30,6 +30,22 @@ npx wdio run mobile/config/wdio.android.conf.ts --suite rwin   # one module
 ```
 
 You can filter by tag in both runners. Playwright uses `--grep @crit`. WebdriverIO uses `--mochaOpts.grep @smoke`.
+
+### Mobile on a Windows machine (Android)
+
+1. **One-time setup.** Set the user environment variables `ANDROID_HOME` (`%LOCALAPPDATA%\Android\Sdk`) and `JAVA_HOME` (Android Studio's `jbr`). Add `platform-tools`, `emulator`, `cmdline-tools\latest\bin` and `%JAVA_HOME%\bin` to `PATH`. Then install Appium 3 and its Android driver:
+   ```bash
+   npm i -g appium && appium driver install uiautomator2
+   appium driver doctor uiautomator2    # expect "0 required fixes"
+   ```
+2. **App build.** Put the dev APK at `apps/rosabon-dev.apk`. The `apps/` folder is git-ignored. The package is `com.optisoft.rosabon`.
+3. **`.env`.** Fill in the `CUSTOMER_T1/T2/T3_EMAIL` and `_PASSWORD` values. Sign-in accepts either email + password or phone + passcode/PIN. The phone tests run only when `_PHONE` and `_PIN` are set. Set `ANDROID_AVD` to the emulator's name and `MOBILE_ID_STRATEGY=resource-id`, because React Native maps `testID` to the Android resource-id.
+4. **First run.** Sign in with each persona. This needs no backend hooks:
+   ```bash
+   npx wdio run mobile/config/wdio.android.conf.ts --spec mobile/specs/auth/persona-login.spec.ts
+   ```
+
+Screens the app hasn't tagged with contract IDs yet are mapped to the live UI in [mobile/screens/live-ids.ts](mobile/screens/live-ids.ts). On failure, the element tree is saved to `reports/mobile-screens/*.xml`. Screenshots come out black because the app blocks screen capture.
 
 ## How the suite is organised
 

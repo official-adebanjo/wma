@@ -1,5 +1,6 @@
 import type { Options } from '@wdio/types';
 import * as path from 'path';
+import * as fs from 'fs';
 import '../../shared/config/env';
 
 /**
@@ -46,9 +47,13 @@ export const sharedConfig: Options.Testrunner = {
     }],
   ],
   afterTest: async function (test, _context, { passed }) {
-    if (!passed) {
+    if (!passed && !test.pending) {
       const safe = test.title.replace(/[^a-z0-9]+/gi, '_').slice(0, 80);
-      await browser.saveScreenshot(path.resolve(__dirname, `../../reports/mobile-screens/${safe}.png`)).catch(() => undefined);
+      const dir = path.resolve(__dirname, '../../reports/mobile-screens');
+      fs.mkdirSync(dir, { recursive: true });
+      await browser.saveScreenshot(path.join(dir, `${safe}.png`)).catch(() => undefined);
+      // Element tree at the moment of failure — what selectors would have matched.
+      await browser.getPageSource().then((xml) => fs.writeFileSync(path.join(dir, `${safe}.xml`), xml)).catch(() => undefined);
     }
   },
 };
