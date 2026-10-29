@@ -72,14 +72,51 @@
   .sev.high { background: var(--bad-bg); color: var(--bad); } .sev.med { background: var(--med-bg); color: var(--med); }
   .finding .impact { font-weight: 600; }
   dl { margin: 10px 0 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
-  details { margin-top: 12px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  details { margin-top: 8px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 0; min-height: 44px; }
   details img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
   ul.clean { padding-left: 20px; } ul.clean li { margin: 10px 0; }
   a { color: var(--accent); }
   code { font-size: .9em; }
   .tech { display: inline-block; margin-top: 8px; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; font-weight: 600; }
   footer { margin-top: 48px; font-size: .85rem; color: var(--muted); }
-  @media (max-width: 520px) { .tab { padding: 10px 8px; font-size: .95rem; } }
+  dd, li, .finding h3 { overflow-wrap: anywhere; }
+
+  /* Phones and narrow windows */
+  @media (max-width: 600px) {
+    body { font-size: 15px; }
+    main { padding: 20px 16px 48px; }
+    h1 { font-size: 1.55rem; }
+    h2 { font-size: 1.15rem; margin-top: 32px; }
+    h2.panel-title { font-size: 1.3rem; }
+    .verdict h3 { font-size: 1.08rem; }
+    .card { padding: 16px; }
+    /* Compact sticky switch: label and count on one line, icon dropped */
+    .tabs { gap: 4px; padding: 4px; margin: 18px 0 16px; top: 4px; border-radius: 12px; }
+    .tab { padding: 9px 6px; gap: 4px 6px; font-size: .92rem; border-radius: 9px; min-height: 44px; }
+    .tab > span[aria-hidden] { display: none; }
+    .pill { font-size: .7rem; padding: 1px 7px; }
+    .stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat { padding: 12px; }
+    .stat .n { font-size: 1.6rem; }
+    /* "What was checked": each row becomes a small card */
+    .table-wrap { overflow: visible; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    table { background: transparent; border: 0; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    tr { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 4px 16px;
+         background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+    td { padding: 0; border: 0; }
+    td.area { grid-column: 1 / -1; margin-bottom: 6px; }
+    td.num { text-align: left; white-space: nowrap; }
+    td.num::before { content: attr(data-label) " "; color: var(--muted); font-size: .85rem; }
+    td.result { justify-self: end; text-align: right; }
+    ul.clean { padding-left: 18px; }
+  }
+  @media (max-width: 340px) {
+    .tab { flex-direction: column; }
+    tr { grid-template-columns: 1fr 1fr; }
+    td.result { grid-column: 1 / -1; justify-self: start; text-align: left; }
+  }
 </style>
 </head>
 <body>
@@ -89,38 +126,38 @@
   <p class="muted">Choose which part of the product to see. The admin portal is the staff website; the mobile app is what customers use.</p>
 
   <div class="tabs" role="tablist" aria-label="Which results to show">
-    <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="true" tabindex="0"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">1 problem</span></button>
-    <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill idle">no run yet</span></button>
+    <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="true" tabindex="0"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">5 problems</span></button>
+    <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">4 problems</span></button>
   </div>
 
   <section role="tabpanel" id="panel-admin" aria-labelledby="tab-admin" tabindex="0">
     
     <p class="muted small">Chrome browser · dev environment</p>
     <h2 class="panel-title">Admin Portal Test Results</h2>
-    <p class="muted">Automated check run on 29 October 2026 at 14:18 (WAT) · took about 0 minutes</p>
+    <p class="muted">Automated check run on 26 October 2026 at 23:59 (WAT) · took about 15 minutes</p>
 
     <section class="card verdict warn">
-      <h3>Mostly working — 1 problem need attention</h3>
-      <p>None of them affect money or compliance.</p>
+      <h3>Mostly working — 5 problems need attention</h3>
+      <p>3 of them affect money or compliance and should be fixed before release.</p>
     </section>
 
     <div class="stats">
       <div class="stat"><div class="n">116</div><div class="muted">checks in total</div></div>
-      <div class="stat ok"><div class="n">114</div><div class="muted">worked as expected</div></div>
-      <div class="stat bad"><div class="n">1</div><div class="muted">checks with a problem</div></div>
-      <div class="stat"><div class="n">1</div><div class="muted">not run (see below)</div></div>
+      <div class="stat ok"><div class="n">105</div><div class="muted">worked as expected</div></div>
+      <div class="stat bad"><div class="n">5</div><div class="muted">checks with a problem</div></div>
+      <div class="stat"><div class="n">6</div><div class="muted">not run (see below)</div></div>
     </div>
-    <div class="bar" role="img" aria-label="114 passed, 1 problems, 1 not run">
-      <span class="p" style="width:98.27586206896551%"></span><span class="f" style="width:0.8620689655172413%"></span><span class="s" style="width:0.8620689655172413%"></span>
+    <div class="bar" role="img" aria-label="105 passed, 5 problems, 6 not run">
+      <span class="p" style="width:90.51724137931035%"></span><span class="f" style="width:4.310344827586207%"></span><span class="s" style="width:5.172413793103448%"></span>
     </div>
-    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (99% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
+    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (95% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
 
     <h2>What was checked</h2>
     <p class="muted">An automated tester used the admin portal the way a staff member would — opening pages, filling in forms and checking the results against the product documents.</p>
     <div class="table-wrap">
     <table>
       <thead><tr><th>Area</th><th class="num">Checks run</th><th class="num">Worked</th><th>Result</th></tr></thead>
-      <tbody><tr><td><strong>Signing in</strong><div class="muted">Admins can sign in, and a wrong password is refused.</div></td><td class="num">1</td><td class="num">0</td><td><span class="badge bad">1 problem</span><div class="muted small">1 not run</div></td></tr><tr><td><strong>Every page opens correctly</strong><div class="muted">Each of the admin portal’s sections, sub-pages and tabs opens without errors, blank screens or system failures.</div></td><td class="num">42</td><td class="num">42</td><td><span class="badge ok">All good</span></td></tr><tr><td><strong>Customer management</strong><div class="muted">Finding customers, viewing their full profile, reviewing documents and protecting personal data.</div></td><td class="num">10</td><td class="num">10</td><td><span class="badge ok">All good</span></td></tr><tr><td><strong>Investments</strong><div class="muted">Searching and filtering investments, viewing a plan, and booking, topping up or withdrawing on a customer’s behalf.</div></td><td class="num">9</td><td class="num">9</td><td><span class="badge ok">All good</span></td></tr><tr><td><strong>Investment approvals, alerts and audit log</strong><div class="muted">Approval queues, on-behalf requests, system alerts, tax settings and the record of who did what.</div></td><td class="num">15</td><td class="num">15</td><td><span class="badge ok">All good</span></td></tr><tr><td><strong>Loan interest calculations</strong><div class="muted">That loans charge interest the way the loan specification says — “Monthly equal” (Model A) or “Monthly reducing” (Model B).</div></td><td class="num">7</td><td class="num">7</td><td><span class="badge ok">All good</span></td></tr><tr><td><strong>Loans</strong><div class="muted">Loan applications, booking a loan on a customer’s behalf, repayments and payroll reconciliation.</div></td><td class="num">5</td><td class="num">5</td><td><span class="badge ok">All good</span></td></tr><tr><td><strong>Product setup</strong><div class="muted">Creating and editing investment and loan products, loan purposes, variants, eligibility rules and required documents.</div></td><td class="num">9</td><td class="num">9</td><td><span class="badge ok">All good</span></td></tr><tr><td><strong>Transactions, billers and communications</strong><div class="muted">The transaction monitor, billers, the approvals inbox, campaigns and in-app banners.</div></td><td class="num">8</td><td class="num">8</td><td><span class="badge ok">All good</span></td></tr><tr><td><strong>Wallet management</strong><div class="muted">The live wallet board, payment providers, routing rules, wallet settings and manual ledger tools.</div></td><td class="num">9</td><td class="num">9</td><td><span class="badge ok">All good</span></td></tr></tbody>
+      <tbody><tr><td class="area"><strong>Signing in</strong><div class="muted">Admins can sign in, and a wrong password is refused.</div></td><td class="num" data-label="Checks run">2</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge ok">All good</span></td></tr><tr><td class="area"><strong>Every page opens correctly</strong><div class="muted">Each of the admin portal’s sections, sub-pages and tabs opens without errors, blank screens or system failures.</div></td><td class="num" data-label="Checks run">42</td><td class="num" data-label="Worked">42</td><td class="result"><span class="badge ok">All good</span></td></tr><tr><td class="area"><strong>Customer management</strong><div class="muted">Finding customers, viewing their full profile, reviewing documents and protecting personal data.</div></td><td class="num" data-label="Checks run">8</td><td class="num" data-label="Worked">7</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">2 not run</div></td></tr><tr><td class="area"><strong>Investments</strong><div class="muted">Searching and filtering investments, viewing a plan, and booking, topping up or withdrawing on a customer’s behalf.</div></td><td class="num" data-label="Checks run">8</td><td class="num" data-label="Worked">8</td><td class="result"><span class="badge ok">All good</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Investment approvals, alerts and audit log</strong><div class="muted">Approval queues, on-behalf requests, system alerts, tax settings and the record of who did what.</div></td><td class="num" data-label="Checks run">14</td><td class="num" data-label="Worked">13</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Loan interest calculations</strong><div class="muted">That loans charge interest the way the loan specification says — “Monthly equal” (Model A) or “Monthly reducing” (Model B).</div></td><td class="num" data-label="Checks run">7</td><td class="num" data-label="Worked">5</td><td class="result"><span class="badge bad">2 problems</span></td></tr><tr><td class="area"><strong>Loans</strong><div class="muted">Loan applications, booking a loan on a customer’s behalf, repayments and payroll reconciliation.</div></td><td class="num" data-label="Checks run">5</td><td class="num" data-label="Worked">5</td><td class="result"><span class="badge ok">All good</span></td></tr><tr><td class="area"><strong>Product setup</strong><div class="muted">Creating and editing investment and loan products, loan purposes, variants, eligibility rules and required documents.</div></td><td class="num" data-label="Checks run">9</td><td class="num" data-label="Worked">9</td><td class="result"><span class="badge ok">All good</span></td></tr><tr><td class="area"><strong>Transactions, billers and communications</strong><div class="muted">The transaction monitor, billers, the approvals inbox, campaigns and in-app banners.</div></td><td class="num" data-label="Checks run">8</td><td class="num" data-label="Worked">7</td><td class="result"><span class="badge bad">1 problem</span></td></tr><tr><td class="area"><strong>Wallet management</strong><div class="muted">The live wallet board, payment providers, routing rules, wallet settings and manual ledger tools.</div></td><td class="num" data-label="Checks run">7</td><td class="num" data-label="Worked">7</td><td class="result"><span class="badge ok">All good</span><div class="muted small">2 not run</div></td></tr></tbody>
     </table>
     </div>
 
@@ -129,14 +166,66 @@
     
       <article class="card finding">
         <header>
-          <span class="sev med">Medium priority</span>
-          <h3>1. wrong password is rejected</h3>
-          <p class="muted">Area: Signing in · Who should look at this: Engineering</p>
+          <span class="sev high">High priority</span>
+          <h3>1. The main audit log is empty</h3>
+          <p class="muted">Area: Investment approvals, alerts and audit log · Who should look at this: Engineering and Compliance</p>
         </header>
-        <p class="impact">An automated check did not get the result the specification expects.</p>
+        <p class="impact">The portal is not keeping its official record of who did what. This is a compliance requirement.</p>
         <dl>
-          <dt>What we saw</dt><dd>Error: page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL</dd>
-          <dt>What should happen</dt><dd>See the technical report for details.</dd>
+          <dt>What we saw</dt><dd>The Audit Log page says “No system actions have been recorded yet” and shows 0 entries for the past week — even though admin actions were carried out during this test.</dd>
+          <dt>What should happen</dt><dd>Every admin action should be recorded permanently in the audit log (Admin PRD). Entries were visible here on 21 October.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev high">High priority</span>
+          <h3>2. A loan is being repaid at the wrong monthly amount</h3>
+          <p class="muted">Area: Loan interest calculations · Who should look at this: Engineering (loan calculation) and Product</p>
+        </header>
+        <p class="impact">Customers may be charged the wrong amount of interest. This affects money and must be confirmed before loans go live.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Loan #169 (Personal, ₦5,000,000 over 24 months at 8.5%, set to “Monthly equal”) is collecting ₦226,041.66 every month.</dd>
+          <dt>What should happen</dt><dd>Under the loan specification the monthly amount should be ₦633,333.33 if 8.5% is a monthly rate, or ₦243,750.00 if 8.5% is a yearly rate. The amount being collected matches neither.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev high">High priority</span>
+          <h3>3. Money is deducted from a loan payout without being shown</h3>
+          <p class="muted">Area: Loan interest calculations · Who should look at this: Engineering (loans) and Finance</p>
+        </header>
+        <p class="impact">The customer received less than they borrowed, and the screen does not explain why.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Loan #169 was approved for ₦5,000,000 with a management fee of ₦0, but only ₦4,625,000 was paid out — ₦375,000 is missing.</dd>
+          <dt>What should happen</dt><dd>The amount paid out should equal the loan amount minus any fee shown on the loan.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>4. Viewing a customer’s private details is not recorded</h3>
+          <p class="muted">Area: Customer management · Who should look at this: Engineering and Compliance (data protection)</p>
+        </header>
+        <p class="impact">There is no record of which admin looked at a customer’s BVN or NIN, which data-protection rules expect.</p>
+        <dl>
+          <dt>What we saw</dt><dd>After revealing a customer’s hidden BVN/NIN, the customer’s Audit tab still says “No audit entries found”.</dd>
+          <dt>What should happen</dt><dd>Each time an admin reveals private details, it should appear in that customer’s audit history.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>5. A new biller disappears after it is submitted</h3>
+          <p class="muted">Area: Transactions, billers and communications · Who should look at this: Engineering (Transactions &amp; Ledger)</p>
+        </header>
+        <p class="impact">Admins cannot add new bill-payment providers, and they get no message telling them anything went wrong.</p>
+        <dl>
+          <dt>What we saw</dt><dd>After filling in a new biller and pressing “Submit for approval”, it does not appear in the billers list or in either approvals tab, and no message is shown.</dd>
+          <dt>What should happen</dt><dd>The new biller should wait in the approvals inbox for a second admin to approve it, as it did on 21 October.</dd>
         </dl>
         
       </article>
@@ -149,13 +238,110 @@
     <ul class="clean"><li>Is the loan “Interest rate” shown in the portal a monthly rate (as in the specification’s 2% examples) or a yearly rate? Either way, loan #169 does not match.</li><li>What is the minimum customer verification level (KYC tier) for a Personal loan? The specification does not say; the tests assume Tier 2.</li></ul>
 
     <h2>Not run in this round</h2>
-    <ul class="clean"><li><strong>sign in to the dev Admin Portal</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: DEV_ADMIN_EMAIL / DEV_ADMIN_PASSWORD not set in .env</span></li></ul>
+    <ul class="clean"><li><strong>Screening: escalate a hit</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Customer 360: freeze wallet</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>closed plan: audit entry &quot;View details&quot; opens and closes</strong> <span class="muted">(Investments)</span><br><span class="muted">Not run: there was no suitable data on the test system to check this against.</span></li><li><strong>System alerts: acknowledge and resolve</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Live board: release / reject / reconcile / query / manual complete</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Providers: mark status / retire; routing manual override</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li></ul>
 
     <h2>Need the technical detail?</h2>
     <p class="muted">Screenshots and the full technical report (every step, with recordings and timings) are kept internally because they contain customer details and system access data. Ask the QA team for access.</p>
   </section>
   <hr class="nojs-divider"><section role="tabpanel" id="panel-mobile" aria-labelledby="tab-mobile" tabindex="0">
-    <h2 class="panel-title">Mobile app Test Results</h2><section class="card verdict"><h3>No results yet</h3><p class="muted">Run the mobile checks (npx wdio run mobile/config/wdio.android.conf.ts) to fill this in.</p></section>
+    
+    <p class="muted small">Device: Google sdk_gphone16k_x86_64 · Android 17 · app build 1.1.55 (92) · dev environment</p>
+    <h2 class="panel-title">Mobile App Test Results</h2>
+    <p class="muted">Automated check run on 29 October 2026 at 13:48 (WAT) · took about 7 minutes</p>
+
+    <section class="card verdict warn">
+      <h3>Mostly working — 4 problems need attention (including 1 seen in the app’s error log)</h3>
+      <p>2 of them affect money or compliance and should be fixed before release.</p>
+    </section>
+
+    <div class="stats">
+      <div class="stat"><div class="n">33</div><div class="muted">checks in total</div></div>
+      <div class="stat ok"><div class="n">12</div><div class="muted">worked as expected</div></div>
+      <div class="stat bad"><div class="n">3</div><div class="muted">checks with a problem</div></div>
+      <div class="stat"><div class="n">18</div><div class="muted">not run (see below)</div></div>
+    </div>
+    <div class="bar" role="img" aria-label="12 passed, 3 problems, 18 not run">
+      <span class="p" style="width:36.36363636363637%"></span><span class="f" style="width:9.090909090909092%"></span><span class="s" style="width:54.54545454545454%"></span>
+    </div>
+    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (80% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
+
+    <h2>What was checked</h2>
+    <p class="muted">An automated tester used the Rosabon app on an Android phone the way a customer would — signing in, moving between screens and checking what they show against the product documents. Nothing was booked, borrowed or paid during these checks.</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Area</th><th class="num">Checks run</th><th class="num">Worked</th><th>Result</th></tr></thead>
+      <tbody><tr><td class="area"><strong>Signing in</strong><div class="muted">Each test customer can sign in with email and password, or with phone number and passcode.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Sign-up, sign-in security and sessions</strong><div class="muted">Creating an account, wrong-password handling, account lock-out, staying signed in, and frozen accounts.</div></td><td class="num" data-label="Checks run">0</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge idle">Not run yet</span><div class="muted small">14 not run</div></td></tr><tr><td class="area"><strong>Home, Grow and Borrow screens</strong><div class="muted">The balance and quick actions on Home, investment products and plan totals on Grow, and the loans offered on Borrow.</div></td><td class="num" data-label="Checks run">12</td><td class="num" data-label="Worked">10</td><td class="result"><span class="badge bad">2 problems</span></td></tr></tbody>
+    </table>
+    </div>
+
+    <h2>Problems found</h2>
+    <p class="muted">These did not behave the way the product documents say they should. “High priority” means it affects customers’ money or a compliance requirement.</p>
+    
+      <article class="card finding">
+        <header>
+          <span class="sev high">High priority</span>
+          <h3>1. The app offers a Payday loan ten times bigger than allowed</h3>
+          <p class="muted">Area: Home, Grow and Borrow screens · Who should look at this: Engineering (loans) and Product</p>
+        </header>
+        <p class="impact">Customers are invited to take a loan above the approved limit. This affects money and lending risk.</p>
+        <dl>
+          <dt>What we saw</dt><dd>The Borrow screen’s “Recommended for you” card says “Get ₦5,000,000 instantly” for a Payday loan (30 days, no paperwork).</dd>
+          <dt>What should happen</dt><dd>Payday loans are capped at ₦500,000 (Loan product specification).</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev high">High priority</span>
+          <h3>2. Identity verification (SmileID) fails to start in this app build</h3>
+          <p class="muted">Area: App start-up (seen in the app’s error log) · Who should look at this: Engineering (mobile app build)</p>
+        </header>
+        <p class="impact">Selfie / ID verification for upgrading a customer’s KYC tier is likely to fail in this build.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Every time the app starts, its error log reports “SmileID initialize error: smile_config.json not found in assets”. The file is missing from the app package.</dd>
+          <dt>What should happen</dt><dd>The SmileID configuration file should be included in the build so identity checks can run.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>3. Signing in with a phone number that starts with 0 does nothing</h3>
+          <p class="muted">Area: Signing in · Who should look at this: Engineering (mobile app)</p>
+        </header>
+        <p class="impact">Customers who type their number the usual way (080…) are stuck on the sign-in screen with no explanation.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Entering a mobile number in the usual 080… form and tapping Continue does nothing — no next screen and no error. Only the +234 form of the same number works.</dd>
+          <dt>What should happen</dt><dd>The app should accept the usual Nigerian format, or clearly say which format it needs.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>4. The Tier 3 test account still shows an identity step to complete</h3>
+          <p class="muted">Area: Home, Grow and Borrow screens · Who should look at this: Product and Compliance (KYC)</p>
+        </header>
+        <p class="impact">Either the test account is not really Tier 3, or the “Complete your profile” card does not follow the customer’s verification level — which would confuse fully verified customers.</p>
+        <dl>
+          <dt>What we saw</dt><dd>The Home screen shows “Complete your profile — 2/3, 1 key identity step left” for the Tier 3 test account.</dd>
+          <dt>What should happen</dt><dd>A fully verified (Tier 3) customer should have every identity step complete.</dd>
+        </dl>
+        
+      </article>
+
+    <h2>Differences from the documents (not failures)</h2>
+    <p class="muted">These work, but don’t match what the specifications say. Product should confirm which is correct.</p>
+    <ul class="clean"><li><strong>Password error wording.</strong> After a wrong password, the app says “Incorrect passcode. 3 attempt(s) left.” — it should say password; “passcode” is the 6-digit code used with a phone number.</li><li><strong>Shared attempt counter.</strong> Wrong attempts with email + password and with phone + passcode count towards the same limit (4 attempts in total). Product should confirm this is intended.</li></ul>
+
+    <h2>Questions for the product team</h2>
+    <ul class="clean"><li>Is the “Complete your profile” card meant to follow the customer’s KYC tier? The Tier 3 test account shows 2 of 3 steps done.</li><li>Should sign-in accept phone numbers starting with 0, or only the +234 format?</li></ul>
+
+    <h2>Not run in this round</h2>
+    <ul class="clean"><li><strong>Tier 1 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Tier 2 test account signs in with email + password</strong> <span class="muted">(Signing in)</span><br><span class="muted">Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.</span></li><li><strong>Tier 2 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.</span></li><li><strong>Tier 3 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>happy path: BVN match → phone OTP → email OTP → PIN → lands on home as Tier 1</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN 10 digits is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN contains a letter is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN name/DOB mismatch blocks onboarding with clear guidance</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>identity provider timeout surfaces a retryable error, not a crash</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong OTP is rejected; resend is throttled</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>PIN confirmation mismatch and weak PINs are rejected</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid email + password logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid phone + passcode/PIN logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong password shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong PIN shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account locks after repeated wrong passwords — and the phone route is locked too</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>session survives short backgrounding but requires re-auth after relaunch</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account frozen by Compliance blocks login with support message</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li></ul>
+
+    <h2>Need the technical detail?</h2>
+    <p class="muted">Step-by-step technical detail is kept internally. Ask the QA team for access.</p>
   </section>
 
   <footer>
@@ -175,9 +361,14 @@
         if (on && focus) t.focus();
       });
       if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
+      var bar = document.querySelector('.tabs');
+      var panel = document.getElementById('panel-' + id);
+      if (focus !== undefined && panel.getBoundingClientRect().top < bar.offsetHeight) {
+        window.scrollTo({ top: window.scrollY + panel.getBoundingClientRect().top - bar.offsetHeight - 12, behavior: 'smooth' });
+      }
     }
     tabs.forEach(function (t, i) {
-      t.addEventListener('click', function () { show(t.id.slice(4)); });
+      t.addEventListener('click', function () { show(t.id.slice(4), false); });
       t.addEventListener('keydown', function (e) {
         var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
         if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length].id.slice(4), true); }

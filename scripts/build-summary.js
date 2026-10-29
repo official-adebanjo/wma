@@ -324,7 +324,7 @@ function panel(d, pub) {
     const nr = count('not-run', list);
     const ran = list.length - nr;
     const badge = p ? `<span class="badge bad">${p} problem${p > 1 ? 's' : ''}</span>` : ran ? '<span class="badge ok">All good</span>' : '<span class="badge idle">Not run yet</span>';
-    return `<tr><td><strong>${esc(a.name)}</strong><div class="muted">${esc(a.what)}</div></td><td class="num">${ran}</td><td class="num">${count('passed', list)}</td><td>${badge}${nr ? `<div class="muted small">${nr} not run</div>` : ''}</td></tr>`;
+    return `<tr><td class="area"><strong>${esc(a.name)}</strong><div class="muted">${esc(a.what)}</div></td><td class="num" data-label="Checks run">${ran}</td><td class="num" data-label="Worked">${count('passed', list)}</td><td class="result">${badge}${nr ? `<div class="muted small">${nr} not run</div>` : ''}</td></tr>`;
   }).join('');
 
   const cards = findings.map((f, i) => `
@@ -487,14 +487,51 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .sev.high { background: var(--bad-bg); color: var(--bad); } .sev.med { background: var(--med-bg); color: var(--med); }
   .finding .impact { font-weight: 600; }
   dl { margin: 10px 0 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
-  details { margin-top: 12px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  details { margin-top: 8px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 0; min-height: 44px; }
   details img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
   ul.clean { padding-left: 20px; } ul.clean li { margin: 10px 0; }
   a { color: var(--accent); }
   code { font-size: .9em; }
   .tech { display: inline-block; margin-top: 8px; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; font-weight: 600; }
   footer { margin-top: 48px; font-size: .85rem; color: var(--muted); }
-  @media (max-width: 520px) { .tab { padding: 10px 8px; font-size: .95rem; } }
+  dd, li, .finding h3 { overflow-wrap: anywhere; }
+
+  /* Phones and narrow windows */
+  @media (max-width: 600px) {
+    body { font-size: 15px; }
+    main { padding: 20px 16px 48px; }
+    h1 { font-size: 1.55rem; }
+    h2 { font-size: 1.15rem; margin-top: 32px; }
+    h2.panel-title { font-size: 1.3rem; }
+    .verdict h3 { font-size: 1.08rem; }
+    .card { padding: 16px; }
+    /* Compact sticky switch: label and count on one line, icon dropped */
+    .tabs { gap: 4px; padding: 4px; margin: 18px 0 16px; top: 4px; border-radius: 12px; }
+    .tab { padding: 9px 6px; gap: 4px 6px; font-size: .92rem; border-radius: 9px; min-height: 44px; }
+    .tab > span[aria-hidden] { display: none; }
+    .pill { font-size: .7rem; padding: 1px 7px; }
+    .stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat { padding: 12px; }
+    .stat .n { font-size: 1.6rem; }
+    /* "What was checked": each row becomes a small card */
+    .table-wrap { overflow: visible; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    table { background: transparent; border: 0; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    tr { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 4px 16px;
+         background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+    td { padding: 0; border: 0; }
+    td.area { grid-column: 1 / -1; margin-bottom: 6px; }
+    td.num { text-align: left; white-space: nowrap; }
+    td.num::before { content: attr(data-label) " "; color: var(--muted); font-size: .85rem; }
+    td.result { justify-self: end; text-align: right; }
+    ul.clean { padding-left: 18px; }
+  }
+  @media (max-width: 340px) {
+    .tab { flex-direction: column; }
+    tr { grid-template-columns: 1fr 1fr; }
+    td.result { grid-column: 1 / -1; justify-self: start; text-align: left; }
+  }
 </style>
 </head>
 <body>
@@ -528,9 +565,14 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
         if (on && focus) t.focus();
       });
       if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
+      var bar = document.querySelector('.tabs');
+      var panel = document.getElementById('panel-' + id);
+      if (focus !== undefined && panel.getBoundingClientRect().top < bar.offsetHeight) {
+        window.scrollTo({ top: window.scrollY + panel.getBoundingClientRect().top - bar.offsetHeight - 12, behavior: 'smooth' });
+      }
     }
     tabs.forEach(function (t, i) {
-      t.addEventListener('click', function () { show(t.id.slice(4)); });
+      t.addEventListener('click', function () { show(t.id.slice(4), false); });
       t.addEventListener('keydown', function (e) {
         var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
         if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length].id.slice(4), true); }
