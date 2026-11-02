@@ -368,7 +368,8 @@ const MOBILE_CHANGES = {
     ['App build', 'Tested the 30 October build. It has the same version number as the 29 October build (1.1.55, code 92); the version should be raised with each build so testers and devices can tell them apart.'],
     ['Fixed: oversized Payday offer', 'The Borrow screen’s “Recommended for you” card now offers ₦20,000 for a 30-day Payday loan, within the ₦500,000 limit. On 29 October it offered ₦5,000,000.'],
     ['Fixed during the day: Tier 3 investing', 'In the early afternoon the Tier 3 test account was told every investment was “not available on your current tier”. By the automated run later the same day, RWIN, REAP and RTN all opened.'],
-    ['Still not fixed', 'A Tier 3 account still shows its profile as 2/3 complete, a local phone number (080…) is still not accepted at sign-in, and identity verification (SmileID) still cannot start because its settings file is missing.'],
+    ['Fixed during the day: phone sign-in', 'Signing in with a phone number written the usual way (080…) failed on 29 October and in the morning run; it worked in the evening run, without a new app build.'],
+    ['Still not fixed', 'A Tier 3 account still shows its profile as 2/3 complete, and identity verification (SmileID) still cannot start because its settings file is missing.'],
   ],
 };
 
@@ -381,7 +382,6 @@ const MOBILE_MISMATCHES = [
 
 const MOBILE_QUESTIONS = [
   'Is the “Complete your profile” card meant to follow the customer’s KYC tier? The Tier 3 test account shows 2 of 3 steps done.',
-  'Should sign-in accept phone numbers starting with 0, or only the +234 format?',
   'How should RWIN goal interest be projected? The app shows ₦2,237.38 on ₦100,000 over 90 days at 14% — interest up to the goal’s end date. Our reading of the calculator rules (each contribution earning for a full 90-day cycle) gives about ₦3,375.',
   'Should 7.5% VAT be charged on the amount lent? It is currently taken from every loan payout as “Loan VAT”. And is there a management fee on Personal loans (the app says 1%, the admin portal says ₦0)?',
   'Which KYC tier does each investment product need? The product documents do not say.',
@@ -392,7 +392,8 @@ const MOBILE_SKIP_REASONS = [
   [/HELD/, 'Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.'],
   [/phone \+ passcode/, 'Not run: no phone number and passcode are on file for this test account yet.'],
   [/email \+ password/, 'Not run: no email and password are on file for this test account.'],
-  [/schedule follows the interest rule/, 'Not run: the Tier 3 test account already has a loan, and only one loan can be held at a time. It runs again once that loan is repaid.'],
+  [/home-grow-borrow\.spec\.ts .*(offers Nano, Payday|groups loans into|recommended offer stays)/, 'Not run: the Tier 3 test account has a loan in progress (one at a time), so its Borrow tab shows that loan instead of the product list. It runs again once the loan is repaid.'],
+  [/schedule follows the interest rule/,'Not run: the Tier 3 test account already has a loan, and only one loan can be held at a time. It runs again once that loan is repaid.'],
   [/Loan offer shows the same terms/, 'Not run: only checked while an approved loan offer is waiting to be accepted.'],
   [/next payment countdown/, 'Not run: only checked while a loan is being repaid.'],
   [/topping up from an empty wallet/, 'Not run: only checked while the Tier 1 test wallet is empty, so the check can never move money.'],
