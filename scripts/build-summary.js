@@ -68,12 +68,12 @@ const FINDINGS = [
   },
   {
     match: /disbursed amount = amount − stated management fee/,
-    title: '7.5% is withheld from loan payouts without being shown',
+    title: '7.5% “Loan VAT” is taken from every loan payout without being shown on the loan',
     severity: 'High',
     owner: 'Engineering (loans) and Finance',
-    impact: 'Customers receive less than they borrowed, and the screen does not explain why. It happens on every loan checked, including new ones.',
-    saw: 'Both loans show a management fee of ₦0, yet exactly 7.5% was kept back: loan #169 was approved for ₦5,000,000 and paid out ₦4,625,000 (₦375,000 missing); the newer loan #188 was approved for ₦500,000 and paid out ₦462,500 (₦37,500 missing).',
-    expected: 'The amount paid out should equal the loan amount minus any fee shown on the loan. If a 7.5% fee is intended, it should be shown to the customer and on the loan record.',
+    impact: 'Customers receive less than they borrowed, and neither the loan record nor the offer explains why. It happens on every loan checked, including new ones.',
+    saw: 'All three loans show a management fee of ₦0, yet exactly 7.5% was kept back: #169 ₦5,000,000 → ₦4,625,000 paid out; #188 ₦500,000 → ₦462,500; #189 (paid out during this round) ₦100,000 → ₦92,500. The customer’s wallet history shows the full amount credited, then the 7.5% taken back as “Loan VAT”.',
+    expected: 'The amount paid out should equal the loan amount minus the charges shown on the loan. Finance should confirm whether VAT applies to the amount lent (it normally applies to fees); if it does, it should be shown on the offer and the loan record.',
   },
   {
     match: /Audit log: portal actions are recorded/,
@@ -190,7 +190,143 @@ const MOBILE_EXTRA_FINDINGS = [
     expected: 'The SmileID configuration file should be included in the build so identity checks can run.',
     area: 'App start-up (seen in the app’s error log)',
   },
+  // Found by hand on 2 November (30 October build) — see MOBILE_JOURNEYS.
+  {
+    title: 'A Tier 3 customer cannot invest in anything, while a Tier 1 customer can',
+    severity: 'High',
+    owner: 'Engineering (mobile app and KYC) and Product',
+    impact: 'Fully verified customers are locked out of every investment product, so they cannot put money in.',
+    saw: 'Signed in as the Tier 3 test account (Tier 3 in the admin portal and in the app’s Settings), opening RWIN, REAP or RTN shows “This investment isn’t available on your current tier. Upgrade your account to invest.” The upgrade screen then says “You are on Tier 3 — kindly provide the information below to upgrade to Tier 3” and lists 8 unfinished steps. The Tier 1 test account can open RWIN and create a goal.',
+    expected: 'A Tier 3 customer should be able to invest in every product. The app should use the same tier the admin portal shows, and the upgrade screen should not ask a Tier 3 customer to upgrade to Tier 3.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'Nano and Payday loan applications crash',
+    severity: 'High',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers cannot apply for any short-term loan. After the crash the app shows a blank screen and has to be closed.',
+    saw: 'Tapping any Nano or Payday loan on the Borrow screen (four products) shows a red error screen: “ReferenceError: Property ’useFocusEffect’ doesn’t exist” in the loan-amount screen. Dismissing or reloading leaves a blank screen.',
+    expected: 'The loan-amount screen should open so the customer can choose an amount and apply.',
+    area: 'Borrowing (tried by hand)',
+  },
+  {
+    title: 'Send Money shows recipients the customer never added',
+    severity: 'High',
+    owner: 'Engineering (mobile app) and Compliance',
+    impact: 'A customer could send money to a stranger they think they paid before.',
+    saw: 'On the Tier 1 test account, which has never sent money, Send Money lists four “Recent Recipients” and saved beneficiaries with names, banks and the last four digits of their account numbers. They look like built-in sample data, but could also be another customer’s list.',
+    expected: 'Only recipients this customer has actually paid or saved should be shown; a new customer should see an empty list. If these belong to another customer, it is also a data leak.',
+    area: 'Sending money (tried by hand)',
+  },
+  {
+    title: 'Next of kin cannot be saved',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app and API)',
+    impact: 'Customers cannot add a next of kin, which is normally required for KYC.',
+    saw: 'After filling in every field on the Next of Kin form and pressing Save, the app shows “City cannot be empty”. The form has no City field.',
+    expected: 'The form should ask for everything the system needs (add a City field, or stop requiring it).',
+    area: 'Profile (tried by hand)',
+  },
+  {
+    title: 'Changing the home address fails without telling the customer',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'The customer believes their address is saved when it is not.',
+    saw: 'The profile shows no address (“Add your address”). Adding one and pressing “Save changes” shows no message, but the address is gone when the profile is reopened. The app’s log shows the system refused it: “You can no longer update your residential address”.',
+    expected: 'If the address cannot be changed, the app should say so (and explain how to change it). It should also show the address already on file.',
+    area: 'Profile (tried by hand)',
+  },
+  {
+    title: '“Log out” does nothing',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers cannot sign out — a risk on shared or lost phones.',
+    saw: 'Tapping “Log out” in Settings (several times, waiting up to 9 seconds) has no effect. The customer stays signed in until the app times out.',
+    expected: 'Log out should end the session and return to the sign-in screen.',
+    area: 'Settings (tried by hand)',
+  },
+  {
+    title: 'Funding the wallet by card does nothing',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app and payments)',
+    impact: 'Customers cannot add money by card, so they cannot fund investments or repayments that way.',
+    saw: 'Fund → Card Payment → entering ₦40,000 and tapping “Pay ₦40,000” or “Add New Card” does nothing — no card form, no message, and no request is sent.',
+    expected: 'The card payment page (Paystack) should open.',
+    area: 'Funding the wallet (tried by hand)',
+  },
+  {
+    title: 'Investment goals can be created and topped up with an empty wallet, with no warning',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app) and Product',
+    impact: 'Customers set up a plan whose first payment will fail, and get no message telling them why nothing happens.',
+    saw: 'The Tier 1 test account (₦0.00 balance) created an RWIN goal that says “Your first debit of ₦32,587.54 will be automatically processed on 2 November 2026” (that day). Tapping “Add ₦32,587.54” to top it up then does nothing — no “insufficient balance” message and no other way to pay.',
+    expected: 'The app should tell the customer their balance is too low and offer a way to fund it before (or while) creating the goal.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'Loan documents are marked “Verified” the moment they are uploaded',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app) and Operations',
+    impact: 'Customers are told their documents are verified before anyone has checked them, and are asked to upload documents already on file.',
+    saw: 'Applying for a Personal loan asked for a statement of accounts, NIN document and utility bill — the admin portal shows this customer uploaded all three on 21 October. A blank test PDF uploaded for each was immediately labelled “Verified”.',
+    expected: 'Documents already on file should be reused, and new uploads should show “Uploaded” or “Pending review” until someone checks them.',
+    area: 'Borrowing (tried by hand)',
+  },
+  {
+    title: 'The loan offer asks the customer to repay ₦865,000 on a ₦100,000 loan',
+    severity: 'High',
+    owner: 'Engineering (loans and mobile app)',
+    impact: 'Customers are asked to accept terms that are wildly wrong. Most would decline; anyone who accepts is agreeing to repay more than eight times what they borrowed.',
+    saw: 'Loan #189 (₦100,000 over 3 months at 8.5% a month, approved in the admin portal) showed “Interest Fee (8.5%) ₦765,000.00 · Repayment Amount ₦865,000.00 · Repayment Date 31 January 2027” on the offer screen — 8.5% charged per day for 90 days, in one payment. When applying, the same loan showed ₦125,500 over three monthly payments, and after acceptance the loan screen shows ₦125,500 outstanding.',
+    expected: 'The offer should show the same terms as the application and the admin portal: ₦125,500 in three monthly payments of about ₦41,833 (“Monthly equal”), the first on 2 December 2026.',
+    area: 'Borrowing (tried by hand)',
+  },
+  {
+    title: 'Loan screens show a fee that is never charged, and hide the 7.5% VAT that is',
+    severity: 'Medium',
+    owner: 'Engineering (loans) and Finance',
+    impact: 'Customers cannot see the real cost of the loan before they accept it.',
+    saw: 'The review screen showed “Management Fee (1%) ₦1,000” and “Total Repayable ₦126,500”, while its own schedule adds up to ₦125,500. The admin portal shows a ₦0 management fee, and no fee was charged. Instead, when ₦100,000 was paid out, ₦7,500 was taken straight back as “Loan VAT” (wallet credited ₦92,500). VAT is not mentioned on the application or offer screens.',
+    expected: 'Every charge should be shown, with the correct amount, before the customer accepts. Finance should confirm whether VAT applies to the amount lent (VAT normally applies to fees).',
+    area: 'Borrowing (tried by hand)',
+  },
+  {
+    title: 'The loan screen counts down to the wrong payment date',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers may miss their first payment and be charged late penalties.',
+    saw: 'After payout, the Borrow screen says “Next payment due in 90 days · ₦41,834”. The admin portal shows the next repayment on 2 December 2026 — 30 days away. (90 days is the last payment, 31 January 2027.)',
+    expected: 'It should count down to the next monthly payment (2 December 2026).',
+    area: 'Borrowing (tried by hand)',
+  },
+  {
+    title: 'Times are shown an hour behind Nigerian time',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app, admin portal and API)',
+    impact: 'Transaction and application times look wrong to customers and staff, which matters for disputes and audits.',
+    saw: 'The loan payout made at about 3:30 PM (WAT) appears in the app’s activity as 02:30 PM. The admin portal shows the application created at 1:56 PM when it was submitted at about 2:56 PM.',
+    expected: 'Times should be shown in Nigerian time (WAT, UTC+1).',
+    area: 'Times and dates (tried by hand)',
+  },
 ];
+
+/** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
+const MOBILE_JOURNEYS = {
+  when: '2 November, 30 October build',
+  intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible.',
+  items: [
+    ['Apply for a Personal loan (₦100,000, 3 months), accept it and receive it', 'bad', 'Full journey done: applied in the app (after uploading three documents), approved in the admin portal (#189), offer accepted in the app, paid out from the admin portal. The repayment schedule (3 × about ₦41,833, ₦125,500 in total) follows the “Monthly equal” rule correctly, and the Borrow screen correctly blocks new loans until this one is repaid. But the offer showed ₦865,000 to repay, ₦7,500 “Loan VAT” was taken from the payout, and the next-payment countdown is wrong — see “Problems found”.'],
+    ['Apply for a Nano or Payday loan', 'bad', 'Crashes on the first screen — see “Problems found”.'],
+    ['Invest in RWIN, REAP or RTN as a Tier 3 customer', 'bad', 'Blocked as “not available on your current tier” — see “Problems found”.'],
+    ['Create, top up and delete an RWIN goal as a Tier 1 customer', 'bad', 'Goal created (₦100,000 over 90 days, maturity 31 January 2027 — correct) and deleted. The top-up could not be paid: the wallet was empty and card funding does not work.'],
+    ['Edit employment details', 'ok', 'Job title changed, saved and still there after restarting the app; then changed back.'],
+    ['Add a home address', 'bad', 'Not saved, with no message — see “Problems found”.'],
+    ['Add a next of kin', 'bad', 'Cannot be saved (“City cannot be empty”, no City field).'],
+    ['Fund the wallet', 'bad', 'Card payment does nothing. Bank transfer (dedicated account) and USSD are offered but were not used, as they move real money.'],
+    ['Send money and pay bills', 'idle', 'Screens open; not completed, as they move real money. Send Money shows recipients the customer never added.'],
+    ['Log out and switch account', 'bad', '“Log out” does nothing; “Switch Account” on the sign-in screen works.'],
+  ],
+};
 
 /** Shown on the Mobile tab: what this run found different from the previous one. */
 const MOBILE_CHANGES = {
@@ -203,6 +339,9 @@ const MOBILE_CHANGES = {
 };
 
 const MOBILE_MISMATCHES = [
+  ['RWIN tenors', 'Booking an RWIN goal offers 60, 90 or 120 days, but the RWIN product page lists rates for 90, 180, 270 and 360 days.'],
+  ['REAP rate', 'The Grow screen’s “Recommended for you” card says REAP earns “up to 20% p.a.”, while the REAP card below it says 30% p.a.'],
+  ['App version', 'Settings shows “v2.0.0”, but the installed app is version 1.1.55.'],
   ['Password error wording', 'After a wrong password, the app says “Incorrect passcode. 3 attempt(s) left.” — it should say password; “passcode” is the 6-digit code used with a phone number.'],
   ['Shared attempt counter', 'Wrong attempts with email + password and with phone + passcode count towards the same limit (4 attempts in total). Product should confirm this is intended.'],
 ];
@@ -210,6 +349,9 @@ const MOBILE_MISMATCHES = [
 const MOBILE_QUESTIONS = [
   'Is the “Complete your profile” card meant to follow the customer’s KYC tier? The Tier 3 test account shows 2 of 3 steps done.',
   'Should sign-in accept phone numbers starting with 0, or only the +234 format?',
+  'How should RWIN goal interest be projected? The app shows ₦2,237.38 on ₦100,000 over 90 days at 14% — interest up to the goal’s end date. Our reading of the calculator rules (each contribution earning for a full 90-day cycle) gives about ₦3,375.',
+  'Should 7.5% VAT be charged on the amount lent? It is currently taken from every loan payout as “Loan VAT”. And is there a management fee on Personal loans (the app says 1%, the admin portal says ₦0)?',
+  'Which KYC tier does each investment product need? The product documents do not say.',
 ];
 
 const MOBILE_SKIP_REASONS = [
@@ -324,7 +466,7 @@ function readMobile() {
     context: mobileContext(rows),
     runText: `Automated check run on ${fmt(times[0])} (WAT) · took about ${mins} minutes`,
     intro: 'An automated tester used the Rosabon app on an Android phone the way a customer would — signing in, moving between screens and checking what they show against the product documents. Nothing was booked, borrowed or paid during these checks.',
-    tests, findings, extraCount: MOBILE_EXTRA_FINDINGS.length,
+    tests, findings, extraCount: MOBILE_EXTRA_FINDINGS.length, journeys: MOBILE_JOURNEYS,
     areas: MOBILE_AREAS, mismatches: MOBILE_MISMATCHES, questions: MOBILE_QUESTIONS, changes: MOBILE_CHANGES,
     notRunReason: (t) => (MOBILE_SKIP_REASONS.find(([re]) => re.test(`${t.held ? 'HELD ' : ''}${t.file} ${t.rawTitle}`)) || [null, 'Not run in this round.'])[1],
     techInternal: '<p class="muted">The mobile app blocks screenshots for security, so failures are recorded as the screen’s layout instead. These are in <code>reports/mobile-screens/</code> with the QA team.</p>',
@@ -352,10 +494,10 @@ function panel(d, pub) {
   const passRate = checked ? Math.round((passed / checked) * 100) : 0;
   const high = findings.filter((f) => f.severity === 'High').length;
   const n = findings.length;
-  const extra = d.extraCount ? ` (including ${d.extraCount} seen in the app’s error log)` : '';
+  const extra = d.extraCount ? ` (including ${d.extraCount} found by hand or in the app’s error log)` : '';
   const verdict = n === 0
     ? { tone: 'good', head: 'Everything checked is working as expected', sub: `All ${checked} checks passed.` }
-    : { tone: 'warn', head: `Mostly working — ${n} problem${n > 1 ? 's' : ''} need attention${extra}`, sub: high ? `${high} of them affect money or compliance and should be fixed before release.` : 'None of them affect money or compliance.' };
+    : { tone: 'warn', head: `${high >= 3 ? 'Not ready for release' : 'Mostly working'} — ${n} problem${n > 1 ? 's' : ''} need attention${extra}`, sub: high ? `${high} of them affect money or compliance and should be fixed before release.` : 'None of them affect money or compliance.' };
 
   const areaRows = Object.entries(d.areas).map(([file, a]) => {
     const list = tests.filter((t) => t.file === file);
@@ -410,6 +552,15 @@ function panel(d, pub) {
 ${d.changes ? `
     <h2>What changed since the last run (${esc(d.changes.since)})</h2>
     <ul class="clean">${d.changes.items.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
+` : ''}${d.journeys ? `
+    <h2>What we tried by hand (${esc(d.journeys.when)})</h2>
+    <p class="muted">${esc(d.journeys.intro)}</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Activity</th><th>Result</th></tr></thead>
+      <tbody>${d.journeys.items.map(([t, tone, x]) => `<tr><td class="area"><strong>${esc(t)}</strong><div class="muted">${esc(x)}</div></td><td class="result"><span class="badge ${tone}">${tone === 'ok' ? 'Worked' : tone === 'bad' ? 'Problem' : 'Partly checked'}</span></td></tr>`).join('')}</tbody>
+    </table>
+    </div>
 ` : ''}
     <h2>What was checked</h2>
     <p class="muted">${esc(d.intro)}</p>
