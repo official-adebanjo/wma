@@ -95,6 +95,88 @@ export const LIVE_IDS: Record<string, string> = {
   'borrow.home.tile.personal': 'android=new UiSelector().resourceId("action-card").descriptionMatches("(?i)^[^,]*personal.*")',
   'borrow.home.tile.publicSector': 'android=new UiSelector().resourceId("action-card").descriptionMatches("(?i)^[^,]*public.?sector.*")',
   'borrow.home.tile.any': 'rid:action-card',
+
+  // ---- Journeys (probed by hand on the 30 October build, 2026-11-02) ----
+  // Shared: React Native red error screen (debug build), toast, confirm modal, screen header title
+  // Native views: resource-ids carry the package prefix (com.optisoft.rosabon:id/…), unlike RN testIDs
+  'common.redbox': 'android=new UiSelector().resourceIdMatches(".*:id/rn_redbox_stack")',
+  'common.redbox.message': 'android=new UiSelector().resourceIdMatches(".*:id/catalyst_redbox_title")',
+  'common.confirmModal': 'rid:confirm-modal',
+  'common.header.title': '//*[@resource-id="screen-header"]//android.widget.TextView',
+  'common.anyInput': '//android.widget.EditText',
+
+  // Grow → product page. Blocked products open a confirm modal instead: "Upgrade Your Account … Upgrade Now".
+  'grow.tierGate': 'text:Upgrade Your Account',
+  'grow.tierGate.message': 'android=new UiSelector().textContains("isn\'t available on your current tier")',
+  'rwin.product.screen': 'text:Rates based on Tenure',
+  'rwin.product.newGoal': '~New Goal',
+  // RWIN goal creation: 01 name → 02 amount, tenor, payment preference → 03 summary + T&Cs → "Goal created!"
+  'rwin.create.step': 'android=new UiSelector().textMatches("0[1-3] / 03")',
+  'rwin.create.name.input': 'rid:form-text-input',
+  'rwin.create.continue': '~Continue',
+  'rwin.create.target.input': '//android.widget.EditText',
+  'rwin.create.summary': 'text:Goal Summary',
+  'rwin.create.terms': 'rid:checkbox',
+  'rwin.create.submit': '~Create Goal',
+  'rwin.create.success': 'text:Goal created!',
+  'rwin.create.success.note': 'android=new UiSelector().textStartsWith("Your first debit of")',
+  'rwin.create.viewGoal': '~View Goal',
+  'rwin.goal.topUp': '~Top Up Goal',
+  'rwin.goal.delete': '~Delete Goal',
+  'rwin.goal.deleteConfirm': '//*[@resource-id="confirm-modal"]//*[@content-desc="Delete Goal"] | (//*[@content-desc="Delete Goal"])[2]',
+  'rwin.goal.deleted': 'text:Goal deleted',
+  'rwin.topUp.screen': 'text:Top up plan',
+  'rwin.topUp.submit': 'android=new UiSelector().descriptionStartsWith("Add ₦")',
+
+  // Borrow → loan application. Personal: amount + tenor chips + purpose → Upload Documents → Review → submitted.
+  'loan.apply.amountScreen': 'android=new UiSelector().textMatches("(?i)^(SELECT AMOUNT.*|Enter Amount|How much.*)$")',
+  'loan.apply.continue': '~Continue',
+  'loan.docs.screen': 'text:Upload Documents',
+  'loan.docs.upload': '~Upload',
+  'loan.docs.uploaded': 'android=new UiSelector().descriptionEndsWith("uploaded. Tap to replace.")',
+  'loan.docs.submit': '~Submit for Review',
+  'common.filePicker.pdf': '~Choose a PDF or document',
+  'loan.review.screen': 'text:Review Application',
+  'loan.review.seeBreakdown': '~See Breakdown',
+  'loan.review.breakdownSheet': 'rid:repayment-breakdown-sheet',
+  'loan.review.breakdownRow': 'android=new UiSelector().textMatches(".*\\\\(Month [0-9]+\\\\)$")',
+  'loan.review.declaration': 'rid:checkbox',
+  'loan.review.submit': '~Submit Application',
+  // Borrow-tab states while a loan exists: under review → offer ready → disbursement in progress → active dashboard
+  'loan.state.underReview': 'text:Your loan application on review',
+  'loan.state.offer': 'text:OFFER READY',
+  'loan.state.disbursing': 'text:Your disbursement is in progress',
+  'loan.dashboard.outstanding': 'text:TOTAL OUTSTANDING',
+  'loan.dashboard.nextDue': 'android=new UiSelector().textStartsWith("Next payment due in")',
+
+  // Settings and Profile (Personal Info. / Next of Kin / Employment Info. tabs)
+  'settings.screen': '//*[@resource-id="screen-header"] | //android.widget.TextView[@text="Settings"]',
+  'settings.profile': '~Profile',
+  'settings.logout': '~Log out',
+  'profile.tab.personal': '~Personal Info.',
+  'profile.tab.kin': '~Next of Kin',
+  'profile.tab.employment': '~Employment Info.',
+  'profile.personal.save': '~Save changes',
+  'profile.address.add': '~Add your address',
+  'profile.address.modal': 'text:Edit Address',
+  'profile.address.street': 'android=new UiSelector().text("Enter street address")',
+  'profile.address.state': '~Select state',
+  'profile.address.city': '~Select City',
+  'profile.address.done': '~Done',
+  'profile.kin.relationship': '~Select relationship',
+  'profile.kin.save': '~Save Next of Kin',
+  'profile.employment.jobTitle': '(//android.widget.TextView[@text="Job Title"]/following::android.widget.EditText)[1]',
+  'profile.employment.save': '~Save Changes',
+
+  // Home quick actions → Send Money / Fund Wallet
+  'send.screen': 'text:Send Money',
+  'send.recent': 'text:Recent Recipients',
+  'send.beneficiary': 'rid:list-item',
+  'fund.screen': 'text:Fund Wallet',
+  'fund.card': 'android=new UiSelector().descriptionStartsWith("Card Payment")',
+  'fund.card.addNew': '~Add New Card',
+  'fund.card.pay': 'android=new UiSelector().descriptionStartsWith("Pay ₦")',
+  'fund.card.gateway': 'android=new UiSelector().className("android.webkit.WebView")',
 };
 
 /** WebdriverIO selector for a LIVE_IDS value (Android). */

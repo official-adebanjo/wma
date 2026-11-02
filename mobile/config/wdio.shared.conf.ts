@@ -18,6 +18,7 @@ export const sharedConfig: Options.Testrunner = {
   suites: {
     auth: ['../specs/auth/**/*.spec.ts'],
     navigation: ['../specs/navigation/**/*.spec.ts'],
+    journeys: ['../specs/journeys/**/*.spec.ts'],
     kyc: ['../specs/kyc/**/*.spec.ts'],
     wallet: ['../specs/wallet/**/*.spec.ts'],
     grow: ['../specs/grow/**/*.spec.ts'],

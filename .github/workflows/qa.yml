@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       mobile_suite:
-        description: 'WDIO suite (auth, kyc, wallet, grow, reap, rwin, rtn, borrow, nano, payday, personal, publicSector, resilience) or "all"'
+        description: 'WDIO suite (auth, navigation, journeys, kyc, wallet, grow, reap, rwin, rtn, borrow, nano, payday, personal, publicSector, resilience) or "all"'
         default: 'all'
   schedule:
     - cron: '0 1 * * 1-5' # nightly full regression, 02:00 WAT
@@ -152,7 +152,7 @@ jobs:
       APP_PACKAGE: com.optisoft.rosabon
       ANDROID_APP_PATH: ./apps/rosabon-dev.apk
       MOBILE_HOLD_PERSONAS: ${{ vars.MOBILE_HOLD_PERSONAS }}
-      MOBILE_SUITES: ${{ (github.event.inputs.mobile_suite && github.event.inputs.mobile_suite != 'all') && github.event.inputs.mobile_suite || 'auth navigation' }}
+      MOBILE_SUITES: ${{ (github.event.inputs.mobile_suite && github.event.inputs.mobile_suite != 'all') && github.event.inputs.mobile_suite || 'auth navigation journeys' }}
       CUSTOMER_T1_EMAIL: ${{ secrets.CUSTOMER_T1_EMAIL }}
       CUSTOMER_T1_PASSWORD: ${{ secrets.CUSTOMER_T1_PASSWORD }}
       CUSTOMER_T1_PHONE: ${{ secrets.CUSTOMER_T1_PHONE }}

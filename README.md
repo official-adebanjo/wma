@@ -44,6 +44,13 @@ You can filter by tag in both runners. Playwright uses `--grep @crit`. Webdriver
    ```bash
    npx wdio run mobile/config/wdio.android.conf.ts --spec mobile/specs/auth/persona-login.spec.ts
    ```
+5. **Customer journeys.** `--suite journeys` runs investing, borrowing, profile and account journeys with the Tier 1 and Tier 3 accounts. They make real changes on the dev system, all small and mostly undone:
+   - An RWIN goal is created and then deleted.
+   - A job title is edited and then changed back.
+   - A test next of kin is saved, once the app allows it.
+   - Nothing is paid or sent.
+
+   A Personal loan application is only submitted with `MOBILE_ALLOW_LOAN_APPLY=1`. Without it, the check stops at the review screen. The loan checks run whichever stage the Tier 3 account's loan is at, because a customer can hold one loan at a time.
 
 Screens the app hasn't tagged with contract IDs yet are mapped to the live UI in [mobile/screens/live-ids.ts](mobile/screens/live-ids.ts). On failure, the element tree is saved to `reports/mobile-screens/*.xml`. Screenshots come out black because the app blocks screen capture.
 

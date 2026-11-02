@@ -147,6 +147,10 @@ const MOBILE_AREAS = {
   'persona-login.spec.ts': { name: 'Signing in', what: 'Each test customer can sign in with email and password, or with phone number and passcode.' },
   'onboarding-login.spec.ts': { name: 'Sign-up, sign-in security and sessions', what: 'Creating an account, wrong-password handling, account lock-out, staying signed in, and frozen accounts.' },
   'home-grow-borrow.spec.ts': { name: 'Home, Grow and Borrow screens', what: 'The balance and quick actions on Home, investment products and plan totals on Grow, and the loans offered on Borrow.' },
+  'investing.spec.ts': { name: 'Investing', what: 'Opening each investment product, and creating, checking and deleting an RWIN savings goal.' },
+  'borrowing.spec.ts': { name: 'Borrowing', what: 'Opening short-term loans, and checking a Personal loan’s quote, offer and repayment countdown against the loan rules.' },
+  'profile.spec.ts': { name: 'Profile', what: 'Editing employment details, adding a next of kin and a home address.' },
+  'account.spec.ts': { name: 'Account', what: 'Send Money recipients, funding the wallet by card, and logging out.' },
 };
 
 const MOBILE_FINDINGS = [
@@ -177,6 +181,106 @@ const MOBILE_FINDINGS = [
     saw: 'The Home screen shows “Complete your profile — 2/3, 1 key identity step left” for the Tier 3 test account.',
     expected: 'A fully verified (Tier 3) customer should have every identity step complete.',
   },
+  // Customer journeys (mobile/specs/journeys) — first found by hand on 2 November.
+  {
+    match: /Tier 3 customer can open/,
+    title: 'A Tier 3 customer cannot open an investment product',
+    severity: 'High',
+    owner: 'Engineering (mobile app and KYC) and Product',
+    impact: 'Fully verified customers are locked out of investing.',
+    saw: 'Signed in as the Tier 3 test account, opening the product shows “This investment isn’t available on your current tier. Upgrade your account to invest.”',
+    expected: 'A Tier 3 customer should be able to open and invest in every product.',
+  },
+  {
+    match: /(Nano|Payday) loan application opens without crashing/,
+    title: 'Nano and Payday loan applications crash',
+    severity: 'High',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers cannot apply for any short-term loan. After the crash the app shows a blank screen and has to be closed.',
+    saw: 'Tapping a Nano or Payday loan on the Borrow screen shows a red error screen: “ReferenceError: Property ’useFocusEffect’ doesn’t exist” in the loan-amount screen. Dismissing or reloading leaves a blank screen.',
+    expected: 'The loan-amount screen should open so the customer can choose an amount and apply.',
+  },
+  {
+    match: /Send Money lists no recipients/,
+    title: 'Send Money shows recipients the customer never added',
+    severity: 'High',
+    owner: 'Engineering (mobile app) and Compliance',
+    impact: 'A customer could send money to a stranger they think they paid before.',
+    saw: 'On the Tier 1 test account, which has never sent money, Send Money lists “Recent Recipients” and saved beneficiaries with names, banks and the last four digits of their account numbers. They look like built-in sample data, but could also be another customer’s list.',
+    expected: 'Only recipients this customer has actually paid or saved should be shown; a new customer should see an empty list. If these belong to another customer, it is also a data leak.',
+  },
+  {
+    match: /Loan offer shows the same terms as the application/,
+    title: 'The loan offer asks the customer to repay ₦865,000 on a ₦100,000 loan',
+    severity: 'High',
+    owner: 'Engineering (loans and mobile app)',
+    impact: 'Customers are asked to accept terms that are wildly wrong.',
+    saw: 'The offer screen’s repayment amount does not match either loan interest rule (see the technical report for the figures).',
+    expected: 'The offer should show the same terms as the application and the admin portal.',
+  },
+  {
+    match: /schedule follows the interest rule and adds up to the total/,
+    title: 'Personal loan total does not match its repayment schedule',
+    severity: 'Medium',
+    owner: 'Engineering (loans) and Product',
+    impact: 'Customers cannot see the real cost of the loan before they apply.',
+    saw: 'On the review screen, “Total Repayable” differs from the sum of the monthly repayment schedule, or the schedule does not follow the “Monthly equal” / “Monthly reducing” rule.',
+    expected: 'The total and the schedule should agree, and follow the loan specification.',
+  },
+  {
+    match: /next payment countdown is within a month/,
+    title: 'The loan screen counts down to the wrong payment date',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers may miss their first payment and be charged late penalties.',
+    saw: 'With a 3-month Personal loan being repaid monthly, the Borrow screen says “Next payment due in 90 days”. The admin portal shows the next repayment on 2 December 2026 — 30 days away. (90 days is the last payment.)',
+    expected: 'It should count down to the next monthly payment.',
+  },
+  {
+    match: /next of kin can be saved/,
+    title: 'Next of kin cannot be saved',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app and API)',
+    impact: 'Customers cannot add a next of kin, which is normally required for KYC.',
+    saw: 'After filling in every field on the Next of Kin form and pressing Save, the app shows “City cannot be empty”. The form has no City field.',
+    expected: 'The form should ask for everything the system needs (add a City field, or stop requiring it).',
+  },
+  {
+    match: /Log out returns to the sign-in screen/,
+    title: '“Log out” does nothing',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers cannot sign out — a risk on shared or lost phones.',
+    saw: 'Tapping “Log out” in Settings has no effect. The customer stays signed in until the app times out.',
+    expected: 'Log out should end the session and return to the sign-in screen.',
+  },
+  {
+    match: /card funding opens the payment page/,
+    title: 'Funding the wallet by card does nothing',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app and payments)',
+    impact: 'Customers cannot add money by card, so they cannot fund investments or repayments that way.',
+    saw: 'Fund → Card Payment → entering an amount and tapping “Pay ₦…” does nothing — no card form and no message.',
+    expected: 'The card payment page (Paystack) should open.',
+  },
+  {
+    match: /topping up from an empty wallet/,
+    title: 'Investment goals can be created and topped up with an empty wallet, with no warning',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app) and Product',
+    impact: 'Customers set up a plan whose first payment will fail, and get no message telling them why nothing happens.',
+    saw: 'The Tier 1 test account (₦0.00 balance) can create an RWIN goal whose first debit is due that day. Tapping “Add ₦…” to top it up then does nothing — no “insufficient balance” message and no other way to pay.',
+    expected: 'The app should tell the customer their balance is too low and offer a way to fund it before (or while) creating the goal.',
+  },
+  {
+    match: /tenors match the product rate table/,
+    title: 'RWIN goals offer tenors that are not in the RWIN rate table',
+    severity: 'Medium',
+    owner: 'Product and Engineering (mobile app)',
+    impact: 'Customers can book a term with no published rate, so the rate they get is unclear.',
+    saw: 'Booking an RWIN goal offers 60, 90 or 120 days; the RWIN product page lists rates only for 90, 180, 270 and 360 days.',
+    expected: 'Booking should offer the tenors in the rate table (or the table should cover every tenor offered).',
+  },
 ];
 
 /** Problems seen during the mobile run that no automated check covers yet (from the app’s own error log). */
@@ -190,78 +294,16 @@ const MOBILE_EXTRA_FINDINGS = [
     expected: 'The SmileID configuration file should be included in the build so identity checks can run.',
     area: 'App start-up (seen in the app’s error log)',
   },
-  // Found by hand on 2 November (30 October build) — see MOBILE_JOURNEYS.
+  // Found by hand on 2 November (30 October build) and not yet covered by an automated check —
+  // the rest of that round's findings are in MOBILE_FINDINGS, matched to mobile/specs/journeys.
   {
-    title: 'A Tier 3 customer cannot invest in anything, while a Tier 1 customer can',
-    severity: 'High',
-    owner: 'Engineering (mobile app and KYC) and Product',
-    impact: 'Fully verified customers are locked out of every investment product, so they cannot put money in.',
-    saw: 'Signed in as the Tier 3 test account (Tier 3 in the admin portal and in the app’s Settings), opening RWIN, REAP or RTN shows “This investment isn’t available on your current tier. Upgrade your account to invest.” The upgrade screen then says “You are on Tier 3 — kindly provide the information below to upgrade to Tier 3” and lists 8 unfinished steps. The Tier 1 test account can open RWIN and create a goal.',
-    expected: 'A Tier 3 customer should be able to invest in every product. The app should use the same tier the admin portal shows, and the upgrade screen should not ask a Tier 3 customer to upgrade to Tier 3.',
-    area: 'Investing (tried by hand)',
-  },
-  {
-    title: 'Nano and Payday loan applications crash',
-    severity: 'High',
-    owner: 'Engineering (mobile app)',
-    impact: 'Customers cannot apply for any short-term loan. After the crash the app shows a blank screen and has to be closed.',
-    saw: 'Tapping any Nano or Payday loan on the Borrow screen (four products) shows a red error screen: “ReferenceError: Property ’useFocusEffect’ doesn’t exist” in the loan-amount screen. Dismissing or reloading leaves a blank screen.',
-    expected: 'The loan-amount screen should open so the customer can choose an amount and apply.',
-    area: 'Borrowing (tried by hand)',
-  },
-  {
-    title: 'Send Money shows recipients the customer never added',
-    severity: 'High',
-    owner: 'Engineering (mobile app) and Compliance',
-    impact: 'A customer could send money to a stranger they think they paid before.',
-    saw: 'On the Tier 1 test account, which has never sent money, Send Money lists four “Recent Recipients” and saved beneficiaries with names, banks and the last four digits of their account numbers. They look like built-in sample data, but could also be another customer’s list.',
-    expected: 'Only recipients this customer has actually paid or saved should be shown; a new customer should see an empty list. If these belong to another customer, it is also a data leak.',
-    area: 'Sending money (tried by hand)',
-  },
-  {
-    title: 'Next of kin cannot be saved',
+    title: 'A customer with no address on file is told they can no longer change it',
     severity: 'Medium',
-    owner: 'Engineering (mobile app and API)',
-    impact: 'Customers cannot add a next of kin, which is normally required for KYC.',
-    saw: 'After filling in every field on the Next of Kin form and pressing Save, the app shows “City cannot be empty”. The form has no City field.',
-    expected: 'The form should ask for everything the system needs (add a City field, or stop requiring it).',
+    owner: 'Engineering (mobile app and API) and Product',
+    impact: 'Customers without an address cannot add one, although an address is normally needed for KYC.',
+    saw: 'The Tier 3 test account’s profile shows no address (“Add your address”). Adding one and pressing “Save changes” briefly shows “You can no longer update your residential address”, and nothing is saved.',
+    expected: 'A customer with no address on file should be able to add one — or, if one is on file, the profile should show it and explain how to change it.',
     area: 'Profile (tried by hand)',
-  },
-  {
-    title: 'Changing the home address fails without telling the customer',
-    severity: 'Medium',
-    owner: 'Engineering (mobile app)',
-    impact: 'The customer believes their address is saved when it is not.',
-    saw: 'The profile shows no address (“Add your address”). Adding one and pressing “Save changes” shows no message, but the address is gone when the profile is reopened. The app’s log shows the system refused it: “You can no longer update your residential address”.',
-    expected: 'If the address cannot be changed, the app should say so (and explain how to change it). It should also show the address already on file.',
-    area: 'Profile (tried by hand)',
-  },
-  {
-    title: '“Log out” does nothing',
-    severity: 'Medium',
-    owner: 'Engineering (mobile app)',
-    impact: 'Customers cannot sign out — a risk on shared or lost phones.',
-    saw: 'Tapping “Log out” in Settings (several times, waiting up to 9 seconds) has no effect. The customer stays signed in until the app times out.',
-    expected: 'Log out should end the session and return to the sign-in screen.',
-    area: 'Settings (tried by hand)',
-  },
-  {
-    title: 'Funding the wallet by card does nothing',
-    severity: 'Medium',
-    owner: 'Engineering (mobile app and payments)',
-    impact: 'Customers cannot add money by card, so they cannot fund investments or repayments that way.',
-    saw: 'Fund → Card Payment → entering ₦40,000 and tapping “Pay ₦40,000” or “Add New Card” does nothing — no card form, no message, and no request is sent.',
-    expected: 'The card payment page (Paystack) should open.',
-    area: 'Funding the wallet (tried by hand)',
-  },
-  {
-    title: 'Investment goals can be created and topped up with an empty wallet, with no warning',
-    severity: 'Medium',
-    owner: 'Engineering (mobile app) and Product',
-    impact: 'Customers set up a plan whose first payment will fail, and get no message telling them why nothing happens.',
-    saw: 'The Tier 1 test account (₦0.00 balance) created an RWIN goal that says “Your first debit of ₦32,587.54 will be automatically processed on 2 November 2026” (that day). Tapping “Add ₦32,587.54” to top it up then does nothing — no “insufficient balance” message and no other way to pay.',
-    expected: 'The app should tell the customer their balance is too low and offer a way to fund it before (or while) creating the goal.',
-    area: 'Investing (tried by hand)',
   },
   {
     title: 'Loan documents are marked “Verified” the moment they are uploaded',
@@ -291,15 +333,6 @@ const MOBILE_EXTRA_FINDINGS = [
     area: 'Borrowing (tried by hand)',
   },
   {
-    title: 'The loan screen counts down to the wrong payment date',
-    severity: 'Medium',
-    owner: 'Engineering (mobile app)',
-    impact: 'Customers may miss their first payment and be charged late penalties.',
-    saw: 'After payout, the Borrow screen says “Next payment due in 90 days · ₦41,834”. The admin portal shows the next repayment on 2 December 2026 — 30 days away. (90 days is the last payment, 31 January 2027.)',
-    expected: 'It should count down to the next monthly payment (2 December 2026).',
-    area: 'Borrowing (tried by hand)',
-  },
-  {
     title: 'Times are shown an hour behind Nigerian time',
     severity: 'Medium',
     owner: 'Engineering (mobile app, admin portal and API)',
@@ -313,14 +346,14 @@ const MOBILE_EXTRA_FINDINGS = [
 /** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
 const MOBILE_JOURNEYS = {
   when: '2 November, 30 October build',
-  intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible.',
+  intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
     ['Apply for a Personal loan (₦100,000, 3 months), accept it and receive it', 'bad', 'Full journey done: applied in the app (after uploading three documents), approved in the admin portal (#189), offer accepted in the app, paid out from the admin portal. The repayment schedule (3 × about ₦41,833, ₦125,500 in total) follows the “Monthly equal” rule correctly, and the Borrow screen correctly blocks new loans until this one is repaid. But the offer showed ₦865,000 to repay, ₦7,500 “Loan VAT” was taken from the payout, and the next-payment countdown is wrong — see “Problems found”.'],
     ['Apply for a Nano or Payday loan', 'bad', 'Crashes on the first screen — see “Problems found”.'],
-    ['Invest in RWIN, REAP or RTN as a Tier 3 customer', 'bad', 'Blocked as “not available on your current tier” — see “Problems found”.'],
+    ['Invest in RWIN, REAP or RTN as a Tier 3 customer', 'ok', 'Blocked as “not available on your current tier” in the early afternoon, with an upgrade screen saying “You are on Tier 3 … upgrade to Tier 3”. By the automated run later that day all three products opened, so it now passes.'],
     ['Create, top up and delete an RWIN goal as a Tier 1 customer', 'bad', 'Goal created (₦100,000 over 90 days, maturity 31 January 2027 — correct) and deleted. The top-up could not be paid: the wallet was empty and card funding does not work.'],
     ['Edit employment details', 'ok', 'Job title changed, saved and still there after restarting the app; then changed back.'],
-    ['Add a home address', 'bad', 'Not saved, with no message — see “Problems found”.'],
+    ['Add a home address', 'bad', 'Not saved: the app briefly shows “You can no longer update your residential address”, although no address is on file — see “Problems found”.'],
     ['Add a next of kin', 'bad', 'Cannot be saved (“City cannot be empty”, no City field).'],
     ['Fund the wallet', 'bad', 'Card payment does nothing. Bank transfer (dedicated account) and USSD are offered but were not used, as they move real money.'],
     ['Send money and pay bills', 'idle', 'Screens open; not completed, as they move real money. Send Money shows recipients the customer never added.'],
@@ -334,12 +367,12 @@ const MOBILE_CHANGES = {
   items: [
     ['App build', 'Tested the 30 October build. It has the same version number as the 29 October build (1.1.55, code 92); the version should be raised with each build so testers and devices can tell them apart.'],
     ['Fixed: oversized Payday offer', 'The Borrow screen’s “Recommended for you” card now offers ₦20,000 for a 30-day Payday loan, within the ₦500,000 limit. On 29 October it offered ₦5,000,000.'],
+    ['Fixed during the day: Tier 3 investing', 'In the early afternoon the Tier 3 test account was told every investment was “not available on your current tier”. By the automated run later the same day, RWIN, REAP and RTN all opened.'],
     ['Still not fixed', 'A Tier 3 account still shows its profile as 2/3 complete, a local phone number (080…) is still not accepted at sign-in, and identity verification (SmileID) still cannot start because its settings file is missing.'],
   ],
 };
 
 const MOBILE_MISMATCHES = [
-  ['RWIN tenors', 'Booking an RWIN goal offers 60, 90 or 120 days, but the RWIN product page lists rates for 90, 180, 270 and 360 days.'],
   ['REAP rate', 'The Grow screen’s “Recommended for you” card says REAP earns “up to 20% p.a.”, while the REAP card below it says 30% p.a.'],
   ['App version', 'Settings shows “v2.0.0”, but the installed app is version 1.1.55.'],
   ['Password error wording', 'After a wrong password, the app says “Incorrect passcode. 3 attempt(s) left.” — it should say password; “passcode” is the 6-digit code used with a phone number.'],
@@ -359,6 +392,10 @@ const MOBILE_SKIP_REASONS = [
   [/HELD/, 'Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.'],
   [/phone \+ passcode/, 'Not run: no phone number and passcode are on file for this test account yet.'],
   [/email \+ password/, 'Not run: no email and password are on file for this test account.'],
+  [/schedule follows the interest rule/, 'Not run: the Tier 3 test account already has a loan, and only one loan can be held at a time. It runs again once that loan is repaid.'],
+  [/Loan offer shows the same terms/, 'Not run: only checked while an approved loan offer is waiting to be accepted.'],
+  [/next payment countdown/, 'Not run: only checked while a loan is being repaid.'],
+  [/topping up from an empty wallet/, 'Not run: only checked while the Tier 1 test wallet is empty, so the check can never move money.'],
 ];
 
 /* ================================================================== helpers */
@@ -455,7 +492,12 @@ function readMobile() {
     ...(MOBILE_FINDINGS.find((x) => x.match.test(t.rawTitle)) || genericFinding(t)),
     area: MOBILE_AREAS[t.file]?.name || t.file,
   }));
-  const findings = [...fromChecks, ...MOBILE_EXTRA_FINDINGS].sort((a, b) => sevRank(a.severity) - sevRank(b.severity));
+  // One card per problem: several checks can fail for the same reason (e.g. Nano and Payday both crash),
+  // and a problem found by hand may also be caught by a check.
+  const seen = new Set();
+  const findings = [...fromChecks, ...MOBILE_EXTRA_FINDINGS]
+    .filter((f) => !seen.has(f.title) && seen.add(f.title))
+    .sort((a, b) => sevRank(a.severity) - sevRank(b.severity));
 
   const times = rows.map((r) => new Date(r.at)).sort((a, b) => a - b);
   const mins = Math.max(1, Math.round((times[times.length - 1] - times[0]) / 60000));
