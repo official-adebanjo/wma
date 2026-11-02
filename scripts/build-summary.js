@@ -198,7 +198,6 @@ const MOBILE_CHANGES = {
   items: [
     ['App build', 'Tested the 30 October build. It has the same version number as the 29 October build (1.1.55, code 92); the version should be raised with each build so testers and devices can tell them apart.'],
     ['Fixed: oversized Payday offer', 'The Borrow screen’s “Recommended for you” card now offers ₦20,000 for a 30-day Payday loan, within the ₦500,000 limit. On 29 October it offered ₦5,000,000.'],
-    ['New loan products on the Borrow screen', 'Customers now also see products named “payday-loan-v2”, “nano-loan-v2”, “Personal-loan-v2” and “public-sector-loan-v2”. The names look like internal codes; please confirm these are intended test products.'],
     ['Still not fixed', 'A Tier 3 account still shows its profile as 2/3 complete, a local phone number (080…) is still not accepted at sign-in, and identity verification (SmileID) still cannot start because its settings file is missing.'],
   ],
 };
