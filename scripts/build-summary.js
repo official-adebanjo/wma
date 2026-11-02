@@ -192,6 +192,17 @@ const MOBILE_EXTRA_FINDINGS = [
   },
 ];
 
+/** Shown on the Mobile tab: what this run found different from the previous one. */
+const MOBILE_CHANGES = {
+  since: '29 October',
+  items: [
+    ['App build', 'Tested the 30 October build. It has the same version number as the 29 October build (1.1.55, code 92); the version should be raised with each build so testers and devices can tell them apart.'],
+    ['Fixed: oversized Payday offer', 'The Borrow screen’s “Recommended for you” card now offers ₦20,000 for a 30-day Payday loan, within the ₦500,000 limit. On 29 October it offered ₦5,000,000.'],
+    ['New loan products on the Borrow screen', 'Customers now also see products named “payday-loan-v2”, “nano-loan-v2”, “Personal-loan-v2” and “public-sector-loan-v2”. The names look like internal codes; please confirm these are intended test products.'],
+    ['Still not fixed', 'A Tier 3 account still shows its profile as 2/3 complete, a local phone number (080…) is still not accepted at sign-in, and identity verification (SmileID) still cannot start because its settings file is missing.'],
+  ],
+};
+
 const MOBILE_MISMATCHES = [
   ['Password error wording', 'After a wrong password, the app says “Incorrect passcode. 3 attempt(s) left.” — it should say password; “passcode” is the 6-digit code used with a phone number.'],
   ['Shared attempt counter', 'Wrong attempts with email + password and with phone + passcode count towards the same limit (4 attempts in total). Product should confirm this is intended.'],
@@ -315,7 +326,7 @@ function readMobile() {
     runText: `Automated check run on ${fmt(times[0])} (WAT) · took about ${mins} minutes`,
     intro: 'An automated tester used the Rosabon app on an Android phone the way a customer would — signing in, moving between screens and checking what they show against the product documents. Nothing was booked, borrowed or paid during these checks.',
     tests, findings, extraCount: MOBILE_EXTRA_FINDINGS.length,
-    areas: MOBILE_AREAS, mismatches: MOBILE_MISMATCHES, questions: MOBILE_QUESTIONS,
+    areas: MOBILE_AREAS, mismatches: MOBILE_MISMATCHES, questions: MOBILE_QUESTIONS, changes: MOBILE_CHANGES,
     notRunReason: (t) => (MOBILE_SKIP_REASONS.find(([re]) => re.test(`${t.held ? 'HELD ' : ''}${t.file} ${t.rawTitle}`)) || [null, 'Not run in this round.'])[1],
     techInternal: '<p class="muted">The mobile app blocks screenshots for security, so failures are recorded as the screen’s layout instead. These are in <code>reports/mobile-screens/</code> with the QA team.</p>',
     techPublic: '<p class="muted">Step-by-step technical detail is kept internally. Ask the QA team for access.</p>',
