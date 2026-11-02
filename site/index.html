@@ -140,7 +140,7 @@
     
     <p class="muted small">Chrome browser · dev environment</p>
     <h2 class="panel-title">Admin Portal Test Results</h2>
-    <p class="muted">Automated check run on 26 October 2026 at 23:59 (WAT) · took about 15 minutes</p>
+    <p class="muted">Automated check run on 2 November 2026 at 12:33 (WAT) · took about 17 minutes</p>
 
     <section class="card verdict warn">
       <h3>Mostly working — 5 problems need attention</h3>
@@ -157,6 +157,9 @@
       <span class="p" style="width:90.51724137931035%"></span><span class="f" style="width:4.310344827586207%"></span><span class="s" style="width:5.172413793103448%"></span>
     </div>
     <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (95% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
+
+    <h2>What changed since the last run (26 October)</h2>
+    <ul class="clean"><li><strong>Loan interest.</strong> Newer loans now follow the specification’s “Monthly equal” formula (8.5% a month on loan #188, rounded up to the whole naira). The older loan #169 still uses the old amount — see “Problems found” below.</li><li><strong>Nano and Payday loan product forms.</strong> The “Loyalty discount streaks” section is now called “Loyalty &amp; repayment progression” on Nano and “Loyalty &amp; constraints” on Payday. Its settings are unchanged. Our check was updated and passes.</li><li><strong>Investment plan page.</strong> RTN (Treasury Note) plans now appear in the list. Their page correctly has no “Contribution plan” section and no “Top up” button, as RTN is a one-off lump sum. Our check was updated and passes.</li><li><strong>Still not fixed.</strong> The empty audit log, the disappearing new biller, the unrecorded viewing of private customer details and the 7.5% deduction from loan payouts are all still happening.</li></ul>
 
     <h2>What was checked</h2>
     <p class="muted">An automated tester used the admin portal the way a staff member would — opening pages, filling in forms and checking the results against the product documents.</p>
@@ -179,33 +182,33 @@
         <p class="impact">The portal is not keeping its official record of who did what. This is a compliance requirement.</p>
         <dl>
           <dt>What we saw</dt><dd>The Audit Log page says “No system actions have been recorded yet” and shows 0 entries for the past week — even though admin actions were carried out during this test.</dd>
-          <dt>What should happen</dt><dd>Every admin action should be recorded permanently in the audit log (Admin PRD). Entries were visible here on 21 October.</dd>
+          <dt>What should happen</dt><dd>Every admin action should be recorded permanently in the audit log (Admin PRD). Entries were visible here on 21 October; it has been empty on 26 October and 2 November.</dd>
         </dl>
         
       </article>
       <article class="card finding">
         <header>
           <span class="sev high">High priority</span>
-          <h3>2. A loan is being repaid at the wrong monthly amount</h3>
+          <h3>2. Loans on the same setting are repaid using different interest calculations</h3>
           <p class="muted">Area: Loan interest calculations · Who should look at this: Engineering (loan calculation) and Product</p>
         </header>
-        <p class="impact">Customers may be charged the wrong amount of interest. This affects money and must be confirmed before loans go live.</p>
+        <p class="impact">Customers on the same loan product are charged interest in different ways, and older loans may be charged the wrong amount. This affects money and must be confirmed before loans go live.</p>
         <dl>
-          <dt>What we saw</dt><dd>Loan #169 (Personal, ₦5,000,000 over 24 months at 8.5%, set to “Monthly equal”) is collecting ₦226,041.66 every month.</dd>
-          <dt>What should happen</dt><dd>Under the loan specification the monthly amount should be ₦633,333.33 if 8.5% is a monthly rate, or ₦243,750.00 if 8.5% is a yearly rate. The amount being collected matches neither.</dd>
+          <dt>What we saw</dt><dd>Both loans are Personal loans at 8.5% set to “Monthly equal”. The newer loan #188 (₦500,000 over 9 months) collects ₦98,056 a month — the specification’s amount at 8.5% a month (₦98,055.56), rounded up to the whole naira. The older loan #169 (₦5,000,000 over 24 months) still collects ₦226,041.66 a month, which is what you get if 8.5% were the interest for the whole 24 months.</dd>
+          <dt>What should happen</dt><dd>Every loan should follow the same rule from the loan specification. For loan #169 that is ₦633,333.33 a month if 8.5% is a monthly rate, or ₦243,750.00 if it is a yearly rate (loan #188: ₦98,055.56 or ₦59,097.23). Rounding up to the whole naira also means loan #188 would collect ₦4 more than the schedule over 9 months unless the last payment is adjusted.</dd>
         </dl>
         
       </article>
       <article class="card finding">
         <header>
           <span class="sev high">High priority</span>
-          <h3>3. Money is deducted from a loan payout without being shown</h3>
+          <h3>3. 7.5% is withheld from loan payouts without being shown</h3>
           <p class="muted">Area: Loan interest calculations · Who should look at this: Engineering (loans) and Finance</p>
         </header>
-        <p class="impact">The customer received less than they borrowed, and the screen does not explain why.</p>
+        <p class="impact">Customers receive less than they borrowed, and the screen does not explain why. It happens on every loan checked, including new ones.</p>
         <dl>
-          <dt>What we saw</dt><dd>Loan #169 was approved for ₦5,000,000 with a management fee of ₦0, but only ₦4,625,000 was paid out — ₦375,000 is missing.</dd>
-          <dt>What should happen</dt><dd>The amount paid out should equal the loan amount minus any fee shown on the loan.</dd>
+          <dt>What we saw</dt><dd>Both loans show a management fee of ₦0, yet exactly 7.5% was kept back: loan #169 was approved for ₦5,000,000 and paid out ₦4,625,000 (₦375,000 missing); the newer loan #188 was approved for ₦500,000 and paid out ₦462,500 (₦37,500 missing).</dd>
+          <dt>What should happen</dt><dd>The amount paid out should equal the loan amount minus any fee shown on the loan. If a 7.5% fee is intended, it should be shown to the customer and on the loan record.</dd>
         </dl>
         
       </article>
@@ -241,7 +244,7 @@
     <ul class="clean"><li><strong>RWIN holding period.</strong> When booking an RWIN plan for a customer, the form asks them to accept a 1-day minimum holding period. The RWIN 2.0 specification says 30 days, with no exceptions.</li><li><strong>Early-repayment charge on loans.</strong> Personal and Public Sector loan products have a “Liquidation charge” (3% by default). The loan specification says customers can repay early without any penalty.</li><li><strong>Personal loan limits.</strong> A new Personal loan product starts at ₦50,000–₦6,000,000 and 3–18 months. The specification allows up to ₦30,000,000 and 3–24 months. (These can be changed by an admin.)</li><li><strong>Daily-interest loans.</strong> Nano and Payday loans can be switched to a monthly interest model in the admin portal, although the specification says they are always charged per day.</li></ul>
 
     <h2>Questions for the product team</h2>
-    <ul class="clean"><li>Is the loan “Interest rate” shown in the portal a monthly rate (as in the specification’s 2% examples) or a yearly rate? Either way, loan #169 does not match.</li><li>What is the minimum customer verification level (KYC tier) for a Personal loan? The specification does not say; the tests assume Tier 2.</li></ul>
+    <ul class="clean"><li>Is the loan “Interest rate” shown in the portal a monthly rate (as in the specification’s 2% examples) or a yearly rate? Newer loans now treat it as monthly; loan #169 matches neither.</li><li>Should monthly loan repayments be rounded to the whole naira, and if so, is the difference corrected in the last payment?</li><li>Should existing loans (such as #169) be recalculated under the new interest rule, or keep their original schedule?</li><li>What is the minimum customer verification level (KYC tier) for a Personal loan? The specification does not say; the tests assume Tier 2.</li></ul>
 
     <h2>Not run in this round</h2>
     <ul class="clean"><li><strong>Screening: escalate a hit</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Customer 360: freeze wallet</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>closed plan: audit entry &quot;View details&quot; opens and closes</strong> <span class="muted">(Investments)</span><br><span class="muted">Not run: there was no suitable data on the test system to check this against.</span></li><li><strong>System alerts: acknowledge and resolve</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Live board: release / reject / reconcile / query / manual complete</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Providers: mark status / retire; routing manual override</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li></ul>

@@ -59,21 +59,21 @@ const AREAS = {
 const FINDINGS = [
   {
     match: /posted repayments match the configured model/,
-    title: 'A loan is being repaid at the wrong monthly amount',
+    title: 'Loans on the same setting are repaid using different interest calculations',
     severity: 'High',
     owner: 'Engineering (loan calculation) and Product',
-    impact: 'Customers may be charged the wrong amount of interest. This affects money and must be confirmed before loans go live.',
-    saw: 'Loan #169 (Personal, ₦5,000,000 over 24 months at 8.5%, set to “Monthly equal”) is collecting ₦226,041.66 every month.',
-    expected: 'Under the loan specification the monthly amount should be ₦633,333.33 if 8.5% is a monthly rate, or ₦243,750.00 if 8.5% is a yearly rate. The amount being collected matches neither.',
+    impact: 'Customers on the same loan product are charged interest in different ways, and older loans may be charged the wrong amount. This affects money and must be confirmed before loans go live.',
+    saw: 'Both loans are Personal loans at 8.5% set to “Monthly equal”. The newer loan #188 (₦500,000 over 9 months) collects ₦98,056 a month — the specification’s amount at 8.5% a month (₦98,055.56), rounded up to the whole naira. The older loan #169 (₦5,000,000 over 24 months) still collects ₦226,041.66 a month, which is what you get if 8.5% were the interest for the whole 24 months.',
+    expected: 'Every loan should follow the same rule from the loan specification. For loan #169 that is ₦633,333.33 a month if 8.5% is a monthly rate, or ₦243,750.00 if it is a yearly rate (loan #188: ₦98,055.56 or ₦59,097.23). Rounding up to the whole naira also means loan #188 would collect ₦4 more than the schedule over 9 months unless the last payment is adjusted.',
   },
   {
     match: /disbursed amount = amount − stated management fee/,
-    title: 'Money is deducted from a loan payout without being shown',
+    title: '7.5% is withheld from loan payouts without being shown',
     severity: 'High',
     owner: 'Engineering (loans) and Finance',
-    impact: 'The customer received less than they borrowed, and the screen does not explain why.',
-    saw: 'Loan #169 was approved for ₦5,000,000 with a management fee of ₦0, but only ₦4,625,000 was paid out — ₦375,000 is missing.',
-    expected: 'The amount paid out should equal the loan amount minus any fee shown on the loan.',
+    impact: 'Customers receive less than they borrowed, and the screen does not explain why. It happens on every loan checked, including new ones.',
+    saw: 'Both loans show a management fee of ₦0, yet exactly 7.5% was kept back: loan #169 was approved for ₦5,000,000 and paid out ₦4,625,000 (₦375,000 missing); the newer loan #188 was approved for ₦500,000 and paid out ₦462,500 (₦37,500 missing).',
+    expected: 'The amount paid out should equal the loan amount minus any fee shown on the loan. If a 7.5% fee is intended, it should be shown to the customer and on the loan record.',
   },
   {
     match: /Audit log: portal actions are recorded/,
@@ -82,7 +82,7 @@ const FINDINGS = [
     owner: 'Engineering and Compliance',
     impact: 'The portal is not keeping its official record of who did what. This is a compliance requirement.',
     saw: 'The Audit Log page says “No system actions have been recorded yet” and shows 0 entries for the past week — even though admin actions were carried out during this test.',
-    expected: 'Every admin action should be recorded permanently in the audit log (Admin PRD). Entries were visible here on 21 October.',
+    expected: 'Every admin action should be recorded permanently in the audit log (Admin PRD). Entries were visible here on 21 October; it has been empty on 26 October and 2 November.',
   },
   {
     match: /Add biller/,
@@ -112,9 +112,22 @@ const MISMATCHES = [
 ];
 
 const QUESTIONS = [
-  'Is the loan “Interest rate” shown in the portal a monthly rate (as in the specification’s 2% examples) or a yearly rate? Either way, loan #169 does not match.',
+  'Is the loan “Interest rate” shown in the portal a monthly rate (as in the specification’s 2% examples) or a yearly rate? Newer loans now treat it as monthly; loan #169 matches neither.',
+  'Should monthly loan repayments be rounded to the whole naira, and if so, is the difference corrected in the last payment?',
+  'Should existing loans (such as #169) be recalculated under the new interest rule, or keep their original schedule?',
   'What is the minimum customer verification level (KYC tier) for a Personal loan? The specification does not say; the tests assume Tier 2.',
 ];
+
+/** Shown on the Admin tab: what this run found different from the previous one. */
+const ADMIN_CHANGES = {
+  since: '26 October',
+  items: [
+    ['Loan interest', 'Newer loans now follow the specification’s “Monthly equal” formula (8.5% a month on loan #188, rounded up to the whole naira). The older loan #169 still uses the old amount — see “Problems found” below.'],
+    ['Nano and Payday loan product forms', 'The “Loyalty discount streaks” section is now called “Loyalty & repayment progression” on Nano and “Loyalty & constraints” on Payday. Its settings are unchanged. Our check was updated and passes.'],
+    ['Investment plan page', 'RTN (Treasury Note) plans now appear in the list. Their page correctly has no “Contribution plan” section and no “Top up” button, as RTN is a one-off lump sum. Our check was updated and passes.'],
+    ['Still not fixed', 'The empty audit log, the disappearing new biller, the unrecorded viewing of private customer details and the 7.5% deduction from loan payouts are all still happening.'],
+  ],
+};
 
 const SKIP_REASONS = [
   [/destructive|Acts on existing records/, 'Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.'],
@@ -256,7 +269,7 @@ function readAdmin() {
     context: 'Chrome browser · dev environment',
     runText: `Automated check run on ${fmt(new Date(results.stats.startTime))} (WAT) · took about ${Math.round(results.stats.duration / 60000)} minutes`,
     intro: 'An automated tester used the admin portal the way a staff member would — opening pages, filling in forms and checking the results against the product documents.',
-    tests, findings, areas: AREAS, mismatches: MISMATCHES, questions: QUESTIONS,
+    tests, findings, areas: AREAS, mismatches: MISMATCHES, questions: QUESTIONS, changes: ADMIN_CHANGES,
     notRunReason: (t) => (SKIP_REASONS.find(([re]) => re.test(t.rawTitle + ' ' + t.skipReason)) || [null, 'Not run: ' + (t.skipReason || 'see technical report')])[1],
     techInternal: '<p class="muted">The full technical report has every step of every check, with screenshots, recordings and timings.</p>\n    <a class="tech" href="report.html">Open the technical report →</a>',
     techPublic: '<p class="muted">Screenshots and the full technical report (every step, with recordings and timings) are kept internally because they contain customer details and system access data. Ask the QA team for access.</p>',
@@ -384,7 +397,10 @@ function panel(d, pub) {
       <span class="p" style="width:${pct(passed)}%"></span><span class="f" style="width:${pct(failed)}%"></span><span class="s" style="width:${pct(notRun)}%"></span>
     </div>
     <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (${passRate}% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
-
+${d.changes ? `
+    <h2>What changed since the last run (${esc(d.changes.since)})</h2>
+    <ul class="clean">${d.changes.items.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
+` : ''}
     <h2>What was checked</h2>
     <p class="muted">${esc(d.intro)}</p>
     <div class="table-wrap">
