@@ -57,8 +57,13 @@ jobs:
   admin:
     name: Admin portal E2E
     needs: api
+    # The full admin suite (admin/specs) targets the build that carries the selector contract
+    # (docs/SELECTOR-CONTRACT.md). It runs once the ADMIN_BASE_URL repository variable points at it;
+    # the live dev portal is covered by the dev-portal-report job below.
+    if: vars.ADMIN_BASE_URL != ''
     runs-on: ubuntu-latest
     env:
+      ADMIN_BASE_URL: ${{ vars.ADMIN_BASE_URL }}
       ADMIN_SUPER_ADMIN_EMAIL: ${{ secrets.ADMIN_SUPER_ADMIN_EMAIL }}
       ADMIN_SUPER_ADMIN_PASSWORD: ${{ secrets.ADMIN_SUPER_ADMIN_PASSWORD }}
       ADMIN_COMPLIANCE_EMAIL: ${{ secrets.ADMIN_COMPLIANCE_EMAIL }}
@@ -98,7 +103,9 @@ jobs:
   mobile-cloud:
     name: Mobile on TestMu AI / LambdaTest real devices
     needs: api
-    if: github.event_name != 'pull_request'
+    # Runs once LambdaTest is set up: LT_USERNAME / LT_ACCESS_KEY secrets and the uploaded app's
+    # LT_APP_ID_ANDROID variable. Until then the emulator job (mobile-dev) covers the mobile app.
+    if: github.event_name != 'pull_request' && vars.LT_APP_ID_ANDROID != ''
     runs-on: ubuntu-latest
     env:
       LT_USERNAME: ${{ secrets.LT_USERNAME }}
