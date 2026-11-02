@@ -50,11 +50,13 @@ test.describe('Dev portal › Investment Management', () => {
 
   test('plan detail: summary sections, audit trail and admin actions are shown @smoke', async ({ page }) => {
     await openFirstInvestment(page);
-    for (const h of ['Summary', 'Customer', 'Contribution plan', 'Exit rules', 'What can happen next', 'Admin actions']) {
+    // RTN is a one-off lump sum: no contribution plan and no top-up. RWIN and REAP have both.
+    const lumpSum = await page.getByText(/\(RTN\)/).first().isVisible();
+    for (const h of ['Summary', 'Customer', ...(lumpSum ? [] : ['Contribution plan']), 'Exit rules', 'What can happen next', 'Admin actions']) {
       await expect(page.getByRole('heading', { name: h, exact: true })).toBeVisible();
     }
     await expect(page.getByRole('heading', { name: /^Audit trail/ })).toBeVisible();
-    for (const a of ['Withdraw on behalf', 'Top up on behalf']) await expect(btn(page, a)).toBeVisible();
+    for (const a of ['Withdraw on behalf', ...(lumpSum ? [] : ['Top up on behalf'])]) await expect(btn(page, a)).toBeVisible();
   });
 
   test('plan detail: audit trail filters and "Open in audit log" deep link @smoke', async ({ page }) => {

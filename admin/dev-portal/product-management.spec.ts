@@ -52,7 +52,7 @@ test.describe('Dev portal › Product Management', () => {
     await page.getByRole('textbox', { name: /^Loan name/ }).fill(uniq('auto-nano'));
     await btn(page, 'Continue').click();
     await expect(page.getByRole('heading', { name: 'New Nano loan product' })).toBeVisible();
-    for (const h of ['Identity', 'Tenors & repayment', 'Fee model', 'Loyalty discount streaks', 'Amount & pricing', 'Decisioning', 'Collections & constraints']) {
+    for (const h of ['Identity', 'Tenors & repayment', 'Fee model', 'Loyalty & repayment progression','Amount & pricing', 'Decisioning', 'Collections & constraints']) {
       await expect(page.getByRole('heading', { name: h, exact: true })).toBeVisible();
     }
     await page.getByRole('checkbox', { name: 'Automatic disbursement' }).check();
