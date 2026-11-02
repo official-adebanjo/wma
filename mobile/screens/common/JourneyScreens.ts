@@ -328,6 +328,8 @@ export class ProfileScreen extends BaseScreen {
   async saveEmployment() {
     await scrollToShown('profile.employment.save');
     await this.tap('profile.employment.save');
+    // No confirmation is shown; leaving the screen straight away can drop the save request.
+    await driver.pause(4_000);
   }
 }
 

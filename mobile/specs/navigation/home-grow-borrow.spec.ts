@@ -6,6 +6,7 @@ import { Tag, title } from '../../../shared/support/tags';
 import { hasPersona, loginAs, openTab, personaCreds } from '../../helpers/session';
 import { resetApp } from '../../screens/common/AuthScreens';
 import { BorrowHomeScreen, GrowHomeScreen, LoanTile, TabBar } from '../../screens/common/HomeScreens';
+import { borrowState } from '../../screens/common/JourneyScreens';
 import { WalletScreen } from '../../screens/common/WalletScreens';
 
 /**
@@ -90,7 +91,12 @@ describe('Navigation › Home, Grow and Borrow tabs (Tier 3 persona)', () => {
   });
 
   describe('Borrow', () => {
-    before(async () => { await openTab('borrow'); await borrow.waitForShown(); });
+    before(async function () {
+      await openTab('borrow');
+      await borrow.waitForShown();
+      // While the persona holds a loan (one at a time), Borrow shows that loan instead of the products.
+      if ((await borrowState()) !== 'products') this.skip();
+    });
 
     it(title('offers Nano, Payday, Personal and Public Sector loans', Tag.high, Tag.smoke, Tag.spec('LoanSpec')), async () => {
       for (const t of ['payday', 'nano', 'personal', 'publicSector'] as LoanTile[]) {
