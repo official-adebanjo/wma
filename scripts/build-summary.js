@@ -577,6 +577,12 @@ function panel(d, pub) {
     <h2 class="panel-title">${esc(d.heading)}</h2>
     <p class="muted">${esc(d.runText)}</p>
 
+    <div class="search" role="search">
+      <label for="q-${d.id}">Search the ${esc(d.label)} results</label>
+      <input id="q-${d.id}" type="search" data-panel="${d.id}" autocomplete="off" spellcheck="false" placeholder="Area, problem, ${d.id === 'api' ? 'endpoint' : 'screen'}… (press / to start, Esc to clear)">
+      <p class="muted small search-count" aria-live="polite"></p>
+    </div>
+
     <section class="card verdict ${verdict.tone}">
       <h3>${esc(verdict.head)}</h3>
       <p>${esc(verdict.sub)}</p>
@@ -593,9 +599,12 @@ function panel(d, pub) {
     </div>
     <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (${passRate}% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
 ${d.changes ? `
+    <div class="sec">
     <h2>${d.changes.heading ? esc(d.changes.heading) : `What changed since the last run (${esc(d.changes.since)})`}</h2>
     <ul class="clean">${d.changes.items.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
+    </div>
 ` : ''}${d.journeys ? `
+    <div class="sec">
     <h2>What we tried by hand (${esc(d.journeys.when)})</h2>
     <p class="muted">${esc(d.journeys.intro)}</p>
     <div class="table-wrap">
@@ -604,7 +613,9 @@ ${d.changes ? `
       <tbody>${d.journeys.items.map(([t, tone, x]) => `<tr><td class="area"><strong>${esc(t)}</strong><div class="muted">${esc(x)}</div></td><td class="result"><span class="badge ${tone}">${tone === 'ok' ? 'Worked' : tone === 'bad' ? 'Problem' : 'Partly checked'}</span></td></tr>`).join('')}</tbody>
     </table>
     </div>
+    </div>
 ` : ''}
+    <div class="sec">
     <h2>What was checked</h2>
     <p class="muted">${esc(d.intro)}</p>
     <div class="table-wrap">
@@ -613,22 +624,31 @@ ${d.changes ? `
       <tbody>${areaRows}</tbody>
     </table>
     </div>
+    </div>
 
+    <div class="sec">
     <h2>Problems found</h2>
     <p class="muted">These did not behave the way the product documents say they should. “High priority” means it affects customers’ money or a compliance requirement.</p>
     ${cards || '<p>No problems were found.</p>'}
+    </div>
 
+    <div class="sec">
     <h2>${esc(d.mismatchesHeading || 'Differences from the documents (not failures)')}</h2>
     <p class="muted">${esc(d.mismatchesIntro || 'These work, but don’t match what the specifications say. Product should confirm which is correct.')}</p>
     <ul class="clean">${d.mismatches.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
+    </div>
 
+    <div class="sec">
     <h2>Questions for the product team</h2>
     <ul class="clean">${d.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ul>
+    </div>
 
-${d.reference ? d.reference(pub) : ''}
+${d.reference ? `<div class="sec">${d.reference(pub)}</div>` : ''}
 
+    <div class="sec">
     <h2>Not run in this round</h2>
     <ul class="clean">${notRunRows || '<li>Everything was run.</li>'}</ul>
+    </div>
 
     <h2>Need the technical detail?</h2>
     ${pub ? d.techPublic : d.techInternal}`;
@@ -829,7 +849,7 @@ function readApi() {
     const groups = Object.keys(areas).map((tag) => {
       const list = ops.filter((o) => o.tag === tag).sort((x, y) => x.path.localeCompare(y.path) || API_METHODS.indexOf(x.method.toLowerCase()) - API_METHODS.indexOf(y.method.toLowerCase()));
       const rows = list.map((o) => `<tr><td class="area"><span class="method m-${o.method.toLowerCase()}">${o.method}</span> <code>${esc(o.path)}</code><div class="muted">${esc(o.summary)}</div></td><td class="num" data-label="Sign-in:">${signIn(o)}</td>${pub ? '' : `<td class="result">${result(o)}</td>`}</tr>`).join('');
-      return `<details><summary>${esc(areas[tag].name)} <span class="muted">· ${list.length} endpoint${list.length > 1 ? 's' : ''}</span></summary><div class="table-wrap"><table><thead><tr><th>Endpoint</th><th>Sign-in</th>${pub ? '' : '<th>Result</th>'}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
+      return `<details class="ref"><summary>${esc(areas[tag].name)} <span class="muted">· ${list.length} endpoint${list.length > 1 ? 's' : ''}</span></summary><div class="table-wrap"><table><thead><tr><th>Endpoint</th><th>Sign-in</th>${pub ? '' : '<th>Result</th>'}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
     }).join('\n');
     return `
     <h2>Endpoint reference</h2>
@@ -961,6 +981,14 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   a { color: var(--accent); }
   code { font-size: .9em; }
   .tech { display: inline-block; margin-top: 8px; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; font-weight: 600; }
+  /* Search within a tab (shown only when JavaScript runs) */
+  .search { display: none; margin: 18px 0 4px; }
+  .js .search { display: block; }
+  .search label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .search input { width: 100%; box-sizing: border-box; font: inherit; padding: 12px 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: inherit; }
+  .search input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .search-count { margin: 6px 0 0; min-height: 1.2em; }
+  .sec[hidden], .sec [hidden] { display: none !important; }
   footer { margin-top: 48px; font-size: .85rem; color: var(--muted); }
   dd, li, .finding h3 { overflow-wrap: anywhere; }
 
@@ -1046,6 +1074,45 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
         if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length].id.slice(4), true); }
       });
     });
+    // Search within a tab: every word must appear (any order). Rows in the API reference also match on
+    // their area's name, and groups with a match open. Sections with nothing left are hidden.
+    Array.prototype.forEach.call(document.querySelectorAll('.search input'), function (input) {
+      var panel = document.getElementById('panel-' + input.getAttribute('data-panel'));
+      var count = input.parentNode.querySelector('.search-count');
+      var items = Array.prototype.map.call(panel.querySelectorAll('.sec tbody tr, .sec article.finding, .sec ul.clean > li'), function (el) {
+        var group = el.closest('details.ref');
+        var text = el.textContent + (group ? ' ' + group.querySelector('summary').textContent : '');
+        return { el: el, text: text.toLowerCase() };
+      });
+      function run() {
+        var raw = input.value.trim();
+        var terms = raw.toLowerCase().split(/\\s+/).filter(Boolean); // \\s: this script sits in a JS template string
+        var shown = 0;
+        items.forEach(function (it) {
+          var hit = terms.every(function (t) { return it.text.indexOf(t) > -1; });
+          it.el.hidden = !hit;
+          if (hit && terms.length) shown++;
+        });
+        Array.prototype.forEach.call(panel.querySelectorAll('details.ref'), function (d) {
+          var any = d.querySelector('tbody tr:not([hidden])');
+          d.hidden = terms.length > 0 && !any;
+          d.open = terms.length > 0 && !!any;
+        });
+        Array.prototype.forEach.call(panel.querySelectorAll('.sec'), function (sec) {
+          sec.hidden = terms.length > 0 && !sec.querySelector('tbody tr:not([hidden]), article.finding:not([hidden]), ul.clean > li:not([hidden])');
+        });
+        count.textContent = !terms.length ? '' : shown ? shown + (shown > 1 ? ' matches' : ' match') + ' for “' + raw + '”' : 'No matches for “' + raw + '”';
+      }
+      input.addEventListener('input', run);
+      input.addEventListener('keydown', function (e) { if (e.key === 'Escape') { input.value = ''; run(); } });
+    });
+    document.addEventListener('keydown', function (e) {
+      var tag = (document.activeElement && document.activeElement.tagName) || '';
+      if (e.key !== '/' || /^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
+      var box = document.querySelector('[role="tabpanel"]:not([hidden]) .search input');
+      if (box) { e.preventDefault(); box.focus(); }
+    });
+
     var start = (location.hash || '').slice(1);
     show(document.getElementById('tab-' + start) ? start : 'admin');
   })();
