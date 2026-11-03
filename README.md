@@ -54,6 +54,25 @@ You can filter by tag in both runners. Playwright uses `--grep @crit`. Webdriver
 
 Screens the app hasn't tagged with contract IDs yet are mapped to the live UI in [mobile/screens/live-ids.ts](mobile/screens/live-ids.ts). On failure, the element tree is saved to `reports/mobile-screens/*.xml`. Screenshots come out black because the app blocks screen capture.
 
+### Testing the API (dev backend)
+
+The backend publishes its API document (OpenAPI/Swagger) at `https://treasury-api-dev.rosabon-finance.com/v3/api-docs`. A saved copy, [api-dev/openapi.snapshot.json](api-dev/openapi.snapshot.json), generates one check per read-only (GET) endpoint. Each check confirms that the endpoint:
+1. refuses requests without a sign-in;
+2. refuses customers in staff-only areas;
+3. doesn't return another customer's records. The Tier 3 test customer asks for the Tier 1 test customer's ID, so only our own test accounts are involved;
+4. answers with the right sign-in, within 5 seconds;
+5. answers in the format the document promises.
+
+Endpoints that create, change or delete data are listed in the report but never called.
+
+```bash
+npm run test:api:dev   # needs API_BASE_URL, CUSTOMER_T3_* (and T1, for the other-customer check), DEV_ADMIN_*
+npm run report:summary # results appear on the third tab, "API", with an endpoint reference
+npm run api:snapshot   # after reviewing "What changed in the API", save the live document as the new copy
+```
+
+IDs in paths come from the list endpoints' own answers. Endpoints for which no ID could be found show as "not run". On the public page, security problems are counted but don't name endpoints; the internal page (`reports/summary`) has the details. Note: page numbers on this API start at 1 (`pageNo=0` is rejected).
+
 ## How the suite is organised
 
 ```
@@ -64,6 +83,7 @@ shared/
   support/tags.ts  tag convention + register of open clarity questions
 unit/            oracle self-tests (worked examples from the specs)
 api-tests/       contract tests: catalog/calculate/create, auth, wallet idempotency & limits
+api-dev/         live dev API: one read-only check per GET endpoint, from the saved OpenAPI document
 admin/
   fixtures/      persona auth (one stored session per role), `asPersona`, `hooks`
   pages/         page objects + shared components (EvidencePanel, ActionModal, Approval Queue, Portfolio)

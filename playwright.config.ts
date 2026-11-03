@@ -31,6 +31,9 @@ export default defineConfig({
   projects: [
     { name: 'unit', testDir: './unit' },
     { name: 'api', testDir: './api-tests' },
+    // Live dev backend, generated from its OpenAPI document (api-dev/openapi.snapshot.json). Read-only.
+    { name: 'api-dev-setup', testDir: './api-dev', testMatch: /api\.setup\.ts/ },
+    { name: 'api-dev', testDir: './api-dev', testMatch: /endpoints\.spec\.ts/, dependencies: ['api-dev-setup'], retries: 0 },
     { name: 'admin-setup', testDir: './admin/fixtures', testMatch: /auth\.setup\.ts/ },
     {
       name: 'admin-chromium',
