@@ -116,7 +116,55 @@ const QUESTIONS = [
   'Should monthly loan repayments be rounded to the whole naira, and if so, is the difference corrected in the last payment?',
   'Should existing loans (such as #169) be recalculated under the new interest rule, or keep their original schedule?',
   'What is the minimum customer verification level (KYC tier) for a Personal loan? The specification does not say; the tests assume Tier 2.',
+  'Public Sector corridors: is the customer’s rate the “policy rate” or the “booked average interim rate”, and in what unit? The Lagos Civil Servants corridor stores 0.03 and 4; lagos-v1 stores 25 and 2.5. The app quotes 4% a month.',
+  'Public Sector fees: should the corridor’s 1% management fee and 1% quarterly fee (capitalised) apply, or the product’s “Public sector fee” structure (0%, deducted upfront, 7.5% VAT)? The app shows the first; the saved loans follow the second.',
 ];
+
+/** Problems found by hand in the admin portal (no automated check covers them yet). */
+const ADMIN_EXTRA_FINDINGS = [
+  {
+    title: 'An active Public Sector product has no approval workflow, and a loan on it was paid out with no approver',
+    severity: 'High',
+    owner: 'Operations (loans) and Engineering (loans)',
+    impact: 'Loans can be paid out without anyone signing them off, which bypasses the approval controls.',
+    saw: '“public-sector-loan-v2” is Active and shown in the app, but Approval threshold has no workflow for it (the other Public Sector product, “Adebanjo Public Sector”, has one). Loan #190 on it (₦500,000, 3 November) was paid out with no workflow and no approvers recorded.',
+    expected: 'Every active loan product should have an approval workflow covering its whole amount range, and a product without one should not accept applications.',
+    area: 'Product Management: Public Sector (checked by hand)',
+  },
+  {
+    title: 'A Public Sector loan is marked “Repaid” although nothing was repaid',
+    severity: 'High',
+    owner: 'Engineering (loans) and Finance',
+    impact: 'A loan that is still owed looks settled, so it would not be collected, and the customer can borrow again straight away.',
+    saw: 'Loan #190 (₦500,000, 12 months) shows as Repaid within minutes of starting, with no repayments recorded. The customer’s wallet received the ₦500,000 payout (less ₦37,500 “Loan VAT”) after the loan was already marked Repaid. A new application from the same customer was then accepted.',
+    expected: 'A loan should only become Repaid when its repayments (or an approved write-off or force-close, with its reason shown on the loan) cover what is owed.',
+    area: 'Loan Management (checked by hand)',
+  },
+  {
+    title: 'Public Sector corridor rates are stored and shown in different units',
+    severity: 'Medium',
+    owner: 'Product and Engineering (loans)',
+    impact: 'Staff cannot tell from the portal what rate customers will be charged, and a rate typed in the wrong unit would go live unnoticed.',
+    saw: 'Corridors & partners shows the Lagos Civil Servants rate as “0.03%” (stored as 0.03, with a booked average interim rate of 4), and lagos-v1 as “25%” (booked average 2.5). Its management fee (0.01) and quarterly fee (0.01) are stored as fractions; lagos-v1’s management fee is 2.5. The app quotes Lagos Civil Servants loans at 4% a month.',
+    expected: 'One unit for every rate and fee, labelled in the portal (for example “% per month”), with the customer’s rate clearly identified.',
+    area: 'Product Management: corridors (checked by hand)',
+  },
+];
+
+/** Admin configuration reviewed by hand, with the outcome. */
+const ADMIN_JOURNEYS = {
+  when: '3 November',
+  intro: 'The Public Sector loan set-up was read in the admin portal and through the staff API (nothing was changed), then compared with the loan specification and with what the app does.',
+  items: [
+    ['Public Sector products', 'idle', 'Three exist: Adebanjo Public Sector (Active, reducing-balance interest, payroll-deduction repayment), public-sector-loan-v2 (Active, equal-instalment interest, bank transfer or card repayment), and Auto-public (Draft). All three use the Lagos Civil Servants corridor, a 30-day re-apply cooldown, a ₦1,000,000 control-gate threshold, CRC Credit Bureau, and loyalty discounts of 0.5% after 3 clean repayments and 1% after 6. None has its own amount range, rate or tenors; these come from the corridor. The product list therefore shows their amount range as “— – —”.'],
+    ['Corridor: Lagos Civil Servants (Remita)', 'bad', '₦200,000–₦10,000,000; 3, 6, 9, 12 or 18 months; DTI 0.33; collection capitalised; salary basis from the bank-statement average; top-up allowed; 8 MDAs. The app offers the right tenors but does not enforce the amount range. Rates and fees use mixed units (see “Problems found”).'],
+    ['Fee structure “Public sector fee”', 'bad', '0% management fee, deducted upfront, 7.5% VAT, 0% WHT. This contradicts the corridor’s 1% management and 1% quarterly fees. The app shows 1%; the saved loans show ₦0 plus 7.5% VAT.'],
+    ['Pre-eligibility gate “GATE-STATE-PUBLIC-01”', 'idle', 'Maximum age 60, 2–420 months of service, ₦40,000 minimum net salary, MDA collection gate 85. The other gates store this gate as 0.65, so the unit needs confirming. The app does not ask for age, service or salary details.'],
+    ['Approval workflows', 'bad', 'Adebanjo Public Sector: one level, ₦100,000–₦70,000,000, any credit score. public-sector-loan-v2: no workflow. Application #191 from the app was correctly routed to level 1.'],
+    ['Documents and purposes', 'ok', 'Adebanjo Public Sector requires 6 documents (driver’s licence, employment letter, statement of accounts, latest payslip, NIN, pension statement), and the app asks for exactly these. It lists 7 loan purposes, one of which (#5) no longer exists; the app shows the remaining 6.'],
+    ['“One active loan across the family”', 'idle', 'Switched off on both active Public Sector products, although only one loan at a time is allowed. In practice the server still refused a second loan (“You have an active loan running currently”). Product should confirm which setting is meant to control this.'],
+  ],
+};
 
 /** Shown on the Admin tab: what this run found different from the previous one. */
 const ADMIN_CHANGES = {
@@ -126,6 +174,7 @@ const ADMIN_CHANGES = {
     ['Customer Management', 'The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.'],
     ['Pending Approvals', 'A new “Created by me” tab lists the requests you raised, with a Withdraw button. This replaces the old investment Approval queue. “Dual-control changes” is marked “Coming soon”, and there is a page-size choice with Previous/Next. Our checks were updated to use it.'],
     ['Reports & Analytics', 'It has moved to a new address (Reports instead of Dashboards).'],
+    ['Public Sector loan set-up reviewed', 'Products, corridor, fees, pre-eligibility, approval workflows and documents were read (not changed) and compared with the app. See “What we checked by hand” and “Problems found”.'],
     ['Fixed', 'The audit log now records portal actions, each with a “View” button, and can be exported. Our check passes.'],
     ['Still not fixed', 'Viewing a customer’s private details is still not recorded in their audit trail, and loan #188 still has the 7.5% deduction from its payout and repayments that don’t match its interest model. The disappearing new biller can no longer be checked, because Transactions & Ledger was taken out of the menu.'],
   ],
@@ -313,7 +362,7 @@ const MOBILE_EXTRA_FINDINGS = [
     severity: 'Medium',
     owner: 'Engineering (mobile app) and Operations',
     impact: 'Customers are told their documents are verified before anyone has checked them, and are asked to upload documents already on file.',
-    saw: 'Applying for a Personal loan asked for a statement of accounts, NIN document and utility bill — the admin portal shows this customer uploaded all three on 21 October. A blank test PDF uploaded for each was immediately labelled “Verified”.',
+    saw: 'Applying for a Personal loan (2 November) asked for a statement of accounts, NIN document and utility bill, although the admin portal shows this customer uploaded all three on 21 October. A blank test PDF uploaded for each was immediately labelled “Verified”. Still happening on 3 November: a Public Sector application asked for all 6 documents again (the customer had a Public Sector loan in October), and each blank PDF showed “Verified” at once.',
     expected: 'Documents already on file should be reused, and new uploads should show “Uploaded” or “Pending review” until someone checks them.',
     area: 'Borrowing (tried by hand)',
   },
@@ -331,7 +380,7 @@ const MOBILE_EXTRA_FINDINGS = [
     severity: 'Medium',
     owner: 'Engineering (loans) and Finance',
     impact: 'Customers cannot see the real cost of the loan before they accept it.',
-    saw: 'The review screen showed “Management Fee (1%) ₦1,000” and “Total Repayable ₦126,500”, while its own schedule adds up to ₦125,500. The admin portal shows a ₦0 management fee, and no fee was charged. Instead, when ₦100,000 was paid out, ₦7,500 was taken straight back as “Loan VAT” (wallet credited ₦92,500). VAT is not mentioned on the application or offer screens.',
+    saw: 'Personal loan #189 (2 November): the review screen showed “Management Fee (1%) ₦1,000” and “Total Repayable ₦126,500”, while its own schedule adds up to ₦125,500. The admin portal shows a ₦0 management fee, and no fee was charged. Instead, when ₦100,000 was paid out, ₦7,500 was taken straight back as “Loan VAT” (wallet credited ₦92,500). Same on 3 November with Public Sector loans. Application #191 (₦300,000): the review screen shows “Management Fee (1%) ₦3,000” and “Total Repayable ₦345,000”, its schedule adds up to ₦342,000, and the saved application has a ₦0 fee and 7.5% VAT. Loan #190 (₦500,000) was paid out, then ₦37,500 was taken as “Loan VAT”. VAT is not mentioned on any application or offer screen.',
     expected: 'Every charge should be shown, with the correct amount, before the customer accepts. Finance should confirm whether VAT applies to the amount lent (VAT normally applies to fees).',
     area: 'Borrowing (tried by hand)',
   },
@@ -340,45 +389,70 @@ const MOBILE_EXTRA_FINDINGS = [
     severity: 'Medium',
     owner: 'Engineering (mobile app, admin portal and API)',
     impact: 'Transaction and application times look wrong to customers and staff, which matters for disputes and audits.',
-    saw: 'The loan payout made at about 3:30 PM (WAT) appears in the app’s activity as 02:30 PM. The admin portal shows the application created at 1:56 PM when it was submitted at about 2:56 PM.',
+    saw: 'The loan payout made at about 3:30 PM (WAT) on 2 November appears in the app’s activity as 02:30 PM. The admin portal shows the application created at 1:56 PM when it was submitted at about 2:56 PM. Still the same on 3 November: an investment made from the admin portal just before 6 PM shows as 04:58 PM, and a loan paid out at about 7:30 PM shows as 06:30 PM.',
     expected: 'Times should be shown in Nigerian time (WAT, UTC+1).',
     area: 'Times and dates (tried by hand)',
+  },
+  // Found by hand on 3 November (3 November build): Public Sector loan application.
+  {
+    title: 'Public Sector loans accept amounts outside the allowed range',
+    severity: 'High',
+    owner: 'Engineering (loans and mobile app)',
+    impact: 'Customers can apply for, and be shown offers on, loans the product does not allow, so the lending limits are not enforced.',
+    saw: 'The Public Sector product’s corridor (Lagos Civil Servants) allows ₦200,000 to ₦10,000,000. The app accepted ₦100,000 and ₦11,000,000, quoted them (₦11,000,000 over 6 months: ₦12,540,000 to repay), and went on to the documents step without any message.',
+    expected: 'Amounts below the minimum or above the maximum should be refused with a clear message, before documents are asked for.',
+    area: 'Borrowing: Public Sector (tried by hand)',
+  },
+  {
+    title: 'The Public Sector application skips the employer and payroll steps',
+    severity: 'High',
+    owner: 'Product and Engineering (loans and mobile app)',
+    impact: 'Loans meant to be repaid through the employer’s payroll can be applied for without saying who the employer is or checking the customer can afford the deductions.',
+    saw: 'The app goes straight from amount, tenure and purpose to documents. It never asks the customer to find their employer (corridor), for an IPPIS or staff number, or for a retirement date. No affordability (salary × DTI) check is shown. Above the ₦1,000,000 control-gate threshold set in the admin portal, it asked for the same 6 documents, with no house visit, cheques or utility bill.',
+    expected: 'As the Public Sector loan specification (§3–§4) describes: employer search and corridor confirmation, the corridor’s ID number, a retirement date (tenor capped at the months left before retirement), a live affordability cap, and the extra requirements above the corridor threshold.',
+    area: 'Borrowing: Public Sector (tried by hand)',
   },
 ];
 
 /** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
 const MOBILE_JOURNEYS = {
-  when: '2 November, 30 October build',
+  when: '2–3 November, 30 October and 3 November builds',
   intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
-    ['Apply for a Personal loan (₦100,000, 3 months), accept it and receive it', 'bad', 'Full journey done: applied in the app (after uploading three documents), approved in the admin portal (#189), offer accepted in the app, paid out from the admin portal. The repayment schedule (3 × about ₦41,833, ₦125,500 in total) follows the “Monthly equal” rule correctly, and the Borrow screen correctly blocks new loans until this one is repaid. But the offer showed ₦865,000 to repay, ₦7,500 “Loan VAT” was taken from the payout, and the next-payment countdown is wrong — see “Problems found”.'],
-    ['Apply for a Nano or Payday loan', 'bad', 'Crashes on the first screen — see “Problems found”.'],
-    ['Invest in RWIN, REAP or RTN as a Tier 3 customer', 'ok', 'Blocked as “not available on your current tier” in the early afternoon, with an upgrade screen saying “You are on Tier 3 … upgrade to Tier 3”. By the automated run later that day all three products opened, so it now passes.'],
-    ['Create, top up and delete an RWIN goal as a Tier 1 customer', 'bad', 'Goal created (₦100,000 over 90 days, maturity 31 January 2027 — correct) and deleted. The top-up could not be paid: the wallet was empty and card funding does not work.'],
-    ['Edit employment details', 'ok', 'Job title changed, saved and still there after restarting the app; then changed back.'],
-    ['Add a home address', 'bad', 'Not saved: the app briefly shows “You can no longer update your residential address”, although no address is on file — see “Problems found”.'],
-    ['Add a next of kin', 'bad', 'Cannot be saved (“City cannot be empty”, no City field).'],
-    ['Fund the wallet', 'bad', 'Card payment does nothing. Bank transfer (dedicated account) and USSD are offered but were not used, as they move real money.'],
-    ['Send money and pay bills', 'idle', 'Screens open; not completed, as they move real money. Send Money shows recipients the customer never added.'],
-    ['Log out and switch account', 'bad', '“Log out” does nothing; “Switch Account” on the sign-in screen works.'],
+    ['3 Nov: apply for a Public Sector loan (Adebanjo Public Sector, ₦300,000, 6 months)', 'bad', 'Submitted as application #191, which is waiting for approval in the admin portal. What matched the admin set-up: tenors of 3, 6, 9, 12 and 18 months; the reducing-balance interest model at 4% a month (schedule ₦62,000 down to ₦52,000); the 6 required documents; and the approval workflow (level 1). Problems: no employer, IPPIS or staff number, retirement date or affordability step; ₦100,000 and ₦11,000,000 accepted; a 1% fee shown but ₦0 fee and 7.5% VAT saved; and “Total Repayable” (₦345,000) doesn’t match the schedule (₦342,000). The repayment breakdown took about 10 seconds to open. The first try was refused with “You have an active loan running currently” while loan #190 was being closed; a minute later it went through. See “Problems found”.'],
+    ['3 Nov: check the Borrow screen lists the right products', 'ok', 'Shows the active products from the admin portal, including both active Public Sector products (Adebanjo Public Sector and public-sector-loan-v2). The draft “Auto-public” is correctly hidden.'],
+    ['3 Nov: apply for a Nano or Payday loan', 'bad', 'Still crashes on the first screen (“useFocusEffect doesn’t exist”).'],
+    ['3 Nov: Tier 3 profile and identity', 'bad', 'Still “2/3, 1 key identity step left”, and the list includes “Upgrade to Tier 2” for a Tier 3 customer. SmileID still reports its settings file missing.'],
+    ['2 Nov: apply for a Personal loan (₦100,000, 3 months), accept it and receive it', 'bad', 'Full journey done: applied in the app (after uploading three documents), approved in the admin portal (#189), offer accepted in the app, paid out from the admin portal. The repayment schedule (3 × about ₦41,833, ₦125,500 in total) follows the “Monthly equal” rule correctly, and the Borrow screen correctly blocks new loans until this one is repaid. But the offer showed ₦865,000 to repay, ₦7,500 “Loan VAT” was taken from the payout, and the next-payment countdown is wrong — see “Problems found”.'],
+    ['2 Nov: apply for a Nano or Payday loan', 'bad', 'Crashes on the first screen — see “Problems found”.'],
+    ['2 Nov: invest in RWIN, REAP or RTN as a Tier 3 customer', 'ok', 'Blocked as “not available on your current tier” in the early afternoon, with an upgrade screen saying “You are on Tier 3 … upgrade to Tier 3”. By the automated run later that day all three products opened, so it now passes.'],
+    ['2 Nov: create, top up and delete an RWIN goal as a Tier 1 customer', 'bad', 'Goal created (₦100,000 over 90 days, maturity 31 January 2027 — correct) and deleted. The top-up could not be paid: the wallet was empty and card funding does not work.'],
+    ['2 Nov: edit employment details', 'ok', 'Job title changed, saved and still there after restarting the app; then changed back.'],
+    ['2 Nov: add a home address', 'bad', 'Not saved: the app briefly shows “You can no longer update your residential address”, although no address is on file — see “Problems found”.'],
+    ['2 Nov: add a next of kin', 'bad', 'Cannot be saved (“City cannot be empty”, no City field).'],
+    ['2 Nov: fund the wallet', 'bad', 'Card payment does nothing. Bank transfer (dedicated account) and USSD are offered but were not used, as they move real money.'],
+    ['2 Nov: send money and pay bills', 'idle', 'Screens open; not completed, as they move real money. Send Money shows recipients the customer never added.'],
+    ['2 Nov: log out and switch account', 'bad', '“Log out” does nothing; “Switch Account” on the sign-in screen works.'],
   ],
 };
 
 /** Shown on the Mobile tab: what this run found different from the previous one. */
 const MOBILE_CHANGES = {
-  since: '29 October',
+  since: '30 October',
   items: [
-    ['App build', 'Tested the 30 October build. It has the same version number as the 29 October build (1.1.55, code 92); the version should be raised with each build so testers and devices can tell them apart.'],
-    ['Fixed: oversized Payday offer', 'The Borrow screen’s “Recommended for you” card now offers ₦20,000 for a 30-day Payday loan, within the ₦500,000 limit. On 29 October it offered ₦5,000,000.'],
-    ['Fixed during the day: Tier 3 investing', 'In the early afternoon the Tier 3 test account was told every investment was “not available on your current tier”. By the automated run later the same day, RWIN, REAP and RTN all opened.'],
-    ['Fixed during the day: phone sign-in', 'Signing in with a phone number written the usual way (080…) failed on 29 October and in the morning run; it worked in the evening run, without a new app build.'],
-    ['Still not fixed', 'A Tier 3 account still shows its profile as 2/3 complete, and identity verification (SmileID) still cannot start because its settings file is missing.'],
+    ['App build', 'Tested the 3 November build. It still has the same version number as the 29 and 30 October builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.'],
+    ['Still not fixed: Nano and Payday crash', 'Both still crash on the first screen with the same error (“useFocusEffect doesn’t exist”). Checked 3 times: twice by the automated run and once by hand.'],
+    ['Broken again: phone sign-in', 'Signing in with a phone number written the usual way (080…) failed again in this run. It had worked on the evening of 2 November.'],
+    ['Fixed: REAP rate on Grow', 'The “Recommended for you” card that said REAP earns “up to 20%” (while the REAP card said 30%) is gone.'],
+    ['Still not fixed', 'Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 and is asked to “Upgrade to Tier 2”. SmileID still can’t start (its settings file is missing). Uploaded documents are still marked “Verified” straight away. Times are still an hour behind. RWIN goals still offer tenors not in the rate table. The Settings screen still says v2.0.0.'],
+    ['New: Public Sector loan checked by hand', 'See “What we tried by hand” and “Problems found”. The application can be submitted, but it skips the employer and payroll steps the specification requires and accepts amounts outside the allowed range.'],
   ],
 };
 
 const MOBILE_MISMATCHES = [
-  ['REAP rate', 'The Grow screen’s “Recommended for you” card says REAP earns “up to 20% p.a.”, while the REAP card below it says 30% p.a.'],
   ['App version', 'Settings shows “v2.0.0”, but the installed app is version 1.1.55.'],
+  ['Public Sector loan rate', 'The app quotes “4% / month”. That is the corridor’s “booked average interim rate”. The corridor’s “policy rate” is 0.03, which the admin portal shows as “0.03%”.'],
+  ['Public Sector management fee', 'The review screen adds a 1% management fee (₦3,000 on ₦300,000), as the corridor sets. The product’s fee structure (“Public sector fee”) says 0%, and the saved application has a ₦0 fee plus 7.5% VAT, which the app never shows.'],
   ['Password error wording', 'After a wrong password, the app says “Incorrect passcode. 3 attempt(s) left.” — it should say password; “passcode” is the 6-digit code used with a phone number.'],
   ['Shared attempt counter', 'Wrong attempts with email + password and with phone + passcode count towards the same limit (4 attempts in total). Product should confirm this is intended.'],
 ];
@@ -388,6 +462,8 @@ const MOBILE_QUESTIONS = [
   'How should RWIN goal interest be projected? The app shows ₦2,237.38 on ₦100,000 over 90 days at 14% — interest up to the goal’s end date. Our reading of the calculator rules (each contribution earning for a full 90-day cycle) gives about ₦3,375.',
   'Should 7.5% VAT be charged on the amount lent? It is currently taken from every loan payout as “Loan VAT”. And is there a management fee on Personal loans (the app says 1%, the admin portal says ₦0)?',
   'Which KYC tier does each investment product need? The product documents do not say.',
+  'For Public Sector loans, which corridor setting is the customer’s interest rate: the “policy rate” or the “booked average interim rate”? And which fee applies: the corridor’s 1% management fee and 1% quarterly fee, or the product’s fee structure (0%)?',
+  'Is the Public Sector application meant to ask for the employer (corridor), IPPIS or staff number, and retirement date, as the specification describes? This build goes straight from amount and tenure to documents.',
 ];
 
 const MOBILE_SKIP_REASONS = [
@@ -461,7 +537,7 @@ function readAdmin() {
       fs.copyFileSync(t.video, path.join(outDir, video));
     }
     return { ...f, area: AREAS[t.file]?.name || t.file, shot, video, snippet: errorSnippet(t.errorFull) };
-  }).sort((a, b) => sevRank(a.severity) - sevRank(b.severity));
+  }).concat(ADMIN_EXTRA_FINDINGS).sort((a, b) => sevRank(a.severity) - sevRank(b.severity));
 
   return {
     id: 'admin',
@@ -471,6 +547,7 @@ function readAdmin() {
     runText: `Automated check run on ${fmt(new Date(results.stats.startTime))} (WAT) · took about ${Math.round(results.stats.duration / 60000)} minutes`,
     intro: 'An automated tester used the admin portal the way a staff member would — opening pages, filling in forms and checking the results against the product documents.',
     tests, findings, areas: AREAS, mismatches: MISMATCHES, questions: QUESTIONS, changes: ADMIN_CHANGES,
+    extraCount: ADMIN_EXTRA_FINDINGS.length, extraNote: 'found by hand', journeys: ADMIN_JOURNEYS,
     notRunReason: (t) => (SKIP_REASONS.find(([re]) => re.test(t.rawTitle + ' ' + t.skipReason)) || [null, 'Not run: ' + (t.skipReason || 'see technical report')])[1],
     techInternal: '<p class="muted">The full technical report has every step of every check, with screenshots, recordings and timings.</p>\n    <a class="tech" href="report.html">Open the technical report →</a>',
     techPublic: '<p class="muted">Screenshots and the full technical report (every step, with recordings and timings) are kept internally because they contain customer details and system access data. Ask the QA team for access.</p>',
@@ -584,7 +661,7 @@ function panel(d, pub) {
   const passRate = checked ? Math.round((passed / checked) * 100) : 0;
   const high = findings.filter((f) => f.severity === 'High').length;
   const n = findings.length;
-  const extra = d.extraCount ? ` (including ${d.extraCount} found by hand or in the app’s error log)` : '';
+  const extra = d.extraCount ? ` (including ${d.extraCount} ${d.extraNote || 'found by hand or in the app’s error log'})` : '';
   const verdict = n === 0
     ? { tone: 'good', head: 'Everything checked is working as expected', sub: `All ${checked} checks passed.` }
     : { tone: 'warn', head: `${high >= 3 ? 'Not ready for release' : 'Mostly working'} — ${n} problem${n > 1 ? 's' : ''} need attention${extra}`, sub: high ? `${high} of them affect money or compliance and should be fixed before release.` : 'None of them affect money or compliance.' };
@@ -652,7 +729,7 @@ ${d.changes ? `
     </div>
 ` : ''}${d.journeys ? `
     <div class="sec">
-    <h2>What we tried by hand (${esc(d.journeys.when)})</h2>
+    <h2>${d.id === 'admin' ? 'What we checked by hand' : 'What we tried by hand'} (${esc(d.journeys.when)})</h2>
     <p class="muted">${esc(d.journeys.intro)}</p>
     <div class="table-wrap">
     <table>

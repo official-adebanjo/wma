@@ -19,6 +19,8 @@ export const config: WebdriverIO.Config = {
       'appium:appPackage': process.env.APP_PACKAGE ?? 'com.optisoft.rosabon',
       'appium:autoGrantPermissions': true,
       'appium:newCommandTimeout': 240,
+      // A new build's first cold start can take over Appium's default 20 s.
+      'appium:adbExecTimeout': 60_000,
       'appium:noReset': false,
     },
   ],

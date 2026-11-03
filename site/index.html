@@ -144,8 +144,8 @@
   <p class="muted">Choose which part of the product to see. The admin portal is the staff website; the mobile app is what customers use; the API is the service both of them talk to.</p>
 
   <div class="tabs" role="tablist" aria-label="Which results to show">
-    <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="true" tabindex="0"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">3 problems</span></button>
-    <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">15 problems</span></button>
+    <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="true" tabindex="0"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">6 problems</span></button>
+    <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">17 problems</span></button>
     <button class="tab" role="tab" id="tab-api" aria-controls="panel-api" aria-selected="false" tabindex="-1"><span aria-hidden="true">🔌</span> API <span class="pill bad">6 problems</span></button>
   </div>
 
@@ -162,8 +162,8 @@
     </div>
 
     <section class="card verdict warn">
-      <h3>Mostly working — 3 problems need attention</h3>
-      <p>2 of them affect money or compliance and should be fixed before release.</p>
+      <h3>Not ready for release — 6 problems need attention (including 3 found by hand)</h3>
+      <p>4 of them affect money or compliance and should be fixed before release.</p>
     </section>
 
     <div class="stats">
@@ -179,7 +179,18 @@
 
     <div class="sec">
     <h2>What changed since the last run (30 October)</h2>
-    <ul class="clean"><li><strong>20 pages switched off.</strong> Wallet Management, Transactions &amp; Ledger, Support &amp; Tickets, Rewards &amp; Incentives and Payroll reconciliation are now marked “Coming soon” in the menu and can’t be opened. These were removed from the menu altogether: Discovery banners; the investment request pages (Approval queue, On-behalf requests, Break requests, On-behalf withdrawals, top-ups and rollovers, Unlock requests, Auto-rollover and Statutory tax carry-across); and the settings pages Field Rules Setup, Controlled Vocabularies, Approval Thresholds, Communications Providers and Metric Definitions. Their old addresses now open Pending Approvals or an empty page. Checks on them are listed as “not run” until they come back.</li><li><strong>Customer Management.</strong> The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.</li><li><strong>Pending Approvals.</strong> A new “Created by me” tab lists the requests you raised, with a Withdraw button. This replaces the old investment Approval queue. “Dual-control changes” is marked “Coming soon”, and there is a page-size choice with Previous/Next. Our checks were updated to use it.</li><li><strong>Reports &amp; Analytics.</strong> It has moved to a new address (Reports instead of Dashboards).</li><li><strong>Fixed.</strong> The audit log now records portal actions, each with a “View” button, and can be exported. Our check passes.</li><li><strong>Still not fixed.</strong> Viewing a customer’s private details is still not recorded in their audit trail, and loan #188 still has the 7.5% deduction from its payout and repayments that don’t match its interest model. The disappearing new biller can no longer be checked, because Transactions &amp; Ledger was taken out of the menu.</li></ul>
+    <ul class="clean"><li><strong>20 pages switched off.</strong> Wallet Management, Transactions &amp; Ledger, Support &amp; Tickets, Rewards &amp; Incentives and Payroll reconciliation are now marked “Coming soon” in the menu and can’t be opened. These were removed from the menu altogether: Discovery banners; the investment request pages (Approval queue, On-behalf requests, Break requests, On-behalf withdrawals, top-ups and rollovers, Unlock requests, Auto-rollover and Statutory tax carry-across); and the settings pages Field Rules Setup, Controlled Vocabularies, Approval Thresholds, Communications Providers and Metric Definitions. Their old addresses now open Pending Approvals or an empty page. Checks on them are listed as “not run” until they come back.</li><li><strong>Customer Management.</strong> The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.</li><li><strong>Pending Approvals.</strong> A new “Created by me” tab lists the requests you raised, with a Withdraw button. This replaces the old investment Approval queue. “Dual-control changes” is marked “Coming soon”, and there is a page-size choice with Previous/Next. Our checks were updated to use it.</li><li><strong>Reports &amp; Analytics.</strong> It has moved to a new address (Reports instead of Dashboards).</li><li><strong>Public Sector loan set-up reviewed.</strong> Products, corridor, fees, pre-eligibility, approval workflows and documents were read (not changed) and compared with the app. See “What we checked by hand” and “Problems found”.</li><li><strong>Fixed.</strong> The audit log now records portal actions, each with a “View” button, and can be exported. Our check passes.</li><li><strong>Still not fixed.</strong> Viewing a customer’s private details is still not recorded in their audit trail, and loan #188 still has the 7.5% deduction from its payout and repayments that don’t match its interest model. The disappearing new biller can no longer be checked, because Transactions &amp; Ledger was taken out of the menu.</li></ul>
+    </div>
+
+    <div class="sec">
+    <h2>What we checked by hand (3 November)</h2>
+    <p class="muted">The Public Sector loan set-up was read in the admin portal and through the staff API (nothing was changed), then compared with the loan specification and with what the app does.</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Activity</th><th>Result</th></tr></thead>
+      <tbody><tr><td class="area"><strong>Public Sector products</strong><div class="muted">Three exist: Adebanjo Public Sector (Active, reducing-balance interest, payroll-deduction repayment), public-sector-loan-v2 (Active, equal-instalment interest, bank transfer or card repayment), and Auto-public (Draft). All three use the Lagos Civil Servants corridor, a 30-day re-apply cooldown, a ₦1,000,000 control-gate threshold, CRC Credit Bureau, and loyalty discounts of 0.5% after 3 clean repayments and 1% after 6. None has its own amount range, rate or tenors; these come from the corridor. The product list therefore shows their amount range as “— – —”.</div></td><td class="result"><span class="badge idle">Partly checked</span></td></tr><tr><td class="area"><strong>Corridor: Lagos Civil Servants (Remita)</strong><div class="muted">₦200,000–₦10,000,000; 3, 6, 9, 12 or 18 months; DTI 0.33; collection capitalised; salary basis from the bank-statement average; top-up allowed; 8 MDAs. The app offers the right tenors but does not enforce the amount range. Rates and fees use mixed units (see “Problems found”).</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Fee structure “Public sector fee”</strong><div class="muted">0% management fee, deducted upfront, 7.5% VAT, 0% WHT. This contradicts the corridor’s 1% management and 1% quarterly fees. The app shows 1%; the saved loans show ₦0 plus 7.5% VAT.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Pre-eligibility gate “GATE-STATE-PUBLIC-01”</strong><div class="muted">Maximum age 60, 2–420 months of service, ₦40,000 minimum net salary, MDA collection gate 85. The other gates store this gate as 0.65, so the unit needs confirming. The app does not ask for age, service or salary details.</div></td><td class="result"><span class="badge idle">Partly checked</span></td></tr><tr><td class="area"><strong>Approval workflows</strong><div class="muted">Adebanjo Public Sector: one level, ₦100,000–₦70,000,000, any credit score. public-sector-loan-v2: no workflow. Application #191 from the app was correctly routed to level 1.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Documents and purposes</strong><div class="muted">Adebanjo Public Sector requires 6 documents (driver’s licence, employment letter, statement of accounts, latest payslip, NIN, pension statement), and the app asks for exactly these. It lists 7 loan purposes, one of which (#5) no longer exists; the app shows the remaining 6.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>“One active loan across the family”</strong><div class="muted">Switched off on both active Public Sector products, although only one loan at a time is allowed. In practice the server still refused a second loan (“You have an active loan running currently”). Product should confirm which setting is meant to control this.</div></td><td class="result"><span class="badge idle">Partly checked</span></td></tr></tbody>
+    </table>
+    </div>
     </div>
 
     <div class="sec">
@@ -237,8 +248,34 @@ Expected: &quot;500000.00&quot;</pre>
       </article>
       <article class="card finding">
         <header>
+          <span class="sev high">High priority</span>
+          <h3>3. An active Public Sector product has no approval workflow, and a loan on it was paid out with no approver</h3>
+          <p class="muted">Area: Product Management: Public Sector (checked by hand) · Who should look at this: Operations (loans) and Engineering (loans)</p>
+        </header>
+        <p class="impact">Loans can be paid out without anyone signing them off, which bypasses the approval controls.</p>
+        <dl>
+          <dt>What we saw</dt><dd>“public-sector-loan-v2” is Active and shown in the app, but Approval threshold has no workflow for it (the other Public Sector product, “Adebanjo Public Sector”, has one). Loan #190 on it (₦500,000, 3 November) was paid out with no workflow and no approvers recorded.</dd>
+          <dt>What should happen</dt><dd>Every active loan product should have an approval workflow covering its whole amount range, and a product without one should not accept applications.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev high">High priority</span>
+          <h3>4. A Public Sector loan is marked “Repaid” although nothing was repaid</h3>
+          <p class="muted">Area: Loan Management (checked by hand) · Who should look at this: Engineering (loans) and Finance</p>
+        </header>
+        <p class="impact">A loan that is still owed looks settled, so it would not be collected, and the customer can borrow again straight away.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Loan #190 (₦500,000, 12 months) shows as Repaid within minutes of starting, with no repayments recorded. The customer’s wallet received the ₦500,000 payout (less ₦37,500 “Loan VAT”) after the loan was already marked Repaid. A new application from the same customer was then accepted.</dd>
+          <dt>What should happen</dt><dd>A loan should only become Repaid when its repayments (or an approved write-off or force-close, with its reason shown on the loan) cover what is owed.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
           <span class="sev med">Medium priority</span>
-          <h3>3. Viewing a customer’s private details is not recorded</h3>
+          <h3>5. Viewing a customer’s private details is not recorded</h3>
           <p class="muted">Area: Customer management · Who should look at this: Engineering and Compliance (data protection)</p>
         </header>
         <p class="impact">There is no record of which admin looked at a customer’s BVN or NIN, which data-protection rules expect.</p>
@@ -257,6 +294,19 @@ Call log:
           
         </details>
       </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>6. Public Sector corridor rates are stored and shown in different units</h3>
+          <p class="muted">Area: Product Management: corridors (checked by hand) · Who should look at this: Product and Engineering (loans)</p>
+        </header>
+        <p class="impact">Staff cannot tell from the portal what rate customers will be charged, and a rate typed in the wrong unit would go live unnoticed.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Corridors &amp; partners shows the Lagos Civil Servants rate as “0.03%” (stored as 0.03, with a booked average interim rate of 4), and lagos-v1 as “25%” (booked average 2.5). Its management fee (0.01) and quarterly fee (0.01) are stored as fractions; lagos-v1’s management fee is 2.5. The app quotes Lagos Civil Servants loans at 4% a month.</dd>
+          <dt>What should happen</dt><dd>One unit for every rate and fee, labelled in the portal (for example “% per month”), with the customer’s rate clearly identified.</dd>
+        </dl>
+        
+      </article>
     </div>
 
     <div class="sec">
@@ -267,7 +317,7 @@ Call log:
 
     <div class="sec">
     <h2>Questions for the product team</h2>
-    <ul class="clean"><li>Is the loan “Interest rate” shown in the portal a monthly rate (as in the specification’s 2% examples) or a yearly rate? Newer loans now treat it as monthly; loan #169 matches neither.</li><li>Should monthly loan repayments be rounded to the whole naira, and if so, is the difference corrected in the last payment?</li><li>Should existing loans (such as #169) be recalculated under the new interest rule, or keep their original schedule?</li><li>What is the minimum customer verification level (KYC tier) for a Personal loan? The specification does not say; the tests assume Tier 2.</li></ul>
+    <ul class="clean"><li>Is the loan “Interest rate” shown in the portal a monthly rate (as in the specification’s 2% examples) or a yearly rate? Newer loans now treat it as monthly; loan #169 matches neither.</li><li>Should monthly loan repayments be rounded to the whole naira, and if so, is the difference corrected in the last payment?</li><li>Should existing loans (such as #169) be recalculated under the new interest rule, or keep their original schedule?</li><li>What is the minimum customer verification level (KYC tier) for a Personal loan? The specification does not say; the tests assume Tier 2.</li><li>Public Sector corridors: is the customer’s rate the “policy rate” or the “booked average interim rate”, and in what unit? The Lagos Civil Servants corridor stores 0.03 and 4; lagos-v1 stores 25 and 2.5. The app quotes 4% a month.</li><li>Public Sector fees: should the corridor’s 1% management fee and 1% quarterly fee (capitalised) apply, or the product’s “Public sector fee” structure (0%, deducted upfront, 7.5% VAT)? The app shows the first; the saved loans follow the second.</li></ul>
     </div>
 
 
@@ -282,9 +332,9 @@ Call log:
   </section>
   <hr class="nojs-divider"><section role="tabpanel" id="panel-mobile" aria-labelledby="tab-mobile" tabindex="0">
     
-    <p class="muted small">Device: Google sdk_gphone64_x86_64 · Android 17 · app build 1.1.55 (30 October) · dev environment</p>
+    <p class="muted small">Device: Google sdk_gphone64_x86_64 · Android 17 · app build 1.1.55 (3 November) · dev environment</p>
     <h2 class="panel-title">Mobile App Test Results</h2>
-    <p class="muted">Automated check run on 2 November 2026 at 16:41 (WAT) · took about 14 minutes</p>
+    <p class="muted">Automated check run on 3 November 2026 at 18:49 (WAT) · took about 49 minutes</p>
 
     <div class="search" role="search">
       <label for="q-mobile">Search the Mobile app results</label>
@@ -293,33 +343,33 @@ Call log:
     </div>
 
     <section class="card verdict warn">
-      <h3>Not ready for release — 15 problems need attention (including 6 found by hand or in the app’s error log)</h3>
-      <p>4 of them affect money or compliance and should be fixed before release.</p>
+      <h3>Not ready for release — 17 problems need attention (including 8 found by hand or in the app’s error log)</h3>
+      <p>6 of them affect money or compliance and should be fixed before release.</p>
     </section>
 
     <div class="stats">
       <div class="stat"><div class="n">53</div><div class="muted">checks in total</div></div>
-      <div class="stat ok"><div class="n">20</div><div class="muted">worked as expected</div></div>
+      <div class="stat ok"><div class="n">22</div><div class="muted">worked as expected</div></div>
       <div class="stat bad"><div class="n">10</div><div class="muted">checks with a problem</div></div>
-      <div class="stat"><div class="n">23</div><div class="muted">not run (see below)</div></div>
+      <div class="stat"><div class="n">21</div><div class="muted">not run (see below)</div></div>
     </div>
-    <div class="bar" role="img" aria-label="20 passed, 10 problems, 23 not run">
-      <span class="p" style="width:37.735849056603776%"></span><span class="f" style="width:18.867924528301888%"></span><span class="s" style="width:43.39622641509434%"></span>
+    <div class="bar" role="img" aria-label="22 passed, 10 problems, 21 not run">
+      <span class="p" style="width:41.509433962264154%"></span><span class="f" style="width:18.867924528301888%"></span><span class="s" style="width:39.62264150943396%"></span>
     </div>
-    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (67% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
+    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (69% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
 
     <div class="sec">
-    <h2>What changed since the last run (29 October)</h2>
-    <ul class="clean"><li><strong>App build.</strong> Tested the 30 October build. It has the same version number as the 29 October build (1.1.55, code 92); the version should be raised with each build so testers and devices can tell them apart.</li><li><strong>Fixed: oversized Payday offer.</strong> The Borrow screen’s “Recommended for you” card now offers ₦20,000 for a 30-day Payday loan, within the ₦500,000 limit. On 29 October it offered ₦5,000,000.</li><li><strong>Fixed during the day: Tier 3 investing.</strong> In the early afternoon the Tier 3 test account was told every investment was “not available on your current tier”. By the automated run later the same day, RWIN, REAP and RTN all opened.</li><li><strong>Fixed during the day: phone sign-in.</strong> Signing in with a phone number written the usual way (080…) failed on 29 October and in the morning run; it worked in the evening run, without a new app build.</li><li><strong>Still not fixed.</strong> A Tier 3 account still shows its profile as 2/3 complete, and identity verification (SmileID) still cannot start because its settings file is missing.</li></ul>
+    <h2>What changed since the last run (30 October)</h2>
+    <ul class="clean"><li><strong>App build.</strong> Tested the 3 November build. It still has the same version number as the 29 and 30 October builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.</li><li><strong>Still not fixed: Nano and Payday crash.</strong> Both still crash on the first screen with the same error (“useFocusEffect doesn’t exist”). Checked 3 times: twice by the automated run and once by hand.</li><li><strong>Broken again: phone sign-in.</strong> Signing in with a phone number written the usual way (080…) failed again in this run. It had worked on the evening of 2 November.</li><li><strong>Fixed: REAP rate on Grow.</strong> The “Recommended for you” card that said REAP earns “up to 20%” (while the REAP card said 30%) is gone.</li><li><strong>Still not fixed.</strong> Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 and is asked to “Upgrade to Tier 2”. SmileID still can’t start (its settings file is missing). Uploaded documents are still marked “Verified” straight away. Times are still an hour behind. RWIN goals still offer tenors not in the rate table. The Settings screen still says v2.0.0.</li><li><strong>New: Public Sector loan checked by hand.</strong> See “What we tried by hand” and “Problems found”. The application can be submitted, but it skips the employer and payroll steps the specification requires and accepts amounts outside the allowed range.</li></ul>
     </div>
 
     <div class="sec">
-    <h2>What we tried by hand (2 November, 30 October build)</h2>
+    <h2>What we tried by hand (2–3 November, 30 October and 3 November builds)</h2>
     <p class="muted">A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.</p>
     <div class="table-wrap">
     <table>
       <thead><tr><th>Activity</th><th>Result</th></tr></thead>
-      <tbody><tr><td class="area"><strong>Apply for a Personal loan (₦100,000, 3 months), accept it and receive it</strong><div class="muted">Full journey done: applied in the app (after uploading three documents), approved in the admin portal (#189), offer accepted in the app, paid out from the admin portal. The repayment schedule (3 × about ₦41,833, ₦125,500 in total) follows the “Monthly equal” rule correctly, and the Borrow screen correctly blocks new loans until this one is repaid. But the offer showed ₦865,000 to repay, ₦7,500 “Loan VAT” was taken from the payout, and the next-payment countdown is wrong — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Apply for a Nano or Payday loan</strong><div class="muted">Crashes on the first screen — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Invest in RWIN, REAP or RTN as a Tier 3 customer</strong><div class="muted">Blocked as “not available on your current tier” in the early afternoon, with an upgrade screen saying “You are on Tier 3 … upgrade to Tier 3”. By the automated run later that day all three products opened, so it now passes.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>Create, top up and delete an RWIN goal as a Tier 1 customer</strong><div class="muted">Goal created (₦100,000 over 90 days, maturity 31 January 2027 — correct) and deleted. The top-up could not be paid: the wallet was empty and card funding does not work.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Edit employment details</strong><div class="muted">Job title changed, saved and still there after restarting the app; then changed back.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>Add a home address</strong><div class="muted">Not saved: the app briefly shows “You can no longer update your residential address”, although no address is on file — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Add a next of kin</strong><div class="muted">Cannot be saved (“City cannot be empty”, no City field).</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Fund the wallet</strong><div class="muted">Card payment does nothing. Bank transfer (dedicated account) and USSD are offered but were not used, as they move real money.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>Send money and pay bills</strong><div class="muted">Screens open; not completed, as they move real money. Send Money shows recipients the customer never added.</div></td><td class="result"><span class="badge idle">Partly checked</span></td></tr><tr><td class="area"><strong>Log out and switch account</strong><div class="muted">“Log out” does nothing; “Switch Account” on the sign-in screen works.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr></tbody>
+      <tbody><tr><td class="area"><strong>3 Nov: apply for a Public Sector loan (Adebanjo Public Sector, ₦300,000, 6 months)</strong><div class="muted">Submitted as application #191, which is waiting for approval in the admin portal. What matched the admin set-up: tenors of 3, 6, 9, 12 and 18 months; the reducing-balance interest model at 4% a month (schedule ₦62,000 down to ₦52,000); the 6 required documents; and the approval workflow (level 1). Problems: no employer, IPPIS or staff number, retirement date or affordability step; ₦100,000 and ₦11,000,000 accepted; a 1% fee shown but ₦0 fee and 7.5% VAT saved; and “Total Repayable” (₦345,000) doesn’t match the schedule (₦342,000). The repayment breakdown took about 10 seconds to open. The first try was refused with “You have an active loan running currently” while loan #190 was being closed; a minute later it went through. See “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>3 Nov: check the Borrow screen lists the right products</strong><div class="muted">Shows the active products from the admin portal, including both active Public Sector products (Adebanjo Public Sector and public-sector-loan-v2). The draft “Auto-public” is correctly hidden.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>3 Nov: apply for a Nano or Payday loan</strong><div class="muted">Still crashes on the first screen (“useFocusEffect doesn’t exist”).</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>3 Nov: Tier 3 profile and identity</strong><div class="muted">Still “2/3, 1 key identity step left”, and the list includes “Upgrade to Tier 2” for a Tier 3 customer. SmileID still reports its settings file missing.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: apply for a Personal loan (₦100,000, 3 months), accept it and receive it</strong><div class="muted">Full journey done: applied in the app (after uploading three documents), approved in the admin portal (#189), offer accepted in the app, paid out from the admin portal. The repayment schedule (3 × about ₦41,833, ₦125,500 in total) follows the “Monthly equal” rule correctly, and the Borrow screen correctly blocks new loans until this one is repaid. But the offer showed ₦865,000 to repay, ₦7,500 “Loan VAT” was taken from the payout, and the next-payment countdown is wrong — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: apply for a Nano or Payday loan</strong><div class="muted">Crashes on the first screen — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: invest in RWIN, REAP or RTN as a Tier 3 customer</strong><div class="muted">Blocked as “not available on your current tier” in the early afternoon, with an upgrade screen saying “You are on Tier 3 … upgrade to Tier 3”. By the automated run later that day all three products opened, so it now passes.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>2 Nov: create, top up and delete an RWIN goal as a Tier 1 customer</strong><div class="muted">Goal created (₦100,000 over 90 days, maturity 31 January 2027 — correct) and deleted. The top-up could not be paid: the wallet was empty and card funding does not work.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: edit employment details</strong><div class="muted">Job title changed, saved and still there after restarting the app; then changed back.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>2 Nov: add a home address</strong><div class="muted">Not saved: the app briefly shows “You can no longer update your residential address”, although no address is on file — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: add a next of kin</strong><div class="muted">Cannot be saved (“City cannot be empty”, no City field).</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: fund the wallet</strong><div class="muted">Card payment does nothing. Bank transfer (dedicated account) and USSD are offered but were not used, as they move real money.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: send money and pay bills</strong><div class="muted">Screens open; not completed, as they move real money. Send Money shows recipients the customer never added.</div></td><td class="result"><span class="badge idle">Partly checked</span></td></tr><tr><td class="area"><strong>2 Nov: log out and switch account</strong><div class="muted">“Log out” does nothing; “Switch Account” on the sign-in screen works.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr></tbody>
     </table>
     </div>
     </div>
@@ -330,7 +380,7 @@ Call log:
     <div class="table-wrap">
     <table>
       <thead><tr><th>Area</th><th class="num">Checks run</th><th class="num">Worked</th><th>Result</th></tr></thead>
-      <tbody><tr><td class="area"><strong>Signing in</strong><div class="muted">Each test customer can sign in with email and password, or with phone number and passcode.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">3</td><td class="result"><span class="badge ok">All good</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Sign-up, sign-in security and sessions</strong><div class="muted">Creating an account, wrong-password handling, account lock-out, staying signed in, and frozen accounts.</div></td><td class="num" data-label="Checks run">0</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge idle">Not run yet</span><div class="muted small">14 not run</div></td></tr><tr><td class="area"><strong>Home, Grow and Borrow screens</strong><div class="muted">The balance and quick actions on Home, investment products and plan totals on Grow, and the loans offered on Borrow.</div></td><td class="num" data-label="Checks run">9</td><td class="num" data-label="Worked">8</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">3 not run</div></td></tr><tr><td class="area"><strong>Investing</strong><div class="muted">Opening each investment product, and creating, checking and deleting an RWIN savings goal.</div></td><td class="num" data-label="Checks run">9</td><td class="num" data-label="Worked">7</td><td class="result"><span class="badge bad">2 problems</span></td></tr><tr><td class="area"><strong>Borrowing</strong><div class="muted">Opening short-term loans, and checking a Personal loan’s quote, offer and repayment countdown against the loan rules.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge bad">3 problems</span><div class="muted small">2 not run</div></td></tr><tr><td class="area"><strong>Profile</strong><div class="muted">Editing employment details, adding a next of kin and a home address.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge bad">1 problem</span></td></tr><tr><td class="area"><strong>Account</strong><div class="muted">Send Money recipients, funding the wallet by card, and logging out.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge bad">3 problems</span></td></tr></tbody>
+      <tbody><tr><td class="area"><strong>Signing in</strong><div class="muted">Each test customer can sign in with email and password, or with phone number and passcode.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Sign-up, sign-in security and sessions</strong><div class="muted">Creating an account, wrong-password handling, account lock-out, staying signed in, and frozen accounts.</div></td><td class="num" data-label="Checks run">0</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge idle">Not run yet</span><div class="muted small">14 not run</div></td></tr><tr><td class="area"><strong>Home, Grow and Borrow screens</strong><div class="muted">The balance and quick actions on Home, investment products and plan totals on Grow, and the loans offered on Borrow.</div></td><td class="num" data-label="Checks run">12</td><td class="num" data-label="Worked">11</td><td class="result"><span class="badge bad">1 problem</span></td></tr><tr><td class="area"><strong>Investing</strong><div class="muted">Opening each investment product, and creating, checking and deleting an RWIN savings goal.</div></td><td class="num" data-label="Checks run">9</td><td class="num" data-label="Worked">7</td><td class="result"><span class="badge bad">2 problems</span></td></tr><tr><td class="area"><strong>Borrowing</strong><div class="muted">Opening short-term loans, and checking a Personal loan’s quote, offer and repayment countdown against the loan rules.</div></td><td class="num" data-label="Checks run">2</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge bad">2 problems</span><div class="muted small">3 not run</div></td></tr><tr><td class="area"><strong>Profile</strong><div class="muted">Editing employment details, adding a next of kin and a home address.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge bad">1 problem</span></td></tr><tr><td class="area"><strong>Account</strong><div class="muted">Send Money recipients, funding the wallet by card, and logging out.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge bad">3 problems</span></td></tr></tbody>
     </table>
     </div>
     </div>
@@ -342,20 +392,7 @@ Call log:
       <article class="card finding">
         <header>
           <span class="sev high">High priority</span>
-          <h3>1. Nano and Payday loan applications crash</h3>
-          <p class="muted">Area: Borrowing · Who should look at this: Engineering (mobile app)</p>
-        </header>
-        <p class="impact">Customers cannot apply for any short-term loan. After the crash the app shows a blank screen and has to be closed.</p>
-        <dl>
-          <dt>What we saw</dt><dd>Tapping a Nano or Payday loan on the Borrow screen shows a red error screen: “ReferenceError: Property ’useFocusEffect’ doesn’t exist” in the loan-amount screen. Dismissing or reloading leaves a blank screen.</dd>
-          <dt>What should happen</dt><dd>The loan-amount screen should open so the customer can choose an amount and apply.</dd>
-        </dl>
-        
-      </article>
-      <article class="card finding">
-        <header>
-          <span class="sev high">High priority</span>
-          <h3>2. Send Money shows recipients the customer never added</h3>
+          <h3>1. Send Money shows recipients the customer never added</h3>
           <p class="muted">Area: Account · Who should look at this: Engineering (mobile app) and Compliance</p>
         </header>
         <p class="impact">A customer could send money to a stranger they think they paid before.</p>
@@ -363,7 +400,30 @@ Call log:
           <dt>What we saw</dt><dd>On the Tier 1 test account, which has never sent money, Send Money lists “Recent Recipients” and saved beneficiaries with names, banks and the last four digits of their account numbers. They look like built-in sample data, but could also be another customer’s list.</dd>
           <dt>What should happen</dt><dd>Only recipients this customer has actually paid or saved should be shown; a new customer should see an empty list. If these belong to another customer, it is also a data leak.</dd>
         </dl>
-        
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+Expected: 0</pre>
+          
+          
+        </details>
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev high">High priority</span>
+          <h3>2. Nano and Payday loan applications crash</h3>
+          <p class="muted">Area: Borrowing · Who should look at this: Engineering (mobile app)</p>
+        </header>
+        <p class="impact">Customers cannot apply for any short-term loan. After the crash the app shows a blank screen and has to be closed.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Tapping a Nano or Payday loan on the Borrow screen shows a red error screen: “ReferenceError: Property ’useFocusEffect’ doesn’t exist” in the loan-amount screen. Dismissing or reloading leaves a blank screen.</dd>
+          <dt>What should happen</dt><dd>The loan-amount screen should open so the customer can choose an amount and apply.</dd>
+        </dl>
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+Expected: &quot;opened&quot;</pre>
+          
+          
+        </details>
       </article>
       <article class="card finding">
         <header>
@@ -393,8 +453,52 @@ Call log:
       </article>
       <article class="card finding">
         <header>
+          <span class="sev high">High priority</span>
+          <h3>5. Public Sector loans accept amounts outside the allowed range</h3>
+          <p class="muted">Area: Borrowing: Public Sector (tried by hand) · Who should look at this: Engineering (loans and mobile app)</p>
+        </header>
+        <p class="impact">Customers can apply for, and be shown offers on, loans the product does not allow, so the lending limits are not enforced.</p>
+        <dl>
+          <dt>What we saw</dt><dd>The Public Sector product’s corridor (Lagos Civil Servants) allows ₦200,000 to ₦10,000,000. The app accepted ₦100,000 and ₦11,000,000, quoted them (₦11,000,000 over 6 months: ₦12,540,000 to repay), and went on to the documents step without any message.</dd>
+          <dt>What should happen</dt><dd>Amounts below the minimum or above the maximum should be refused with a clear message, before documents are asked for.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev high">High priority</span>
+          <h3>6. The Public Sector application skips the employer and payroll steps</h3>
+          <p class="muted">Area: Borrowing: Public Sector (tried by hand) · Who should look at this: Product and Engineering (loans and mobile app)</p>
+        </header>
+        <p class="impact">Loans meant to be repaid through the employer’s payroll can be applied for without saying who the employer is or checking the customer can afford the deductions.</p>
+        <dl>
+          <dt>What we saw</dt><dd>The app goes straight from amount, tenure and purpose to documents. It never asks the customer to find their employer (corridor), for an IPPIS or staff number, or for a retirement date. No affordability (salary × DTI) check is shown. Above the ₦1,000,000 control-gate threshold set in the admin portal, it asked for the same 6 documents, with no house visit, cheques or utility bill.</dd>
+          <dt>What should happen</dt><dd>As the Public Sector loan specification (§3–§4) describes: employer search and corridor confirmation, the corridor’s ID number, a retirement date (tenor capped at the months left before retirement), a live affordability cap, and the extra requirements above the corridor threshold.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
           <span class="sev med">Medium priority</span>
-          <h3>5. The Tier 3 test account still shows an identity step to complete</h3>
+          <h3>7. Signing in with a phone number that starts with 0 does nothing</h3>
+          <p class="muted">Area: Signing in · Who should look at this: Engineering (mobile app)</p>
+        </header>
+        <p class="impact">Customers who type their number the usual way (080…) are stuck on the sign-in screen with no explanation.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Entering a mobile number in the usual 080… form and tapping Continue does nothing — no next screen and no error. Only the +234 form of the same number works.</dd>
+          <dt>What should happen</dt><dd>The app should accept the usual Nigerian format, or clearly say which format it needs.</dd>
+        </dl>
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+Expected: true</pre>
+          
+          
+        </details>
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>8. The Tier 3 test account still shows an identity step to complete</h3>
           <p class="muted">Area: Home, Grow and Borrow screens · Who should look at this: Product and Compliance (KYC)</p>
         </header>
         <p class="impact">Either the test account is not really Tier 3, or the “Complete your profile” card does not follow the customer’s verification level — which would confuse fully verified customers.</p>
@@ -402,46 +506,12 @@ Call log:
           <dt>What we saw</dt><dd>The Home screen shows “Complete your profile — 2/3, 1 key identity step left” for the Tier 3 test account.</dd>
           <dt>What should happen</dt><dd>A fully verified (Tier 3) customer should have every identity step complete.</dd>
         </dl>
-        
-      </article>
-      <article class="card finding">
-        <header>
-          <span class="sev med">Medium priority</span>
-          <h3>6. RWIN goals offer tenors that are not in the RWIN rate table</h3>
-          <p class="muted">Area: Investing · Who should look at this: Product and Engineering (mobile app)</p>
-        </header>
-        <p class="impact">Customers can book a term with no published rate, so the rate they get is unclear.</p>
-        <dl>
-          <dt>What we saw</dt><dd>Booking an RWIN goal offers 60, 90 or 120 days; the RWIN product page lists rates only for 90, 180, 270 and 360 days.</dd>
-          <dt>What should happen</dt><dd>Booking should offer the tenors in the rate table (or the table should cover every tenor offered).</dd>
-        </dl>
-        
-      </article>
-      <article class="card finding">
-        <header>
-          <span class="sev med">Medium priority</span>
-          <h3>7. Investment goals can be created and topped up with an empty wallet, with no warning</h3>
-          <p class="muted">Area: Investing · Who should look at this: Engineering (mobile app) and Product</p>
-        </header>
-        <p class="impact">Customers set up a plan whose first payment will fail, and get no message telling them why nothing happens.</p>
-        <dl>
-          <dt>What we saw</dt><dd>The Tier 1 test account (₦0.00 balance) can create an RWIN goal whose first debit is due that day. Tapping “Add ₦…” to top it up then does nothing — no “insufficient balance” message and no other way to pay.</dd>
-          <dt>What should happen</dt><dd>The app should tell the customer their balance is too low and offer a way to fund it before (or while) creating the goal.</dd>
-        </dl>
-        
-      </article>
-      <article class="card finding">
-        <header>
-          <span class="sev med">Medium priority</span>
-          <h3>8. The loan screen counts down to the wrong payment date</h3>
-          <p class="muted">Area: Borrowing · Who should look at this: Engineering (mobile app)</p>
-        </header>
-        <p class="impact">Customers may miss their first payment and be charged late penalties.</p>
-        <dl>
-          <dt>What we saw</dt><dd>With a 3-month Personal loan being repaid monthly, the Borrow screen says “Next payment due in 90 days”. The admin portal shows the next repayment on 2 December 2026 — 30 days away. (90 days is the last payment.)</dd>
-          <dt>What should happen</dt><dd>It should count down to the next monthly payment.</dd>
-        </dl>
-        
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+Expected: 3</pre>
+          
+          
+        </details>
       </article>
       <article class="card finding">
         <header>
@@ -454,7 +524,12 @@ Call log:
           <dt>What we saw</dt><dd>Fund → Card Payment → entering an amount and tapping “Pay ₦…” does nothing — no card form and no message.</dd>
           <dt>What should happen</dt><dd>The card payment page (Paystack) should open.</dd>
         </dl>
-        
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+Expected: &quot;payment page opened&quot;</pre>
+          
+          
+        </details>
       </article>
       <article class="card finding">
         <header>
@@ -467,12 +542,53 @@ Call log:
           <dt>What we saw</dt><dd>Tapping “Log out” in Settings has no effect. The customer stays signed in until the app times out.</dd>
           <dt>What should happen</dt><dd>Log out should end the session and return to the sign-in screen.</dd>
         </dl>
-        
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+Expected: &quot;signed out&quot;</pre>
+          
+          
+        </details>
       </article>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>11. Next of kin cannot be saved</h3>
+          <h3>11. RWIN goals offer tenors that are not in the RWIN rate table</h3>
+          <p class="muted">Area: Investing · Who should look at this: Product and Engineering (mobile app)</p>
+        </header>
+        <p class="impact">Customers can book a term with no published rate, so the rate they get is unclear.</p>
+        <dl>
+          <dt>What we saw</dt><dd>Booking an RWIN goal offers 60, 90 or 120 days; the RWIN product page lists rates only for 90, 180, 270 and 360 days.</dd>
+          <dt>What should happen</dt><dd>Booking should offer the tenors in the rate table (or the table should cover every tenor offered).</dd>
+        </dl>
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).toContain(expected) // indexOf
+Expected substring: &quot;not in table: none&quot;</pre>
+          
+          
+        </details>
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>12. Investment goals can be created and topped up with an empty wallet, with no warning</h3>
+          <p class="muted">Area: Investing · Who should look at this: Engineering (mobile app) and Product</p>
+        </header>
+        <p class="impact">Customers set up a plan whose first payment will fail, and get no message telling them why nothing happens.</p>
+        <dl>
+          <dt>What we saw</dt><dd>The Tier 1 test account (₦0.00 balance) can create an RWIN goal whose first debit is due that day. Tapping “Add ₦…” to top it up then does nothing — no “insufficient balance” message and no other way to pay.</dd>
+          <dt>What should happen</dt><dd>The app should tell the customer their balance is too low and offer a way to fund it before (or while) creating the goal.</dd>
+        </dl>
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+Expected: &quot;the app responded&quot;</pre>
+          
+          
+        </details>
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>13. Next of kin cannot be saved</h3>
           <p class="muted">Area: Profile · Who should look at this: Engineering (mobile app and API)</p>
         </header>
         <p class="impact">Customers cannot add a next of kin, which is normally required for KYC.</p>
@@ -480,12 +596,17 @@ Call log:
           <dt>What we saw</dt><dd>After filling in every field on the Next of Kin form and pressing Save, the app shows “City cannot be empty”. The form has no City field.</dd>
           <dt>What should happen</dt><dd>The form should ask for everything the system needs (add a City field, or stop requiring it).</dd>
         </dl>
-        
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <pre class="snippet">expect(received).not.toMatch(expected)
+Expected pattern: not /cannot|required|invalid|error|failed/i</pre>
+          
+          
+        </details>
       </article>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>12. A customer with no address on file is told they can no longer change it</h3>
+          <h3>14. A customer with no address on file is told they can no longer change it</h3>
           <p class="muted">Area: Profile (tried by hand) · Who should look at this: Engineering (mobile app and API) and Product</p>
         </header>
         <p class="impact">Customers without an address cannot add one, although an address is normally needed for KYC.</p>
@@ -498,12 +619,12 @@ Call log:
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>13. Loan documents are marked “Verified” the moment they are uploaded</h3>
+          <h3>15. Loan documents are marked “Verified” the moment they are uploaded</h3>
           <p class="muted">Area: Borrowing (tried by hand) · Who should look at this: Engineering (mobile app) and Operations</p>
         </header>
         <p class="impact">Customers are told their documents are verified before anyone has checked them, and are asked to upload documents already on file.</p>
         <dl>
-          <dt>What we saw</dt><dd>Applying for a Personal loan asked for a statement of accounts, NIN document and utility bill — the admin portal shows this customer uploaded all three on 21 October. A blank test PDF uploaded for each was immediately labelled “Verified”.</dd>
+          <dt>What we saw</dt><dd>Applying for a Personal loan (2 November) asked for a statement of accounts, NIN document and utility bill, although the admin portal shows this customer uploaded all three on 21 October. A blank test PDF uploaded for each was immediately labelled “Verified”. Still happening on 3 November: a Public Sector application asked for all 6 documents again (the customer had a Public Sector loan in October), and each blank PDF showed “Verified” at once.</dd>
           <dt>What should happen</dt><dd>Documents already on file should be reused, and new uploads should show “Uploaded” or “Pending review” until someone checks them.</dd>
         </dl>
         
@@ -511,12 +632,12 @@ Call log:
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>14. Loan screens show a fee that is never charged, and hide the 7.5% VAT that is</h3>
+          <h3>16. Loan screens show a fee that is never charged, and hide the 7.5% VAT that is</h3>
           <p class="muted">Area: Borrowing (tried by hand) · Who should look at this: Engineering (loans) and Finance</p>
         </header>
         <p class="impact">Customers cannot see the real cost of the loan before they accept it.</p>
         <dl>
-          <dt>What we saw</dt><dd>The review screen showed “Management Fee (1%) ₦1,000” and “Total Repayable ₦126,500”, while its own schedule adds up to ₦125,500. The admin portal shows a ₦0 management fee, and no fee was charged. Instead, when ₦100,000 was paid out, ₦7,500 was taken straight back as “Loan VAT” (wallet credited ₦92,500). VAT is not mentioned on the application or offer screens.</dd>
+          <dt>What we saw</dt><dd>Personal loan #189 (2 November): the review screen showed “Management Fee (1%) ₦1,000” and “Total Repayable ₦126,500”, while its own schedule adds up to ₦125,500. The admin portal shows a ₦0 management fee, and no fee was charged. Instead, when ₦100,000 was paid out, ₦7,500 was taken straight back as “Loan VAT” (wallet credited ₦92,500). Same on 3 November with Public Sector loans. Application #191 (₦300,000): the review screen shows “Management Fee (1%) ₦3,000” and “Total Repayable ₦345,000”, its schedule adds up to ₦342,000, and the saved application has a ₦0 fee and 7.5% VAT. Loan #190 (₦500,000) was paid out, then ₦37,500 was taken as “Loan VAT”. VAT is not mentioned on any application or offer screen.</dd>
           <dt>What should happen</dt><dd>Every charge should be shown, with the correct amount, before the customer accepts. Finance should confirm whether VAT applies to the amount lent (VAT normally applies to fees).</dd>
         </dl>
         
@@ -524,12 +645,12 @@ Call log:
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>15. Times are shown an hour behind Nigerian time</h3>
+          <h3>17. Times are shown an hour behind Nigerian time</h3>
           <p class="muted">Area: Times and dates (tried by hand) · Who should look at this: Engineering (mobile app, admin portal and API)</p>
         </header>
         <p class="impact">Transaction and application times look wrong to customers and staff, which matters for disputes and audits.</p>
         <dl>
-          <dt>What we saw</dt><dd>The loan payout made at about 3:30 PM (WAT) appears in the app’s activity as 02:30 PM. The admin portal shows the application created at 1:56 PM when it was submitted at about 2:56 PM.</dd>
+          <dt>What we saw</dt><dd>The loan payout made at about 3:30 PM (WAT) on 2 November appears in the app’s activity as 02:30 PM. The admin portal shows the application created at 1:56 PM when it was submitted at about 2:56 PM. Still the same on 3 November: an investment made from the admin portal just before 6 PM shows as 04:58 PM, and a loan paid out at about 7:30 PM shows as 06:30 PM.</dd>
           <dt>What should happen</dt><dd>Times should be shown in Nigerian time (WAT, UTC+1).</dd>
         </dl>
         
@@ -539,19 +660,19 @@ Call log:
     <div class="sec">
     <h2>Differences from the documents (not failures)</h2>
     <p class="muted">These work, but don’t match what the specifications say. Product should confirm which is correct.</p>
-    <ul class="clean"><li><strong>REAP rate.</strong> The Grow screen’s “Recommended for you” card says REAP earns “up to 20% p.a.”, while the REAP card below it says 30% p.a.</li><li><strong>App version.</strong> Settings shows “v2.0.0”, but the installed app is version 1.1.55.</li><li><strong>Password error wording.</strong> After a wrong password, the app says “Incorrect passcode. 3 attempt(s) left.” — it should say password; “passcode” is the 6-digit code used with a phone number.</li><li><strong>Shared attempt counter.</strong> Wrong attempts with email + password and with phone + passcode count towards the same limit (4 attempts in total). Product should confirm this is intended.</li></ul>
+    <ul class="clean"><li><strong>App version.</strong> Settings shows “v2.0.0”, but the installed app is version 1.1.55.</li><li><strong>Public Sector loan rate.</strong> The app quotes “4% / month”. That is the corridor’s “booked average interim rate”. The corridor’s “policy rate” is 0.03, which the admin portal shows as “0.03%”.</li><li><strong>Public Sector management fee.</strong> The review screen adds a 1% management fee (₦3,000 on ₦300,000), as the corridor sets. The product’s fee structure (“Public sector fee”) says 0%, and the saved application has a ₦0 fee plus 7.5% VAT, which the app never shows.</li><li><strong>Password error wording.</strong> After a wrong password, the app says “Incorrect passcode. 3 attempt(s) left.” — it should say password; “passcode” is the 6-digit code used with a phone number.</li><li><strong>Shared attempt counter.</strong> Wrong attempts with email + password and with phone + passcode count towards the same limit (4 attempts in total). Product should confirm this is intended.</li></ul>
     </div>
 
     <div class="sec">
     <h2>Questions for the product team</h2>
-    <ul class="clean"><li>Is the “Complete your profile” card meant to follow the customer’s KYC tier? The Tier 3 test account shows 2 of 3 steps done.</li><li>How should RWIN goal interest be projected? The app shows ₦2,237.38 on ₦100,000 over 90 days at 14% — interest up to the goal’s end date. Our reading of the calculator rules (each contribution earning for a full 90-day cycle) gives about ₦3,375.</li><li>Should 7.5% VAT be charged on the amount lent? It is currently taken from every loan payout as “Loan VAT”. And is there a management fee on Personal loans (the app says 1%, the admin portal says ₦0)?</li><li>Which KYC tier does each investment product need? The product documents do not say.</li></ul>
+    <ul class="clean"><li>Is the “Complete your profile” card meant to follow the customer’s KYC tier? The Tier 3 test account shows 2 of 3 steps done.</li><li>How should RWIN goal interest be projected? The app shows ₦2,237.38 on ₦100,000 over 90 days at 14% — interest up to the goal’s end date. Our reading of the calculator rules (each contribution earning for a full 90-day cycle) gives about ₦3,375.</li><li>Should 7.5% VAT be charged on the amount lent? It is currently taken from every loan payout as “Loan VAT”. And is there a management fee on Personal loans (the app says 1%, the admin portal says ₦0)?</li><li>Which KYC tier does each investment product need? The product documents do not say.</li><li>For Public Sector loans, which corridor setting is the customer’s interest rate: the “policy rate” or the “booked average interim rate”? And which fee applies: the corridor’s 1% management fee and 1% quarterly fee, or the product’s fee structure (0%)?</li><li>Is the Public Sector application meant to ask for the employer (corridor), IPPIS or staff number, and retirement date, as the specification describes? This build goes straight from amount and tenure to documents.</li></ul>
     </div>
 
 
 
     <div class="sec">
     <h2>Not run in this round</h2>
-    <ul class="clean"><li><strong>offers Nano, Payday, Personal and Public Sector loans</strong> <span class="muted">(Home, Grow and Borrow screens)</span><br><span class="muted">Not run: the Tier 3 test account has a loan in progress (one at a time), so its Borrow tab shows that loan instead of the product list. It runs again once the loan is repaid.</span></li><li><strong>groups loans into Fast Cash and Long-term</strong> <span class="muted">(Home, Grow and Borrow screens)</span><br><span class="muted">Not run: the Tier 3 test account has a loan in progress (one at a time), so its Borrow tab shows that loan instead of the product list. It runs again once the loan is repaid.</span></li><li><strong>recommended offer stays within the product limits</strong> <span class="muted">(Home, Grow and Borrow screens)</span><br><span class="muted">Not run: the Tier 3 test account has a loan in progress (one at a time), so its Borrow tab shows that loan instead of the product list. It runs again once the loan is repaid.</span></li><li><strong>happy path: BVN match → phone OTP → email OTP → PIN → lands on home as Tier 1</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN 10 digits is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN contains a letter is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN name/DOB mismatch blocks onboarding with clear guidance</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>identity provider timeout surfaces a retryable error, not a crash</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong OTP is rejected; resend is throttled</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>PIN confirmation mismatch and weak PINs are rejected</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid email + password logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid phone + passcode/PIN logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong password shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong PIN shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account locks after repeated wrong passwords — and the phone route is locked too</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>session survives short backgrounding but requires re-auth after relaunch</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account frozen by Compliance blocks login with support message</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>Tier 1 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Tier 2 test account signs in with email + password</strong> <span class="muted">(Signing in)</span><br><span class="muted">Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.</span></li><li><strong>Tier 2 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.</span></li><li><strong>Tier 3 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Personal loan quote: the schedule follows the interest rule and adds up to the total</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: the Tier 3 test account already has a loan, and only one loan can be held at a time. It runs again once that loan is repaid.</span></li><li><strong>Loan offer shows the same terms as the application</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: only checked while an approved loan offer is waiting to be accepted.</span></li></ul>
+    <ul class="clean"><li><strong>happy path: BVN match → phone OTP → email OTP → PIN → lands on home as Tier 1</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN 10 digits is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN contains a letter is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN name/DOB mismatch blocks onboarding with clear guidance</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>identity provider timeout surfaces a retryable error, not a crash</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong OTP is rejected; resend is throttled</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>PIN confirmation mismatch and weak PINs are rejected</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid email + password logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid phone + passcode/PIN logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong password shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong PIN shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account locks after repeated wrong passwords — and the phone route is locked too</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>session survives short backgrounding but requires re-auth after relaunch</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account frozen by Compliance blocks login with support message</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>Tier 1 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Tier 2 test account signs in with email + password</strong> <span class="muted">(Signing in)</span><br><span class="muted">Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.</span></li><li><strong>Tier 2 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.</span></li><li><strong>Tier 3 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Personal loan quote: the schedule follows the interest rule and adds up to the total</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: the Tier 3 test account already has a loan, and only one loan can be held at a time. It runs again once that loan is repaid.</span></li><li><strong>Loan offer shows the same terms as the application</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: only checked while an approved loan offer is waiting to be accepted.</span></li><li><strong>Active loan: next payment countdown is within a month</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: only checked while a loan is being repaid.</span></li></ul>
     </div>
 
     <h2>Need the technical detail?</h2>

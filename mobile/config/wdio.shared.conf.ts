@@ -36,7 +36,7 @@ export const sharedConfig: Options.Testrunner = {
   logLevel: 'warn',
   bail: 0,
   waitforTimeout: 15_000,
-  connectionRetryTimeout: 120_000,
+  connectionRetryTimeout: 300_000, // opening a session installs and resets a ~350 MB app
   connectionRetryCount: 2,
   framework: 'mocha',
   mochaOpts: { ui: 'bdd', timeout: 300_000, retries: 0 },
@@ -52,7 +52,10 @@ export const sharedConfig: Options.Testrunner = {
     }],
   ],
   onPrepare: function () {
-    fs.rmSync(RESULTS_DIR, { recursive: true, force: true });
+    // Each run starts clean, but the previous run's results are kept (a single-spec re-run used to wipe a full run).
+    const previous = `${RESULTS_DIR}-previous`;
+    fs.rmSync(previous, { recursive: true, force: true });
+    if (fs.existsSync(RESULTS_DIR)) fs.renameSync(RESULTS_DIR, previous);
     fs.mkdirSync(RESULTS_DIR, { recursive: true });
   },
   afterTest: async function (test, _context, { passed, error }) {
