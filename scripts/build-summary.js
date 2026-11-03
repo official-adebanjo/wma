@@ -406,7 +406,7 @@ const strip = (s) => (s || '').replace(/\x1b\[[0-9;]*m/g, '');
 const cleanTitle = (t) => t.replace(/\s@\S+/g, '').replace(/\bT(\d) customer\b/g, 'Tier $1 test account').trim();
 const count = (st, list) => list.filter((t) => t.status === st).length;
 const fmt = (d) => d.toLocaleString('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-const sevRank = (s) => (s === 'High' ? 0 : 1);
+const sevRank = (s) => (s === 'High' ? 0 : s === 'Low' ? 2 : 1);
 
 fs.mkdirSync(path.join(outDir, 'screenshots'), { recursive: true });
 
@@ -555,13 +555,13 @@ function panel(d, pub) {
   const cards = findings.map((f, i) => `
       <article class="card finding">
         <header>
-          <span class="sev ${f.severity === 'High' ? 'high' : 'med'}">${esc(f.severity)} priority</span>
+          <span class="sev ${f.severity === 'High' ? 'high' : f.severity === 'Low' ? 'low' : 'med'}">${esc(f.severity)} priority</span>
           <h3>${i + 1}. ${esc(f.title)}</h3>
           <p class="muted">Area: ${esc(f.area)} · Who should look at this: ${esc(f.owner)}</p>
         </header>
         <p class="impact">${esc(f.impact)}</p>
         <dl>
-          <dt>What we saw</dt><dd>${esc(f.saw)}</dd>
+          <dt>What we saw</dt><dd>${esc(pub && f.sawPublic ? f.sawPublic : f.saw)}</dd>
           <dt>What should happen</dt><dd>${esc(f.expected)}</dd>
         </dl>
         ${f.shot && !pub ? `<details><summary>Show screenshot</summary><a href="${f.shot}" target="_blank" rel="noopener"><img src="${f.shot}" alt="Screenshot taken when problem ${i + 1} was found" loading="lazy"></a></details>` : ''}
@@ -593,7 +593,7 @@ function panel(d, pub) {
     </div>
     <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (${passRate}% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
 ${d.changes ? `
-    <h2>What changed since the last run (${esc(d.changes.since)})</h2>
+    <h2>${d.changes.heading ? esc(d.changes.heading) : `What changed since the last run (${esc(d.changes.since)})`}</h2>
     <ul class="clean">${d.changes.items.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
 ` : ''}${d.journeys ? `
     <h2>What we tried by hand (${esc(d.journeys.when)})</h2>
@@ -618,12 +618,14 @@ ${d.changes ? `
     <p class="muted">These did not behave the way the product documents say they should. “High priority” means it affects customers’ money or a compliance requirement.</p>
     ${cards || '<p>No problems were found.</p>'}
 
-    <h2>Differences from the documents (not failures)</h2>
-    <p class="muted">These work, but don’t match what the specifications say. Product should confirm which is correct.</p>
+    <h2>${esc(d.mismatchesHeading || 'Differences from the documents (not failures)')}</h2>
+    <p class="muted">${esc(d.mismatchesIntro || 'These work, but don’t match what the specifications say. Product should confirm which is correct.')}</p>
     <ul class="clean">${d.mismatches.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
 
     <h2>Questions for the product team</h2>
     <ul class="clean">${d.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ul>
+
+${d.reference ? d.reference(pub) : ''}
 
     <h2>Not run in this round</h2>
     <ul class="clean">${notRunRows || '<li>Everything was run.</li>'}</ul>
@@ -636,13 +638,234 @@ function emptyPanel(label, how) {
   return `<h2 class="panel-title">${esc(label)} Test Results</h2><section class="card verdict"><h3>No results yet</h3><p class="muted">${esc(how)}</p></section>`;
 }
 
+/* ================================================================== API — vocabulary and results */
+
+const apiDir = path.join(root, 'reports/api-results');
+const apiSnapshot = path.join(root, 'api-dev/openapi.snapshot.json');
+const API_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
+/** What a few endpoints hold, so findings don't read as bare paths (internal page only). */
+const API_NOTES = {
+  'GET /api/v3/leads': 'sales leads: names, phone numbers, email and home addresses, net salary',
+  'GET /api/v3/loan-applications/{userId}/user': 'loan applications',
+  'GET /api/v3/loan-approval-workflows': 'loan approval set-up: approvers, amount limits, credit-score thresholds',
+  'GET /api/v3/general-approval-workflows': 'general approval set-up and approvers',
+  'GET /api/v3/referral-histories/admin': 'referral history for all customers',
+};
+/** Reference lists that are fine to be public: answering without sign-in is a documentation gap there, not a leak. */
+const PUBLIC_REFERENCE = /^\/api\/v3\/(country|state|lga)(\/|$)/;
+/** Same rule as api-dev/spec.ts isAdminOnly. */
+const API_ADMIN_TAGS = ['Account Control Endpoints', 'General Approval Workflow Endpoints', 'Investment Management Endpoints', 'Investment Report Endpoints', 'Loan Report Endpoints', 'Loan Approval Workflow Endpoints', 'System-Wide Audit Log Endpoints', 'Portal Admin User Endpoints'];
+const apiAdminOnly = (op) => API_ADMIN_TAGS.includes(op.tag) || /\/admin(\/|-|$)/.test(op.path);
+/** Found by hand while building the checks (2026-11-03). */
+const API_DOC_NOTES = [
+  ['Paging starts at 1', 'List endpoints take pageNo starting at 1 — pageNo=0 is rejected as “pageNo is required”. Leaving out the optional pageNo on GET /api/v3/loan-products fails with “Page index must not be less than zero”. The API document says neither.'],
+];
+const API_QUESTIONS = [
+  'Which roles may call each staff-only area? The API document does not say, so these checks treat Investment Management, the Investment and Loan reports, the approval workflows, the audit log, account controls and portal admin users as staff-only.',
+  'Should reference lists such as countries and states be public? They answer without sign-in although the document says sign-in is needed.',
+  'Can the API document mark which parameters and request fields are required? Many are only enforced by the server.',
+];
+const maskPII = (s) => String(s).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '<email>').replace(/(\+?234|0)[789][01]\d{8}/g, '<phone>');
+const apiAreaName = (tag) => (tag === 'lead-api-resource' ? 'Leads' : tag.replace(/ Endpoints$/, ''));
+
+function readApi() {
+  const recFile = path.join(apiDir, 'records.jsonl');
+  if (!fs.existsSync(recFile) || !fs.existsSync(apiSnapshot)) return null;
+  const spec = JSON.parse(fs.readFileSync(apiSnapshot, 'utf8'));
+  const schemas = spec.components?.schemas || {};
+  const ops = [];
+  for (const [p, item] of Object.entries(spec.paths)) {
+    for (const m of API_METHODS) {
+      const o = item[m];
+      if (!o) continue;
+      ops.push({
+        method: m.toUpperCase(), path: p, tag: (o.tags && o.tags[0]) || 'Other', summary: o.summary || o.operationId || '',
+        secured: Array.isArray(o.security) && o.security.length > 0, params: [...(item.parameters || []), ...(o.parameters || [])],
+        body: o.requestBody && Object.values(o.requestBody.content || {})[0]?.schema,
+      });
+    }
+  }
+  const byKey = new Map();
+  for (const line of fs.readFileSync(recFile, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    const r = JSON.parse(line);
+    byKey.set(`${r.method} ${r.path}`, r); // a re-run keeps its last result
+  }
+  const recs = [...byKey.values()];
+  if (!recs.length) return null;
+  const key = (r) => `${r.method} ${r.path}`;
+  const isReference = (r) => PUBLIC_REFERENCE.test(r.path);
+  /** A record's real failures (public reference data answering without sign-in is a doc gap, not a failure). */
+  const failures = (r) => Object.entries(r.checks).filter(([k, v]) => v === 'fail' && !(k === 'noAuth' && isReference(r))).map(([k]) => k);
+
+  const tests = recs.map((r) => ({
+    file: r.tag, title: key(r), rawTitle: key(r), skipReason: r.reason || '',
+    status: r.outcome === 'not-run' ? 'not-run' : failures(r).length ? 'problem' : 'passed',
+  }));
+
+  const counts = {};
+  for (const op of ops) {
+    const c = (counts[op.tag] = counts[op.tag] || { all: 0, reads: 0 });
+    c.all++;
+    if (op.method === 'GET') c.reads++;
+  }
+  const areas = Object.fromEntries(Object.entries(counts).sort(([a], [b]) => apiAreaName(a).localeCompare(apiAreaName(b))).map(([tag, c]) => [tag, {
+    name: apiAreaName(tag),
+    what: `${c.all} endpoint${c.all > 1 ? 's' : ''}: ${c.reads} read-only (checked)${c.all - c.reads ? `, ${c.all - c.reads} that create, change or delete data (documented, not called)` : ''}.`,
+  }]));
+
+  // ---- Problems: one card per kind. Security cards name no endpoints on the public page.
+  const named = (rs, extra = () => '') => rs.map((r) => `${key(r)}${API_NOTES[key(r)] ? ` (${API_NOTES[key(r)]})` : ''}${extra(r)}`).join('; ');
+  const failing = (check) => recs.filter((r) => failures(r).includes(check));
+  const warning = (check) => recs.filter((r) => r.checks[check] === 'warn');
+  const offPublic = 'The endpoint list is in the internal report — kept off this public page on purpose.';
+  const findings = [];
+  const add = (rs, f) => { if (rs.length) findings.push({ area: 'API', owner: 'Engineering (backend)', ...f }); };
+  const noAuth = failing('noAuth');
+  add(noAuth, {
+    title: 'Data is available without signing in', severity: 'High', owner: 'Engineering (backend) and Security',
+    impact: 'Anyone who knows the address can read this data — no account needed. It includes personal data.',
+    saw: `${noAuth.length} endpoint${noAuth.length > 1 ? 's' : ''} answered with data to a request with no sign-in: ${named(noAuth)}.`,
+    sawPublic: `${noAuth.length} endpoint${noAuth.length > 1 ? 's' : ''} answered with data to a request with no sign-in. ${offPublic}`,
+    expected: 'Every endpoint holding customer or business data should refuse requests that are not signed in (401).',
+  });
+  const other = failing('otherCustomer');
+  add(other, {
+    title: 'A customer can read another customer’s records', severity: 'High', owner: 'Engineering (backend) and Security',
+    impact: 'Any signed-in customer can read other customers’ records by changing the ID in the request.',
+    saw: `Signed in as the Tier 3 test customer and asking for the Tier 1 test customer’s ID returned Tier 1’s records: ${named(other)}.`,
+    sawPublic: `Signed in as one test customer and asking for another test customer’s ID returned the other customer’s records on ${other.length} endpoint${other.length > 1 ? 's' : ''}. ${offPublic}`,
+    expected: 'A customer should only ever get their own records (403 or 404 for anyone else’s).',
+  });
+  const staff = failing('customerOnAdmin');
+  add(staff, {
+    title: 'A customer sign-in can read staff-only data', severity: 'High', owner: 'Engineering (backend) and Security',
+    impact: 'Customers can see internal set-up meant for staff, such as who approves loans and the limits used.',
+    saw: `A customer sign-in got data from ${staff.length} staff-only endpoint${staff.length > 1 ? 's' : ''}: ${named(staff)}.`,
+    sawPublic: `A customer sign-in got data from ${staff.length} staff-only endpoint${staff.length > 1 ? 's' : ''}. ${offPublic}`,
+    expected: 'Staff-only areas should refuse customer sign-ins (403).',
+  });
+  const broken = failing('call');
+  add(broken, {
+    title: 'Some endpoints fail instead of answering', severity: 'Medium',
+    impact: 'The app or portal screens that use these endpoints will show errors or empty data.',
+    saw: named(broken, (r) => {
+      const msg = (r.problems.find((p) => /^(answered|server|no answer)/.test(p)) || '').match(/“.*”/)?.[0];
+      return ` → ${r.status === 0 ? 'no answer' : r.status}${msg ? `: ${maskPII(msg)}` : ''}`;
+    }) + '.',
+    expected: 'A correct request should get a successful answer (2xx).',
+  });
+  const format = failing('schema');
+  add(format, {
+    title: 'Some answers don’t match their documented format', severity: 'Medium',
+    impact: 'Apps built from the API document will misread these answers — for example dates sent as lists of numbers instead of text.',
+    saw: named(format, (r) => ` → ${r.problems.filter((p) => p.startsWith('format:')).slice(0, 2).map((p) => p.slice(8)).join('; ')}`) + '.',
+    expected: 'Each answer should match the format the API document gives for it, or the document should be corrected.',
+  });
+  const slow = failing('speed');
+  add(slow, {
+    title: 'Some endpoints are slow', severity: 'Medium',
+    impact: 'Screens using them will feel slow.',
+    saw: named(slow, (r) => ` (${(r.ms / 1000).toFixed(1)} s)`) + '.',
+    expected: 'Answers within 5 seconds on the dev system.',
+  });
+  const wrongCode = [...warning('noAuth'), ...warning('customerOnAdmin')];
+  add(wrongCode, {
+    title: 'Some endpoints refuse with the wrong error code', severity: 'Low', owner: 'Engineering (backend)',
+    impact: 'The request is refused, but with “bad request” (400) instead of “not signed in” (401) or “not allowed” (403), so apps can’t tell the customer to sign in again.',
+    saw: `${wrongCode.length} endpoint${wrongCode.length > 1 ? 's' : ''}: ${named(wrongCode)}.`,
+    sawPublic: `${wrongCode.length} endpoint${wrongCode.length > 1 ? 's' : ''}. ${offPublic}`,
+    expected: 'Refuse unsigned requests with 401 and wrong-role requests with 403.',
+  });
+
+  // ---- Documentation gaps (not failures)
+  const docGaps = [...API_DOC_NOTES];
+  const requiredButOptional = recs.filter((r) => r.problems.some((p) => /is required”/.test(p)));
+  if (requiredButOptional.length) docGaps.push(['Parameters documented as optional but required', named(requiredButOptional, (r) => ` (${maskPII(r.problems.find((p) => /is required”/.test(p)).match(/“(.*)”/)[1])})`) + '.']);
+  const publicRefs = recs.filter((r) => isReference(r) && r.checks.noAuth === 'fail');
+  if (publicRefs.length) docGaps.push(['Public lists documented as needing sign-in', `${named(publicRefs)} answer without sign-in (reasonable for reference lists), but the document says sign-in is required.`]);
+  const loginSecured = ops.filter((o) => /\/login$/.test(o.path) && o.secured);
+  if (loginSecured.length) docGaps.push(['Sign-in endpoints documented as needing a sign-in token', `${loginSecured.map((o) => `${o.method} ${o.path}`).join(' and ')} — tools generated from the document will try to send a token that doesn't exist yet.`]);
+  const leaky = ops.filter((o) => o.params.some((p) => /^(principal|credentials|authorities|details|authenticated)/.test(p.name)));
+  if (leaky.length) docGaps.push(['Internal sign-in fields shown as request parameters', `${leaky.length} endpoint${leaky.length > 1 ? 's list' : ' lists'} the server’s own sign-in fields (principal, credentials, authorities…) as parameters a caller could send. They should be hidden from the document.`]);
+  const resolve = (s) => (s && s.$ref ? schemas[s.$ref.split('/').pop()] : s);
+  const bodies = ops.map((o) => resolve(o.body)).filter((s) => s && s.properties);
+  const noRequired = bodies.filter((s) => !(s.required && s.required.length));
+  if (noRequired.length) docGaps.push(['Required fields are not marked', `${noRequired.length} of ${bodies.length} request bodies don’t say which fields are mandatory (for example the sign-in request), so callers only find out from errors.`]);
+
+  // ---- What changed since the saved copy
+  let changes = null;
+  const liveFile = path.join(apiDir, 'live-spec.json');
+  if (fs.existsSync(liveFile)) {
+    const live = JSON.parse(fs.readFileSync(liveFile, 'utf8'));
+    const sig = (item, m) => JSON.stringify([(item.parameters || []).concat(item[m].parameters || []).map((p) => [p.name, p.in, !!p.required]).sort(), !!item[m].requestBody, Object.keys(item[m].responses || {}).sort(), item[m].summary]);
+    const index = (s) => new Map(Object.entries(s.paths).flatMap(([p, item]) => API_METHODS.filter((m) => item[m]).map((m) => [`${m.toUpperCase()} ${p}`, sig(item, m)])));
+    const a = index(spec), b = index(live);
+    const added = [...b.keys()].filter((k) => !a.has(k));
+    const removed = [...a.keys()].filter((k) => !b.has(k));
+    const changed = [...b.keys()].filter((k) => a.has(k) && a.get(k) !== b.get(k));
+    const items = [];
+    if (added.length) items.push([`${added.length} new endpoint${added.length > 1 ? 's' : ''}`, `${added.slice(0, 20).join('; ')}${added.length > 20 ? '; …' : ''}. They are checked once the saved copy is refreshed (npm run api:snapshot).`]);
+    if (removed.length) items.push([`${removed.length} endpoint${removed.length > 1 ? 's' : ''} removed`, `${removed.slice(0, 20).join('; ')}${removed.length > 20 ? '; …' : ''}.`]);
+    if (changed.length) items.push([`${changed.length} endpoint${changed.length > 1 ? 's' : ''} changed`, `Parameters, request body, responses or description changed: ${changed.slice(0, 20).join('; ')}${changed.length > 20 ? '; …' : ''}.`]);
+    if (!items.length) items.push(['No changes', `The live API matches the saved copy (${ops.length} endpoints, version ${live.info?.version}).`]);
+    changes = { heading: 'What changed in the API since its saved copy', items };
+  }
+
+  // ---- Endpoint reference (results only on the internal page)
+  const result = (op) => {
+    const r = byKey.get(`${op.method} ${op.path}`);
+    if (op.method !== 'GET') return '<span class="badge idle">Not called</span>';
+    if (!r || r.outcome === 'not-run') return '<span class="badge idle">Not run</span>';
+    return failures(r).length ? '<span class="badge bad">Problem</span>' : '<span class="badge ok">Worked</span>';
+  };
+  const signIn = (op) => {
+    const r = byKey.get(`${op.method} ${op.path}`);
+    if (!op.secured) return 'None';
+    if (apiAdminOnly(op) || r?.role === 'admin') return 'Staff';
+    return r?.role === 'customer' ? 'Customer' : 'Signed in';
+  };
+  const reference = (pub) => {
+    const groups = Object.keys(areas).map((tag) => {
+      const list = ops.filter((o) => o.tag === tag).sort((x, y) => x.path.localeCompare(y.path) || API_METHODS.indexOf(x.method.toLowerCase()) - API_METHODS.indexOf(y.method.toLowerCase()));
+      const rows = list.map((o) => `<tr><td class="area"><span class="method m-${o.method.toLowerCase()}">${o.method}</span> <code>${esc(o.path)}</code><div class="muted">${esc(o.summary)}</div></td><td class="num" data-label="Sign-in:">${signIn(o)}</td>${pub ? '' : `<td class="result">${result(o)}</td>`}</tr>`).join('');
+      return `<details><summary>${esc(areas[tag].name)} <span class="muted">· ${list.length} endpoint${list.length > 1 ? 's' : ''}</span></summary><div class="table-wrap"><table><thead><tr><th>Endpoint</th><th>Sign-in</th>${pub ? '' : '<th>Result</th>'}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
+    }).join('\n');
+    return `
+    <h2>Endpoint reference</h2>
+    <p class="muted">All ${ops.length} endpoints in the API document (${spec.info?.title} ${spec.info?.version}), by area. Sign-in: “Customer” or “Staff” is the sign-in that worked; “Signed in” means the document requires one. The live document is at <code>/v3/api-docs</code> on the API server.</p>
+    ${groups}`;
+  };
+
+  const reads = ops.filter((o) => o.method === 'GET').length;
+  const times = recs.map((r) => new Date(r.at)).sort((a, b) => a - b);
+  const mins = Math.max(1, Math.round((times[times.length - 1] - times[0]) / 60000));
+  return {
+    id: 'api',
+    label: 'API',
+    heading: 'API Test Results',
+    context: `${spec.info?.title} ${spec.info?.version} · ${ops.length} endpoints · dev environment`,
+    runText: `Automated check run on ${fmt(times[0])} (WAT) · took about ${mins} minute${mins > 1 ? 's' : ''}`,
+    intro: `Each of the ${reads} read-only endpoints was called the way the app and portal call it: refused without signing in, refused to the wrong customer or role, answered with the right sign-in, and checked against the format the API document promises. The ${ops.length - reads} endpoints that create, change or delete data are listed in the reference below but not called, so testing never changes the system.`,
+    tests, findings: findings.sort((a, b) => sevRank(a.severity) - sevRank(b.severity)), areas,
+    mismatches: docGaps, mismatchesHeading: 'Gaps in the API document',
+    mismatchesIntro: 'The API works here, but its document is missing or contradicts something. Developers building against it will trip over these.',
+    questions: API_QUESTIONS, changes, reference,
+    notRunReason: (t) => `Not run: ${t.skipReason || 'see technical report'}.`,
+    techInternal: '<p class="muted">Each endpoint’s checks (status, timing and every problem) are in <code>reports/api-results/records.jsonl</code>, and the Playwright results in <code>reports/api-final.json</code>. Re-run with <code>npm run test:api:dev</code>.</p>',
+    techPublic: '<p class="muted">Security details and the per-endpoint results are kept internally. Ask the QA team for access.</p>',
+  };
+}
+
 /* ================================================================== page */
 
 const admin = readAdmin();
 const mobile = readMobile();
+const api = readApi();
 const tabs = [
   { id: 'admin', label: 'Admin portal', icon: '🖥', data: admin, empty: 'Run the admin portal checks (npm run test:admin:dev) to fill this in.' },
   { id: 'mobile', label: 'Mobile app', icon: '📱', data: mobile, empty: 'Run the mobile checks (npx wdio run mobile/config/wdio.android.conf.ts) to fill this in.' },
+  { id: 'api', label: 'API', icon: '🔌', data: api, empty: 'Run the API checks (npm run test:api:dev) to fill this in.' },
 ];
 const pill = (d) => {
   if (!d) return '<span class="pill idle">no run yet</span>';
@@ -727,7 +950,9 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .85rem; font-weight: 600; white-space: nowrap; }
   .badge.ok { background: var(--good-bg); color: var(--good); } .badge.bad { background: var(--bad-bg); color: var(--bad); } .badge.idle { background: var(--idle-bg); color: var(--muted); }
   .sev { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .sev.high { background: var(--bad-bg); color: var(--bad); } .sev.med { background: var(--med-bg); color: var(--med); }
+  .sev.high { background: var(--bad-bg); color: var(--bad); } .sev.med { background: var(--med-bg); color: var(--med); } .sev.low { background: var(--idle-bg); color: var(--muted); }
+  .method { display: inline-block; min-width: 3.6em; font: 700 .72rem/1.6 ui-monospace, monospace; text-align: center; padding: 0 6px; border-radius: 6px; background: var(--idle-bg); color: var(--muted); }
+  .method.m-get { background: var(--good-bg); color: var(--good); } .method.m-delete { background: var(--bad-bg); color: var(--bad); } .method.m-post, .method.m-put, .method.m-patch { background: var(--med-bg); color: var(--med); }
   .finding .impact { font-weight: 600; }
   dl { margin: 10px 0 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
   details { margin-top: 8px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 0; min-height: 44px; }
@@ -781,7 +1006,7 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
 <main>
   <p class="muted small">Rosabon Unified · Test environment (dev)</p>
   <h1>Automated Test Results</h1>
-  <p class="muted">Choose which part of the product to see. The admin portal is the staff website; the mobile app is what customers use.</p>
+  <p class="muted">Choose which part of the product to see. The admin portal is the staff website; the mobile app is what customers use; the API is the service both of them talk to.</p>
 
   <div class="tabs" role="tablist" aria-label="Which results to show">
     ${tabs.map((t, i) => `<button class="tab" role="tab" id="tab-${t.id}" aria-controls="panel-${t.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><span aria-hidden="true">${t.icon}</span> ${esc(t.label)} ${pill(t.data)}</button>`).join('\n    ')}
@@ -792,7 +1017,7 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   </section>`).join('\n  ')}
 
   <footer>
-    Generated automatically from the test results by <code>scripts/build-summary.js</code>. Sources: Admin PRD, Unified app PRD, Investment and Loan product specifications, KYC specification, QA Strategy.
+    Generated automatically from the test results by <code>scripts/build-summary.js</code>. Sources: Admin PRD, Unified app PRD, the backend’s API document (/v3/api-docs), Investment and Loan product specifications, KYC specification, QA Strategy.
   </footer>
 </main>
 <script>
@@ -835,6 +1060,7 @@ writeIcons(outDir);
 console.log(`Wrote ${path.relative(root, path.join(outDir, 'index.html'))}`);
 console.log(`  Admin portal: ${summarise(admin)}`);
 console.log(`  Mobile app:   ${summarise(mobile)}`);
+console.log(`  API:          ${summarise(api)}`);
 if (admin) console.log(`Technical report: ${path.relative(root, path.join(outDir, 'report.html'))}`);
 
 // Public site for Netlify: the summary page only — no screenshots, traces, videos or technical report.
@@ -851,6 +1077,9 @@ function publishBlockers() {
   const current = fs.existsSync(sitePage) ? fs.readFileSync(sitePage, 'utf8') : '';
   if (!mobile && current.includes('id="panel-mobile"') && !current.includes(tabs[1].empty)) {
     blockers.push('no mobile results were produced and the published page already has some (check MOBILE_APK_URL)');
+  }
+  if (!api && current.includes('id="panel-api"') && !current.includes(tabs[2].empty)) {
+    blockers.push('no API results were produced and the published page already has some (check API_BASE_URL and the CUSTOMER_T3_* / DEV_ADMIN_* secrets)');
   }
   return blockers;
 }

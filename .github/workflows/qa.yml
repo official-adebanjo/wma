@@ -237,7 +237,7 @@ jobs:
           retention-days: 30
 
   dev-portal-report:
-    name: Dev Admin Portal run → public summary on Netlify (Admin + Mobile tabs)
+    name: Dev Admin Portal + API run → public summary on Netlify (Admin, Mobile and API tabs)
     # Live dev portal: not on PRs (it creates approval requests on the shared dev system).
     # Waits for the mobile run so both tabs are filled; still publishes if that job fails or is skipped.
     needs: mobile-dev
@@ -263,6 +263,18 @@ jobs:
           PLAYWRIGHT_HTML_REPORT: reports/playwright-html
           PLAYWRIGHT_JSON_OUTPUT_NAME: reports/dev-final.json
         run: npx playwright test --project=admin-dev --reporter=json,html
+      # Read-only checks of every GET endpoint in the backend's API document (api-dev/). Results feed the API tab.
+      - name: Run API checks
+        if: always()
+        continue-on-error: true # failures are findings — still publish the summary
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://treasury-api-dev.rosabon-finance.com' }}
+          CUSTOMER_T1_EMAIL: ${{ secrets.CUSTOMER_T1_EMAIL }}
+          CUSTOMER_T1_PASSWORD: ${{ secrets.CUSTOMER_T1_PASSWORD }}
+          CUSTOMER_T3_EMAIL: ${{ secrets.CUSTOMER_T3_EMAIL }}
+          CUSTOMER_T3_PASSWORD: ${{ secrets.CUSTOMER_T3_PASSWORD }}
+          PLAYWRIGHT_JSON_OUTPUT_NAME: reports/api-final.json
+        run: npx playwright test --project=api-dev --reporter=json
       - name: Get the mobile results (if the mobile run produced any)
         if: always()
         continue-on-error: true
