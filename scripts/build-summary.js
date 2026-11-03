@@ -120,16 +120,19 @@ const QUESTIONS = [
 
 /** Shown on the Admin tab: what this run found different from the previous one. */
 const ADMIN_CHANGES = {
-  since: '26 October',
+  since: '30 October',
   items: [
-    ['Loan interest', 'Newer loans now follow the specification’s “Monthly equal” formula (8.5% a month on loan #188, rounded up to the whole naira). The older loan #169 still uses the old amount — see “Problems found” below.'],
-    ['Nano and Payday loan product forms', 'The “Loyalty discount streaks” section is now called “Loyalty & repayment progression” on Nano and “Loyalty & constraints” on Payday. Its settings are unchanged. Our check was updated and passes.'],
-    ['Investment plan page', 'RTN (Treasury Note) plans now appear in the list. Their page correctly has no “Contribution plan” section and no “Top up” button, as RTN is a one-off lump sum. Our check was updated and passes.'],
-    ['Still not fixed', 'The empty audit log, the disappearing new biller, the unrecorded viewing of private customer details and the 7.5% deduction from loan payouts are all still happening.'],
+    ['20 pages switched off', 'Wallet Management, Transactions & Ledger, Support & Tickets, Rewards & Incentives and Payroll reconciliation are now marked “Coming soon” in the menu and can’t be opened. These were removed from the menu altogether: Discovery banners; the investment request pages (Approval queue, On-behalf requests, Break requests, On-behalf withdrawals, top-ups and rollovers, Unlock requests, Auto-rollover and Statutory tax carry-across); and the settings pages Field Rules Setup, Controlled Vocabularies, Approval Thresholds, Communications Providers and Metric Definitions. Their old addresses now open Pending Approvals or an empty page. Checks on them are listed as “not run” until they come back.'],
+    ['Customer Management', 'The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.'],
+    ['Pending Approvals', 'A new “Created by me” tab lists the requests you raised, with a Withdraw button. This replaces the old investment Approval queue. “Dual-control changes” is marked “Coming soon”, and there is a page-size choice with Previous/Next. Our checks were updated to use it.'],
+    ['Reports & Analytics', 'It has moved to a new address (Reports instead of Dashboards).'],
+    ['Fixed', 'The audit log now records portal actions, each with a “View” button, and can be exported. Our check passes.'],
+    ['Still not fixed', 'Viewing a customer’s private details is still not recorded in their audit trail, and loan #188 still has the 7.5% deduction from its payout and repayments that don’t match its interest model. The disappearing new biller can no longer be checked, because Transactions & Ledger was taken out of the menu.'],
   ],
 };
 
 const SKIP_REASONS = [
+  [/No longer in the portal/, 'Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.'],
   [/destructive|Acts on existing records/, 'Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.'],
   [/No investments in status|No audit entries|No .* yet|Approval queue is empty|No .*requests|No alerts|No masked/, 'Not run: there was no suitable data on the test system to check this against.'],
 ];
@@ -429,7 +432,9 @@ function readAdmin() {
           status,
           skipReason: (t.annotations || []).filter((a) => a.type === 'skip').map((a) => a.description).join(' '),
           error: strip(((res.errors || [])[0] || res.error || {}).message || '').split('\n').filter((l) => l.trim())[0] || '',
+          errorFull: strip(((res.errors || [])[0] || res.error || {}).message || ''),
           screenshot: (res.attachments || []).find((a) => a.name === 'screenshot' && a.path)?.path,
+          video: (res.attachments || []).find((a) => a.name === 'video' && a.path)?.path,
         });
       }
     }
@@ -449,7 +454,13 @@ function readAdmin() {
       shot = `screenshots/${path.basename(path.dirname(t.screenshot)).slice(0, 40)}.png`;
       fs.copyFileSync(t.screenshot, path.join(outDir, shot));
     }
-    return { ...f, area: AREAS[t.file]?.name || t.file, shot };
+    let video = null;
+    if (t.video && fs.existsSync(t.video)) {
+      fs.mkdirSync(path.join(outDir, 'videos'), { recursive: true });
+      video = `videos/${path.basename(path.dirname(t.video)).slice(0, 40)}.webm`;
+      fs.copyFileSync(t.video, path.join(outDir, video));
+    }
+    return { ...f, area: AREAS[t.file]?.name || t.file, shot, video, snippet: errorSnippet(t.errorFull) };
   }).sort((a, b) => sevRank(a.severity) - sevRank(b.severity));
 
   return {
@@ -488,10 +499,13 @@ function readMobile() {
     status: r.status === 'failed' ? 'problem' : r.status === 'skipped' ? 'not-run' : 'passed',
     held: held.some((p) => new RegExp(`^${p} customer\\b`).test(r.title)),
     error: r.error || '',
+    detail: r.detail || '',
   }));
   const fromChecks = tests.filter((t) => t.status === 'problem').map((t) => ({
     ...(MOBILE_FINDINGS.find((x) => x.match.test(t.rawTitle)) || genericFinding(t)),
     area: MOBILE_AREAS[t.file]?.name || t.file,
+    // A bare matcher line ("expect(received).toBe(expected)") explains nothing, so it isn't shown.
+    snippet: /^expect\(received\)[^\n]*$/.test(errorSnippet(t.detail || t.error)) ? '' : errorSnippet(t.detail || t.error),
   }));
   // One card per problem: several checks can fail for the same reason (e.g. Nano and Payday both crash),
   // and a problem found by hand may also be caught by a check.
@@ -515,6 +529,39 @@ function readMobile() {
     techInternal: '<p class="muted">The mobile app blocks screenshots for security, so failures are recorded as the screen’s layout instead. These are in <code>reports/mobile-screens/</code> with the QA team.</p>',
     techPublic: '<p class="muted">Step-by-step technical detail is kept internally. Ask the QA team for access.</p>',
   };
+}
+
+/** The failing check's own error, trimmed to the lines that explain it (no stack, no code frame). */
+function errorSnippet(msg) {
+  const lines = strip(msg).split('\n').map((l) => l.replace(/\s+$/, '')).filter((l) => l.trim() && !/^\s+at /.test(l) && !/^\s*>?\s*\d* \|/.test(l));
+  return lines.slice(0, 10).join('\n').slice(0, 1200);
+}
+
+/**
+ * Public copy of an error: emails and phone numbers masked and "Received" values dropped. On lines the
+ * test wrote itself (not locator/expect lines, which hold UI labels), anything that looks like a name is masked.
+ */
+function publicSnippet(s) {
+  return s.split('\n').filter((l) => !/^\s*Received/.test(l)).map((l) => {
+    const m = maskPII(l);
+    return /^\s*(Locator:|Expected:|Call log:|- |expect\()|getBy|TimeoutError/.test(m) ? m : m.replace(/\b[A-Z][a-z]+(?: [A-Z][a-z]+)+\b|\b[A-Z]{2,}(?: [A-Z]{2,})+\b/g, '<name>');
+  }).join('\n');
+}
+
+/** "View": what the check saw when it failed. Screenshots and videos stay on the internal page. */
+function evidence(f, i, pub) {
+  const snippet = pub ? (f.sawPublic ? '' : f.snippet && publicSnippet(f.snippet)) : f.snippet;
+  const shot = !pub && f.shot;
+  const video = !pub && f.video;
+  if (!snippet && !shot && !video) {
+    return pub && (f.shot || f.video || f.snippet) ? '<p class="muted small">The evidence for this problem is kept in the internal report.</p>' : '';
+  }
+  const what = [snippet && 'error details', shot && 'screenshot', video && 'video'].filter(Boolean).join(', ');
+  return `<details class="evidence"><summary>View <span class="muted">(${what})</span></summary>
+          ${snippet ? `<pre class="snippet">${esc(snippet)}</pre>` : ''}
+          ${shot ? `<a href="${f.shot}" target="_blank" rel="noopener"><img src="${f.shot}" alt="Screenshot taken when problem ${i + 1} was found" loading="lazy"></a>` : ''}
+          ${video ? `<video controls preload="none" src="${f.video}" aria-label="Recording of the check for problem ${i + 1}"></video>` : ''}
+        </details>`;
 }
 
 function genericFinding(t) {
@@ -564,7 +611,7 @@ function panel(d, pub) {
           <dt>What we saw</dt><dd>${esc(pub && f.sawPublic ? f.sawPublic : f.saw)}</dd>
           <dt>What should happen</dt><dd>${esc(f.expected)}</dd>
         </dl>
-        ${f.shot && !pub ? `<details><summary>Show screenshot</summary><a href="${f.shot}" target="_blank" rel="noopener"><img src="${f.shot}" alt="Screenshot taken when problem ${i + 1} was found" loading="lazy"></a></details>` : ''}
+        ${evidence(f, i, pub)}
       </article>`).join('');
 
   const notRunRows = tests.filter((t) => t.status === 'not-run')
@@ -688,6 +735,13 @@ const API_QUESTIONS = [
 const maskPII = (s) => String(s).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '<email>').replace(/(\+?234|0)[789][01]\d{8}/g, '<phone>');
 const apiAreaName = (tag) => (tag === 'lead-api-resource' ? 'Leads' : tag.replace(/ Endpoints$/, ''));
 
+/** What the latest backend update changed, written up after each re-run (shown above the live comparison). */
+const API_UPDATES = [
+  ['3 November: 7 new notification endpoints', 'The saved copy was refreshed and the 4 read-only ones were checked. The notifications list works; the notification inbox fails with a server error (see “Problems found”); the live notification stream stays open by design, so it is listed as not run; a single notification needs an ID that no list provided.'],
+  ['3 November: fixed', 'The overdue-loans list now answers. It used to fail with “Principal must be greater than zero”.'],
+  ['3 November: still not fixed', 'Customer leads are still readable without signing in, and a customer can still read other customers’ loan applications and the approval set-up. Everything else is also as before.'],
+];
+
 function readApi() {
   const recFile = path.join(apiDir, 'records.jsonl');
   if (!fs.existsSync(recFile) || !fs.existsSync(apiSnapshot)) return null;
@@ -740,7 +794,15 @@ function readApi() {
   const warning = (check) => recs.filter((r) => r.checks[check] === 'warn');
   const offPublic = 'The endpoint list is in the internal report — kept off this public page on purpose.';
   const findings = [];
-  const add = (rs, f) => { if (rs.length) findings.push({ area: 'API', owner: 'Engineering (backend)', ...f }); };
+  // "View" evidence: the redacted request/answer each record kept for the check behind the card.
+  const CHECKS_FOR = {
+    'Data is available without signing in': ['noAuth'], 'A customer can read another customer’s records': ['otherCustomer'],
+    'A customer sign-in can read staff-only data': ['customerOnAdmin'], 'Some endpoints fail instead of answering': ['call'],
+    'Some answers don’t match their documented format': ['schema'], 'Some endpoints are slow': ['speed'],
+    'Some endpoints refuse with the wrong error code': ['noAuth', 'customerOnAdmin'],
+  };
+  const apiSnippet = (rs, checks) => rs.flatMap((r) => checks.map((c) => r.evidence?.[c]).filter(Boolean)).slice(0, 6).map(maskPII).join('\n\n────────\n\n');
+  const add = (rs, f) => { if (rs.length) findings.push({ area: 'API', owner: 'Engineering (backend)', snippet: apiSnippet(rs, CHECKS_FOR[f.title] || []), ...f }); };
   const noAuth = failing('noAuth');
   add(noAuth, {
     title: 'Data is available without signing in', severity: 'High', owner: 'Engineering (backend) and Security',
@@ -829,7 +891,7 @@ function readApi() {
     if (removed.length) items.push([`${removed.length} endpoint${removed.length > 1 ? 's' : ''} removed`, `${removed.slice(0, 20).join('; ')}${removed.length > 20 ? '; …' : ''}.`]);
     if (changed.length) items.push([`${changed.length} endpoint${changed.length > 1 ? 's' : ''} changed`, `Parameters, request body, responses or description changed: ${changed.slice(0, 20).join('; ')}${changed.length > 20 ? '; …' : ''}.`]);
     if (!items.length) items.push(['No changes', `The live API matches the saved copy (${ops.length} endpoints, version ${live.info?.version}).`]);
-    changes = { heading: 'What changed in the API since its saved copy', items };
+    changes = { heading: 'What changed in the API since its saved copy', items: [...API_UPDATES, ...items] };
   }
 
   // ---- Endpoint reference (results only on the internal page)
@@ -976,6 +1038,8 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .finding .impact { font-weight: 600; }
   dl { margin: 10px 0 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
   details { margin-top: 8px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 0; min-height: 44px; }
+  pre.snippet { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: .85rem; line-height: 1.45; max-height: 420px; overflow: auto; margin: 6px 0 0; }
+  details.evidence video { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; background: #000; }
   details img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
   ul.clean { padding-left: 20px; } ul.clean li { margin: 10px 0; }
   a { color: var(--accent); }

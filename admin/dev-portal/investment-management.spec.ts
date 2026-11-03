@@ -133,12 +133,13 @@ test.describe('Dev portal › Investment Management', () => {
     const done = btn(page, 'Done');
     if (await done.isVisible().catch(() => false)) await done.click();
 
-    await open(page, ROUTES.approvalQueue);
-    await btn(page, 'Raised by me').click();
-    await page.getByRole('combobox', { name: 'Action:' }).selectOption({ label: 'Top-ups' });
-    await stateButton(page, 'Pending approval').click();
-    await btn(page, 'Inspect').first().click();
-    await expect(page.getByRole('heading', { name: /Top-up on behalf review/ })).toBeVisible();
-    await btn(page, 'Withdraw request').click();
+    // Since the 3 November update the proposer's own requests live under Pending Approvals › Created by me.
+    await open(page, ROUTES.pendingApprovals);
+    await page.getByRole('tab', { name: 'Created by me' }).click();
+    const row = page.locator('tr', { hasText: 'Investment: Top-up' }).filter({ hasText: 'Pending' }).first();
+    await row.getByRole('button', { name: 'Withdraw' }).click();
+    await expect(page.getByRole('heading', { name: /^Withdraw pending action #\d+/ })).toBeVisible();
+    await btn(page, 'Confirm withdrawal').click();
+    await expect(page.getByRole('heading', { name: /^Withdraw pending action/ })).toBeHidden();
   });
 });

@@ -29,7 +29,28 @@ const refusal = (status: number, expected: number[]): Verdict => (status === 0 ?
 type ApiRecord = {
   method: string; path: string; tag: string; summary: string; outcome: 'checked' | 'not-run';
   role?: 'customer' | 'admin'; status?: number; ms?: number; checks: Checks; problems: string[]; reason?: string; at: string;
+  /** Per failed check: the request and a redacted excerpt of the answer, shown behind "View" on the results page. */
+  evidence?: Record<string, string>;
 };
+
+/** Error fields the API fills with its own text; record fields are always blanked. */
+const KEEP_TEXT = new Set(['message', 'error', 'status', 'path', 'timestamp']);
+
+/** The answer's shape with every value blanked: lists show their first item and a count, never record data. */
+function redact(body: unknown, key = '', depth = 0): unknown {
+  if (body === null || typeof body === 'boolean') return body;
+  if (typeof body === 'string') return KEEP_TEXT.has(key) ? body.slice(0, 160) : '<text>';
+  if (typeof body === 'number') return KEEP_TEXT.has(key) ? body : '<number>';
+  if (depth > 4) return '…';
+  if (Array.isArray(body)) return body.length ? [redact(body[0], key, depth + 1), ...(body.length > 1 ? [`… ${body.length - 1} more`] : [])] : [];
+  return Object.fromEntries(Object.entries(body as Record<string, unknown>).slice(0, 14).map(([k, v]) => [k, redact(v, k, depth + 1)]));
+}
+
+function evidenceFor(op: { method: string; path: string }, who: string, res: { status: number; ms: number; body: unknown; message: string }) {
+  const shown = res.body === undefined ? res.message || '(no JSON body)' : JSON.stringify(redact(res.body), null, 1);
+  const answer = res.status === 0 ? `no answer (${res.message})` : `${res.status} in ${res.ms} ms`;
+  return `Request: ${op.method.toUpperCase()} ${op.path} (${who})\nAnswer: ${answer}\n${shown.length > 900 ? shown.slice(0, 900) + '\n…' : shown}`;
+}
 
 const spec = loadSpec();
 const base = () => (process.env.API_BASE_URL || '').replace(/\/$/, '');
@@ -59,6 +80,27 @@ async function call(url: string, token?: string) {
   // The API's own error text ("pageNo is required") explains most refusals; it never holds record data.
   const message = typeof (body as { message?: unknown })?.message === 'string' ? (body as { message: string }).message.slice(0, 120) : '';
   return { status: res.status, ms: Date.now() - started, body, isJson: body !== undefined, message };
+}
+
+/** Opens a live stream, reads only its status (and error body, if refused), then disconnects. */
+async function openStream(url: string, token?: string) {
+  const started = Date.now();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15_000);
+  try {
+    const res = await fetch(url, { headers: { Accept: 'text/event-stream', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, signal: ctrl.signal });
+    const ms = Date.now() - started;
+    if (res.ok) { ctrl.abort(); return { status: res.status, ms, body: undefined as unknown, isJson: false, message: 'stream opened' }; }
+    const text = await res.text();
+    let body: unknown;
+    try { body = JSON.parse(text); } catch { body = undefined; }
+    const message = typeof (body as { message?: unknown })?.message === 'string' ? (body as { message: string }).message.slice(0, 120) : '';
+    return { status: res.status, ms, body, isJson: body !== undefined, message };
+  } catch {
+    return { status: 0, ms: Date.now() - started, body: undefined as unknown, isJson: false, message: 'the stream did not open within 15 s' };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** First value of `key` anywhere in a JSON body (lists and paged `content`/`data` wrappers included). */
@@ -164,6 +206,7 @@ test.describe('API › read-only endpoints (dev)', () => {
       const tokens = readTokens();
       const checks: Checks = {};
       const problems: string[] = [];
+      const evidence: Record<string, string> = {};
       const meta = { method: op.method.toUpperCase(), path: op.path, tag: op.tag, summary: op.summary };
 
       const built = buildUrl(op, tokens);
@@ -173,10 +216,34 @@ test.describe('API › read-only endpoints (dev)', () => {
         return;
       }
 
+      // Live streams (server-sent events) stay open by design: judge them on the status they open with.
+      if (spec.paths[op.path]?.get?.responses?.['200']?.content?.['text/event-stream']) {
+        if (op.secured) {
+          const anon = await openStream(built.url);
+          checks.noAuth = refusal(anon.status, [401, 403]);
+          if (checks.noAuth !== 'ok') evidence.noAuth = evidenceFor(op, 'no sign-in', anon);
+          if (checks.noAuth === 'fail') problems.push(`stream opened (${anon.status}) without signing in`);
+          if (checks.noAuth === 'warn') problems.push(`refused without signing in, but with ${anon.status} instead of 401`);
+        }
+        const res = await openStream(built.url, tokens.customer?.token);
+        // Silence is normal for a quiet stream (some servers only send headers with the first event).
+        checks.call = res.status >= 200 && res.status < 300 ? 'ok' : res.status === 0 ? 'warn' : 'fail';
+        if (checks.call === 'warn') problems.push('stream sent nothing within 15 s (normal when there is nothing new)');
+        if (checks.call === 'fail') {
+          evidence.call = evidenceFor(op, 'signed in as the customer', res);
+          problems.push(res.status === 0 ? `no answer: “${res.message}”` : res.status >= 500 ? `server error ${res.status}` : `answered ${res.status}${res.message ? `: “${res.message}”` : ''}`);
+        }
+        record({ ...meta, outcome: 'checked', role: 'customer', status: res.status, ms: res.ms, checks, problems, ...(Object.keys(evidence).length ? { evidence } : {}) });
+        expect.soft(checks.noAuth ?? 'ok', 'refused without signing in').not.toBe('fail');
+        expect.soft(checks.call, `stream opens (got ${res.status})`).not.toBe('fail');
+        return;
+      }
+
       // 1. Refused without signing in.
       if (op.secured) {
         const anon = await call(built.url);
         checks.noAuth = refusal(anon.status, [401, 403]);
+        if (checks.noAuth !== 'ok') evidence.noAuth = evidenceFor(op, 'no sign-in', anon);
         if (checks.noAuth === 'fail') problems.push(`answered ${anon.status} with data without signing in`);
         if (checks.noAuth === 'warn') problems.push(`refused without signing in, but with ${anon.status} instead of 401`);
       }
@@ -186,6 +253,7 @@ test.describe('API › read-only endpoints (dev)', () => {
       if (adminOnly && tokens.customer) {
         const asCustomer = await call(built.url, tokens.customer.token);
         checks.customerOnAdmin = refusal(asCustomer.status, [401, 403]);
+        if (checks.customerOnAdmin !== 'ok') evidence.customerOnAdmin = evidenceFor(op, 'signed in as a customer', asCustomer);
         if (checks.customerOnAdmin === 'fail') problems.push(`staff-only area answered ${asCustomer.status} with data to a customer sign-in`);
         if (checks.customerOnAdmin === 'warn') problems.push(`staff-only area refused a customer, but with ${asCustomer.status} instead of 403`);
       }
@@ -201,6 +269,7 @@ test.describe('API › read-only endpoints (dev)', () => {
           const holdsRecords = findValue(other.body, 'id') !== undefined;
           if (!holdsRecords || JSON.stringify(own.body) === JSON.stringify(other.body)) checks.otherCustomer = 'warn';
         }
+        if (checks.otherCustomer === 'fail') evidence.otherCustomer = evidenceFor(op, "Tier 3 test customer asking for Tier 1's ID", other);
         if (checks.otherCustomer === 'fail') problems.push(`returned another customer's records (${other.status})`);
         if (checks.otherCustomer === 'warn') problems.push(`accepted another customer's ID (${other.status}) but returned no data of theirs`);
       }
@@ -228,7 +297,10 @@ test.describe('API › read-only endpoints (dev)', () => {
         problems.push(res.status === 0 ? `no answer: “${res.message}”` : res.status >= 500 ? `server error ${res.status}` : `answered ${res.status}${res.message ? `: “${res.message}”` : ''}`);
       }
       if (checks.call === 'warn') problems.push(`nothing found for the sample record (404${res.message ? `: “${res.message}”` : ''})`);
+      const who = role === 'admin' ? 'signed in as staff' : 'signed in as the customer';
+      if (checks.call !== 'ok') evidence.call = evidenceFor(op, who, res);
       checks.speed = res.ms <= SLOW_MS ? 'ok' : 'fail';
+      if (checks.speed === 'fail') evidence.speed = evidenceFor(op, who, res);
       if (checks.speed === 'fail') problems.push(`slow: ${(res.ms / 1000).toFixed(1)} s`);
 
       // 5. Matches the documented format.
@@ -236,10 +308,11 @@ test.describe('API › read-only endpoints (dev)', () => {
         fs.writeFileSync(cacheFile(built.concrete), JSON.stringify(res.body));
         const schemaProblems = checkSchema(successSchema(op), res.body, spec);
         checks.schema = schemaProblems.length ? 'fail' : 'ok';
+        if (schemaProblems.length) evidence.schema = `${schemaProblems.slice(0, 4).join('\n')}\n\n${evidenceFor(op, who, res)}`;
         problems.push(...schemaProblems.map((p) => `format: ${p}`));
       }
 
-      record({ ...meta, outcome: 'checked', role, status: res.status, ms: res.ms, checks, problems });
+      record({ ...meta, outcome: 'checked', role, status: res.status, ms: res.ms, checks, problems, ...(Object.keys(evidence).length ? { evidence } : {}) });
       // Refusals with an unexpected status ('warn') are reported on the results page but don't fail the check.
       expect.soft(checks.noAuth ?? 'ok', 'refused without signing in').not.toBe('fail');
       expect.soft(checks.customerOnAdmin ?? 'ok', 'staff-only area refuses a customer').not.toBe('fail');

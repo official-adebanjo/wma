@@ -32,6 +32,8 @@ export default class JsonlReporter extends WDIOReporter {
     const line = {
       file: this.file, suite: t.parent, title: t.title, status,
       error: status === 'failed' ? String(t.error?.message ?? '').split('\n')[0] : undefined,
+      // The full message (expected vs received, element waited for), shown behind "View" on the results page.
+      detail: status === 'failed' ? String(t.error?.message ?? '').replace(/\x1b\[[0-9;]*m/g, '').split('\n').slice(0, 12).join('\n') : undefined,
       duration: t.duration, at: new Date().toISOString(),
       device: this.device || undefined,
       // e.g. "build 1.1.55" — CI sets it from the APK; locally optional

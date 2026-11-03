@@ -32,8 +32,9 @@ export default defineConfig({
     { name: 'unit', testDir: './unit' },
     { name: 'api', testDir: './api-tests' },
     // Live dev backend, generated from its OpenAPI document (api-dev/openapi.snapshot.json). Read-only.
-    { name: 'api-dev-setup', testDir: './api-dev', testMatch: /api\.setup\.ts/ },
-    { name: 'api-dev', testDir: './api-dev', testMatch: /endpoints\.spec\.ts/, dependencies: ['api-dev-setup'], retries: 0 },
+    // Own output folder: a run clears its folder, which would delete the admin run's screenshots and videos.
+    { name: 'api-dev-setup', testDir: './api-dev', testMatch: /api\.setup\.ts/, outputDir: 'reports/api-artifacts' },
+    { name: 'api-dev', testDir: './api-dev', testMatch: /endpoints\.spec\.ts/, dependencies: ['api-dev-setup'], retries: 0, outputDir: 'reports/api-artifacts' },
     { name: 'admin-setup', testDir: './admin/fixtures', testMatch: /auth\.setup\.ts/ },
     {
       name: 'admin-chromium',
@@ -61,6 +62,7 @@ export default defineConfig({
         viewport: { width: 1440, height: 900 },
         trace: 'on',
         screenshot: 'on',
+        video: 'retain-on-failure', // shown behind "View" on the internal results page
       },
     },
     {

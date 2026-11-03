@@ -34,8 +34,9 @@ const SNAPSHOT: Array<{ href: string; text: string }> = [
 function routes(): Array<{ href: string; text: string }> {
   const file = path.resolve(__dirname, '../../reports/admin-nav.json');
   const live: Array<{ href: string; text: string }> = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).links : [];
+  // The live map wins: pages taken out of the menu are no longer swept (the snapshot is only a fallback).
   const seen = new Map<string, string>();
-  for (const r of [...SNAPSHOT, ...live]) if (!seen.has(r.href)) seen.set(r.href, r.text.replace(/Soon$/, '').trim());
+  for (const r of live.length ? live : SNAPSHOT) if (!seen.has(r.href)) seen.set(r.href, r.text.replace(/Soon$/, '').trim());
   return [...seen].map(([href, text]) => ({ href, text }));
 }
 
@@ -94,6 +95,7 @@ test.describe('Dev portal › App-wide sweep', () => {
       const tabCount = Math.min(await tabs.count(), 12);
       for (let i = 0; i < tabCount; i++) {
         const name = (await tabs.nth(i).innerText()).trim();
+        if (await tabs.nth(i).isDisabled()) continue; // "COMING SOON" tabs are disabled
         await test.step(`tab: ${name}`, async () => {
           w.reset();
           await tabs.nth(i).click();

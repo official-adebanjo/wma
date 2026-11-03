@@ -13,9 +13,12 @@ async function openCustomer(page: Page, name = CUSTOMER) {
 test.describe('Dev portal › Customer Management', () => {
   test('Customer 360: all eight tabs render @smoke', async ({ page }) => {
     await openCustomer(page);
+    // Screening and Support are marked "COMING SOON" (and disabled) since the 3 November update.
     for (const tab of ['Overview', 'Personal info', 'KYC & Documents', 'Products', 'Transactions', 'Screening', 'Support', 'Audit']) {
-      await page.getByRole('tab', { name: tab, exact: true }).click();
-      await expect(page.getByRole('tab', { name: tab, exact: true })).toHaveAttribute('aria-selected', 'true');
+      const t = page.getByRole('tab', { name: new RegExp(`^${tab}\\s*(coming soon)?$`, 'i') });
+      if (await t.isDisabled()) { await expect(t).toContainText(/coming soon/i); continue; }
+      await t.click();
+      await expect(t).toHaveAttribute('aria-selected', 'true');
     }
     await btn(page, 'Back to directory').click();
     await expect(page.getByRole('heading', { name: 'Customer Directory' })).toBeVisible();
@@ -24,8 +27,8 @@ test.describe('Dev portal › Customer Management', () => {
   test('Customer 360: Overview shows at-a-glance profile and dual-controlled account controls @smoke', async ({ page }) => {
     await openCustomer(page);
     await expect(page.getByRole('heading', { name: 'At a glance' })).toBeVisible();
-    await expect(page.getByText(/All status changes are dual-controlled/)).toBeVisible();
-    for (const b of ['Freeze wallet', 'Freeze account (full)', 'Close account']) await expect(btn(page, b)).toBeVisible();
+    await expect(page.getByText(/only takes effect once a second administrator .* approves it/)).toBeVisible();
+    for (const b of ['Freeze wallet', 'Freeze account', 'Close account']) await expect(btn(page, b)).toBeVisible();
   });
 
   test('Customer 360: PII is masked; reveal/hide is recorded in the Audit tab @smoke', async ({ page }) => {

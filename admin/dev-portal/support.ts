@@ -55,6 +55,22 @@ export const ROUTES = {
   auditLog: '#/reporting/audit',
 } as const;
 
+/**
+ * Pages switched off in the 3 November 2026 update: marked "COMING SOON" in the menu or removed from it.
+ * They now redirect to Pending Approvals or render only their title, so checks on them are skipped (not failed).
+ */
+export const REMOVED_ON_3_NOV = [
+  ROUTES.approvalQueue, ROUTES.requests, ROUTES.breakRequests, ROUTES.withdrawals, ROUTES.topUps, ROUTES.rollovers,
+  ROUTES.unlocks, ROUTES.autoRollover, ROUTES.statutoryTax, ROUTES.payroll, ROUTES.walletBoard, ROUTES.ledger,
+  ROUTES.banners, '#/coming-soon/support', '#/rewards/rules', '#/reports-and-analytics/dashboards', '#/classifications',
+  '#/vocabularies', '#/settings/admin-action-thresholds', '#/settings/communications-providers', '#/settings/metric-definitions',
+] as readonly string[];
+
+/** In-page links removed in the same update (Customer Management sub-pages). */
+export const REMOVED_LINKS_ON_3_NOV = ['Review Queues', 'Auto Grants', 'Screening', 'Account Controls'] as readonly string[];
+
+const REMOVED_REASON = 'No longer in the portal: switched off ("Coming soon" or removed from the menu) in the 3 November update';
+
 /** Unique, human-readable suffix so re-runs never collide with data from earlier runs. */
 /** Some name fields reject digits ("must contain only allowed characters"), so the suffix is letters only. */
 export const uniq = (prefix: string) =>
@@ -66,6 +82,7 @@ export function destructive(): void {
 
 /** Opens a route with a full reload (clears any modal left open by hash-only navigation). */
 export async function open(page: Page, route: string): Promise<void> {
+  test.skip(REMOVED_ON_3_NOV.includes(route), REMOVED_REASON);
   await page.goto(`/${route}`);
   await page.reload();
   await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => undefined);
@@ -73,6 +90,7 @@ export async function open(page: Page, route: string): Promise<void> {
 }
 
 export async function subNav(page: Page, link: string): Promise<void> {
+  test.skip(REMOVED_LINKS_ON_3_NOV.includes(link), REMOVED_REASON);
   await page.getByRole('link', { name: link, exact: true }).first().click();
   await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => undefined);
 }

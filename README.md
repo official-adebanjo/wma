@@ -121,4 +121,12 @@ docs/            test-hook contract, selector contract, traceability
 - `reports/summary/index.html` is the internal copy, with screenshots and a link to the technical report. It's git-ignored.
 - `site/index.html` is the public copy, with no screenshots, names or emails. It **is committed**.
 
+Each problem has a **View** button that shows what the check saw when it failed:
+
+- **Admin problems:** the error, the screenshot and a video. Admin checks record video when they fail.
+- **API problems:** the request and a redacted answer. Every value is blanked, so only the field names and the shape are shown.
+- **Mobile problems:** the error. The app blocks screen capture, so mobile screenshots and video are black.
+
+The public copy shows only the error text, with emails, phone numbers and names masked. Security problems show no evidence there, because their requests name endpoints.
+
 Netlify (`netlify.toml`) and Vercel (`vercel.json`) both publish `site/` straight from the repo with no build step. In either host, import the GitHub repo and keep the defaults; the config files set everything. CI refreshes and commits `site/index.html` after each main or nightly run, and the host redeploys on that commit. To publish a local run, run `npm run report:summary`, then commit `site/index.html` and push.

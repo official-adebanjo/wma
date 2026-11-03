@@ -50,17 +50,17 @@ test.describe('Dev portal › Transactions & Ledger', () => {
 });
 
 test.describe('Dev portal › Approvals, Support & Communications', () => {
-  test('Pending Approvals: both tabs and status filter @smoke', async ({ page }) => {
+  test('Pending Approvals: queue tabs, page size and paging @smoke', async ({ page }) => {
     await open(page, ROUTES.pendingApprovals);
     await expect(page.getByRole('heading', { name: 'Approval Queue' })).toBeVisible();
-    await page.getByRole('tab', { name: /^Dual-control changes/ }).click();
-    await page.getByRole('tab', { name: 'Pending approvals' }).click();
-    for (const s of ['Cleared only', 'All statuses', 'Pending only']) await page.getByRole('combobox').filter({ hasText: 'Pending only' }).first().selectOption({ label: s }).catch(() => undefined);
-  });
-
-  test('Support & Tickets is marked SOON @smoke', async ({ page }) => {
-    await open(page, ROUTES.pendingApprovals);
-    await expect(page.getByRole('link', { name: /Support & Tickets\s*SOON/i })).toBeVisible();
+    // 3 November update: "Created by me" added; "Dual-control changes" is marked COMING SOON and disabled.
+    await expect(page.getByRole('tab', { name: /^Dual-control changes/ })).toContainText(/coming soon/i);
+    for (const t of ['Created by me', 'Pending approvals']) {
+      await page.getByRole('tab', { name: t, exact: true }).click();
+      await expect(page.getByRole('tab', { name: t, exact: true })).toHaveAttribute('aria-selected', 'true');
+    }
+    await page.getByRole('combobox', { name: 'Show:' }).selectOption('50 per page');
+    await expect(btn(page, 'Next')).toBeVisible();
   });
 
   test('Campaigns: templates, delivery log, filters and export @smoke', async ({ page }) => {

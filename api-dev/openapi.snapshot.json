@@ -150,6 +150,10 @@
    "description": "Bank account linking, bank-statement assessment and direct-debit mandates for loans through Mono"
   },
   {
+   "name": "Notification Endpoints",
+   "description": "These endpoints manages notifications on Rosabon"
+  },
+  {
    "name": "Notification Preference Endpoints",
    "description": "These endpoints manages notification preference on Rosabon"
   },
@@ -19228,6 +19232,491 @@
     ]
    }
   },
+  "/api/v3/notifications": {
+   "get": {
+    "tags": [
+     "Notification Endpoints"
+    ],
+    "summary": "Get notifications",
+    "description": "This endpoint retrieves push notifications",
+    "operationId": "retrieveNotificationsUsingGET",
+    "parameters": [
+     {
+      "name": "platform",
+      "in": "query",
+      "description": "platform",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "string",
+       "enum": [
+        "CREDIT",
+        "TREASURY",
+        "TREASURY_PORTAL"
+       ]
+      }
+     },
+     {
+      "name": "search",
+      "in": "query",
+      "description": "search",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "sort",
+      "in": "query",
+      "description": "sort",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HttpResponseDto"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "Notification Endpoints"
+    ],
+    "summary": "Add notification",
+    "description": "This endpoint creates push notification on Rosabon",
+    "operationId": "createNotificationUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessageInDto"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HttpResponseDto"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/notifications/inbox": {
+   "get": {
+    "tags": [
+     "Notification Endpoints"
+    ],
+    "summary": "Get user notifications",
+    "description": "This endpoint retrieves user notifications",
+    "operationId": "retrieveNotificationsUsingGET_1",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "platform",
+      "in": "query",
+      "description": "platform",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "string",
+       "enum": [
+        "CREDIT",
+        "TREASURY",
+        "TREASURY_PORTAL"
+       ]
+      }
+     },
+     {
+      "name": "readStatus",
+      "in": "query",
+      "description": "readStatus",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string",
+       "enum": [
+        "READ",
+        "UNREAD"
+       ]
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "text/event-stream": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/InAppEvent"
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/notifications/subscribe/{userId}": {
+   "get": {
+    "tags": [
+     "Notification Endpoints"
+    ],
+    "summary": "Subscribe to notification",
+    "description": "This endpoint allows user to subscribe to notification on Rosabon",
+    "operationId": "subscribeUsingGET",
+    "parameters": [
+     {
+      "name": "userId",
+      "in": "path",
+      "description": "userId",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "text/event-stream": {
+        "schema": {
+         "$ref": "#/components/schemas/SseEmitter"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/notifications/{id}": {
+   "get": {
+    "tags": [
+     "Notification Endpoints"
+    ],
+    "summary": "Get notification",
+    "description": "This endpoint retrieves push notification",
+    "operationId": "retrieveNotificationUsingGET",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HttpResponseDto"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   },
+   "put": {
+    "tags": [
+     "Notification Endpoints"
+    ],
+    "summary": "Update notification",
+    "description": "This endpoint updates push notification",
+    "operationId": "updateNotificationUsingPUT",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessageInDto"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HttpResponseDto"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   },
+   "delete": {
+    "tags": [
+     "Notification Endpoints"
+    ],
+    "summary": "Delete notification",
+    "description": "This endpoint deletes push notification",
+    "operationId": "deleteNotificationUsingDELETE",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HttpResponseDto"
+        }
+       }
+      }
+     },
+     "204": {
+      "description": "No Content"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/notification-preferences": {
    "get": {
     "tags": [
@@ -26257,68 +26746,74 @@
     "title": "$table.tableComment",
     "type": "object",
     "properties": {
-     "acceptsRollover": {
-      "type": "boolean"
-     },
-     "allowsLiquidation": {
-      "type": "boolean"
-     },
-     "allowsMonthlyDraw": {
-      "type": "boolean"
-     },
-     "allowsTopUp": {
-      "type": "boolean"
-     },
-     "allowsTransfer": {
+     "allowCustomization": {
       "type": "boolean"
      },
      "createdDate": {
       "type": "string",
       "format": "date"
      },
-     "hasContributionValue": {
-      "type": "boolean"
-     },
-     "hasDirectDebit": {
-      "type": "boolean"
-     },
-     "hasSavingFrequency": {
-      "type": "boolean"
-     },
-     "hasTargetAmount": {
-      "type": "boolean"
+     "currency": {
+      "uniqueItems": true,
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/TrCurrencyOutDto"
+      }
      },
      "id": {
       "type": "integer",
       "format": "int64"
      },
-     "interestFormula": {
+     "imageUrl": {
+      "type": "string"
+     },
+     "maxTransactionLimit": {
+      "type": "number",
+      "format": "double"
+     },
+     "minTransactionLimit": {
+      "type": "number",
+      "format": "double"
+     },
+     "productCategory": {
+      "$ref": "#/components/schemas/TrProductCategoryOutDto"
+     },
+     "productCode": {
+      "type": "string"
+     },
+     "productDescription": {
+      "type": "string"
+     },
+     "productName": {
+      "type": "string"
+     },
+     "properties": {
+      "$ref": "$table.tableComment"
+     },
+     "status": {
       "type": "string",
       "enum": [
-       "COMPOUND_INTEREST_FORMULAR",
-       "SIMPLE_INTEREST_FORMULAR"
+       "ACTIVE",
+       "ASSIGNED",
+       "DELETED",
+       "INACTIVE",
+       "UNASSIGNED"
       ]
      },
-     "interestOptions": {
-      "$ref": "#/components/schemas/InterestOption"
-     },
-     "paymentType": {
+     "tenorDisplayIn": {
       "type": "string",
       "enum": [
-       "BANK_TRANSFER",
-       "DEBIT_CARD",
-       "WALLET"
+       "IN_DAYS",
+       "IN_MONTHS",
+       "IN_YEARS"
       ]
      },
-     "penaltyFormula": {
-      "type": "string",
-      "enum": [
-       "FIXED_FORMULA",
-       "TARGET_FORMULA"
-      ]
-     },
-     "receivesTransfer": {
-      "type": "boolean"
+     "tenors": {
+      "uniqueItems": true,
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/TrTenorOutDto"
+      }
      }
     }
    },
@@ -30992,6 +31487,113 @@
      }
     }
    },
+   "HttpResponseDto": {
+    "title": "HttpResponseDto",
+    "type": "object",
+    "properties": {
+     "data": {
+      "type": "object"
+     },
+     "entity": {
+      "type": "string"
+     },
+     "limit": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "message": {
+      "type": "string"
+     },
+     "object": {
+      "type": "object"
+     },
+     "page": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "statusCode": {
+      "type": "string",
+      "enum": [
+       "ACCEPTED",
+       "ALREADY_REPORTED",
+       "BAD_GATEWAY",
+       "BAD_REQUEST",
+       "BANDWIDTH_LIMIT_EXCEEDED",
+       "CHECKPOINT",
+       "CONFLICT",
+       "CONTINUE",
+       "CREATED",
+       "DESTINATION_LOCKED",
+       "EXPECTATION_FAILED",
+       "FAILED_DEPENDENCY",
+       "FORBIDDEN",
+       "FOUND",
+       "GATEWAY_TIMEOUT",
+       "GONE",
+       "HTTP_VERSION_NOT_SUPPORTED",
+       "IM_USED",
+       "INSUFFICIENT_SPACE_ON_RESOURCE",
+       "INSUFFICIENT_STORAGE",
+       "INTERNAL_SERVER_ERROR",
+       "I_AM_A_TEAPOT",
+       "LENGTH_REQUIRED",
+       "LOCKED",
+       "LOOP_DETECTED",
+       "METHOD_FAILURE",
+       "METHOD_NOT_ALLOWED",
+       "MOVED_PERMANENTLY",
+       "MOVED_TEMPORARILY",
+       "MULTIPLE_CHOICES",
+       "MULTI_STATUS",
+       "NETWORK_AUTHENTICATION_REQUIRED",
+       "NON_AUTHORITATIVE_INFORMATION",
+       "NOT_ACCEPTABLE",
+       "NOT_EXTENDED",
+       "NOT_FOUND",
+       "NOT_IMPLEMENTED",
+       "NOT_MODIFIED",
+       "NO_CONTENT",
+       "OK",
+       "PARTIAL_CONTENT",
+       "PAYLOAD_TOO_LARGE",
+       "PAYMENT_REQUIRED",
+       "PERMANENT_REDIRECT",
+       "PRECONDITION_FAILED",
+       "PRECONDITION_REQUIRED",
+       "PROCESSING",
+       "PROXY_AUTHENTICATION_REQUIRED",
+       "REQUESTED_RANGE_NOT_SATISFIABLE",
+       "REQUEST_ENTITY_TOO_LARGE",
+       "REQUEST_HEADER_FIELDS_TOO_LARGE",
+       "REQUEST_TIMEOUT",
+       "REQUEST_URI_TOO_LONG",
+       "RESET_CONTENT",
+       "SEE_OTHER",
+       "SERVICE_UNAVAILABLE",
+       "SWITCHING_PROTOCOLS",
+       "TEMPORARY_REDIRECT",
+       "TOO_EARLY",
+       "TOO_MANY_REQUESTS",
+       "UNAUTHORIZED",
+       "UNAVAILABLE_FOR_LEGAL_REASONS",
+       "UNPROCESSABLE_ENTITY",
+       "UNSUPPORTED_MEDIA_TYPE",
+       "UPGRADE_REQUIRED",
+       "URI_TOO_LONG",
+       "USE_PROXY",
+       "VARIANT_ALSO_NEGOTIATES"
+      ]
+     },
+     "timestamp": {
+      "type": "string",
+      "format": "date"
+     },
+     "total": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
    "IdDocumentImageDto": {
     "title": "IdDocumentImageDto",
     "type": "object",
@@ -31037,6 +31639,66 @@
        "ACTIVE",
        "INACTIVE"
       ]
+     }
+    }
+   },
+   "InAppEvent": {
+    "title": "InAppEvent",
+    "required": [
+     "category",
+     "message",
+     "platform",
+     "recipientUserId"
+    ],
+    "type": "object",
+    "properties": {
+     "category": {
+      "type": "string",
+      "enum": [
+       "APPROVAL",
+       "LOAN",
+       "PLAN",
+       "PLAN_ACTION",
+       "TICKET",
+       "WALLET"
+      ]
+     },
+     "dateSent": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "initiatorUserId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "message": {
+      "type": "string"
+     },
+     "platform": {
+      "type": "string",
+      "enum": [
+       "CREDIT",
+       "TREASURY",
+       "TREASURY_PORTAL"
+      ]
+     },
+     "readStatus": {
+      "type": "string",
+      "enum": [
+       "READ",
+       "UNREAD"
+      ]
+     },
+     "recipientUserId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "title": {
+      "type": "string"
      }
     }
    },
@@ -35957,6 +36619,76 @@
      }
     }
    },
+   "MessageInDto": {
+    "title": "MessageInDto",
+    "type": "object",
+    "properties": {
+     "body": {
+      "type": "string"
+     },
+     "channel": {
+      "type": "string"
+     },
+     "paymentDueDate": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "platform": {
+      "type": "string",
+      "enum": [
+       "CREDIT",
+       "TREASURY",
+       "TREASURY_PORTAL"
+      ]
+     },
+     "product": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "recipient": {
+      "uniqueItems": true,
+      "type": "array",
+      "items": {
+       "type": "integer",
+       "format": "int64"
+      }
+     },
+     "recipientType": {
+      "type": "string",
+      "enum": [
+       "BY_CORPORATE_USER",
+       "BY_INDIVIDUAL_USER",
+       "BY_INVESTMENT_MATURITY",
+       "BY_NO_RUNNING_INVESTMENT",
+       "BY_PAYMENT_DUE",
+       "BY_PRODUCT_TYPE_USER",
+       "BY_TIME_OF_LAST_ACTIVITY"
+      ]
+     },
+     "sendDate": {
+      "type": "string",
+      "format": "date"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "DRAFT",
+       "PENDING",
+       "SENT"
+      ]
+     },
+     "timeofLastActivity": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "title": {
+      "type": "string"
+     },
+     "topic": {
+      "type": "string"
+     }
+    }
+   },
    "MessageTemplateResponse": {
     "title": "MessageTemplateResponse",
     "type": "object",
@@ -38013,6 +38745,16 @@
        "ACTIVE",
        "INACTIVE"
       ]
+     }
+    }
+   },
+   "SseEmitter": {
+    "title": "SseEmitter",
+    "type": "object",
+    "properties": {
+     "timeout": {
+      "type": "integer",
+      "format": "int64"
      }
     }
    },
