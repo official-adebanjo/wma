@@ -1,8 +1,10 @@
 name: Uptime watch (dev)
 
 # Every 15 minutes, Monday–Friday, 06:00–19:00 Lagos time (cron is UTC; Lagos is UTC+1).
-# Checks the endpoints that passed the last full API run (monitor/baseline.json) and emails when
-# something goes down (2 failed checks in a row) or comes back. Read-only; see scripts/monitor.js.
+# Checks the endpoints that passed the last full API run (monitor/baseline.json), the sign-ins and the
+# admin website with its script/style files, and emails when something goes down (2 failed checks in
+# a row) or comes back. A browser check of the main admin pages runs after each new portal version,
+# while a page is broken, and otherwise about once an hour. Read-only; see scripts/monitor.js.
 on:
   schedule:
     - cron: '*/15 5-17 * * 1-5'
@@ -11,6 +13,10 @@ on:
     inputs:
       test_email:
         description: 'Also send a test email (to confirm the mail settings)'
+        type: boolean
+        default: false
+      browser_check:
+        description: 'Run the browser check now'
         type: boolean
         default: false
 
@@ -24,7 +30,7 @@ permissions:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       API_BASE_URL: ${{ vars.API_BASE_URL }}
       MONITOR_ADMIN_URL: ${{ vars.DEV_ADMIN_URL || vars.ADMIN_BASE_URL }}
@@ -36,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with: { node-version: 20, cache: npm }
 
       - name: Load the previous check's state
         run: |
@@ -47,8 +53,24 @@ jobs:
             git worktree add --orphan -b monitor-state state
           fi
 
+      - name: Browser check needed?
+        id: plan
+        run: node scripts/monitor.js --state state --plan ${{ inputs.browser_check && '--ui-now' || '' }}
+
+      - name: Install the browser
+        if: steps.plan.outputs.ui == 'true'
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Browser check of the admin pages
+        if: steps.plan.outputs.ui == 'true'
+        run: node scripts/monitor-ui.js --out out
+
       - name: Check
         id: check
+        env:
+          UI_REASON: ${{ steps.plan.outputs.ui_reason }}
         run: node scripts/monitor.js --state state --out out ${{ inputs.test_email && '--test-email' || '' }}
 
       - name: Save state and status page
@@ -72,3 +94,4 @@ jobs:
           to: ${{ secrets.ALERT_EMAIL_TO }}
           subject: ${{ steps.check.outputs.subject }}
           html_body: file://out/alert.html
+          attachments: ${{ steps.check.outputs.attachments }}

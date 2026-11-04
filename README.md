@@ -122,6 +122,10 @@ docs/            test-hook contract, selector contract, traceability
 - the admin website;
 - every read-only endpoint that passed the last full API run ([monitor/baseline.json](monitor/baseline.json)).
 
+It also checks that the admin website's script and style files load. Their names change with each deployment, so the watch also notices and records every new portal version.
+
+[scripts/monitor-ui.js](scripts/monitor-ui.js) adds a browser check. It signs in to the admin portal with the read-only user and opens the main pages. A page counts as broken if it throws a script error, shows an error screen or nothing at all, gets a server error, or doesn't load within 30 seconds. The browser check runs after each new portal version, while a page is broken, and otherwise about once an hour (or on demand with "Run the browser check now"). A page counts as broken when it fails twice in the same check, and the alert email attaches a screenshot.
+
 After 2 failed checks in a row, it emails what went down. It emails again when it comes back. The current state and history are on the `monitor-state` branch (`status.md`). The watch only makes GET requests, and only with its own accounts, so it can't lock out the test customers.
 
 **Repository settings** (Settings → Secrets and variables → Actions):

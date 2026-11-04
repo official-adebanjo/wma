@@ -1,7 +1,9 @@
 /**
  * Uptime watch for the dev system: checks the watched endpoints (monitor/baseline.json), the admin
- * website and the sign-ins, compares with the previous check, and reports what went down or came back.
+ * website and its script/style files, and the sign-ins; merges the browser check (scripts/monitor-ui.js)
+ * when it ran; compares with the previous check and reports what went down or came back.
  *
+ *   node scripts/monitor.js --state <dir> --plan            should the browser check run now? (→ $GITHUB_OUTPUT ui=true)
  *   node scripts/monitor.js --state <dir> [--out <dir>]     one check (the scheduled GitHub job)
  *   node scripts/monitor.js --state <dir> --test-email       the same, and always write an email (checks mail settings)
  *   node scripts/monitor.js --calibrate                     drop endpoints the monitor accounts may not read
@@ -10,8 +12,8 @@
  * so the test customers can't be locked out. Plain Node 20 (built-in fetch): no npm install needed.
  *
  * State lives in <dir> (the monitor-state branch in CI):
- *   state.json      each target's current status and failure count
- *   incidents.jsonl one line per change (down / back up), with timings
+ *   state.json      each target's current status and failure count, the portal version, the last browser check
+ *   incidents.jsonl one line per change (down / back up / new portal version), with timings
  *   status.md       the current status page (readable on GitHub)
  * When something changes, <out>/alert.html is written and `alert`/`subject` go to $GITHUB_OUTPUT.
  */
@@ -25,6 +27,10 @@ const arg = (name, fallback) => { const i = process.argv.indexOf(name); return i
 const STATE_DIR = path.resolve(arg('--state', path.join(root, 'reports/monitor-state')));
 const OUT_DIR = path.resolve(arg('--out', path.join(root, 'reports/monitor-out')));
 const CALIBRATE = process.argv.includes('--calibrate');
+const PLAN = process.argv.includes('--plan');
+/** The browser check runs after a new portal version appears, and otherwise at most this often. */
+const UI_EVERY_MIN = 55;
+const UI_RESULTS = path.join(OUT_DIR, 'ui-results.json');
 
 // The server address only; a value ending in /api or /api/v3 is accepted too (the paths below add it).
 const API = (process.env.API_BASE_URL || '').replace(/\/+$/, '').replace(/\/api(\/v3)?$/, '');
@@ -76,6 +82,42 @@ async function pool(items, n, fn) {
 
 const describe = (r) => (r.status === 0 ? r.message : `${r.status}${r.message ? ` “${r.message}”` : ''}`);
 
+/**
+ * The admin website and the script/style files its page loads. The file names change with every
+ * deployment, so they double as the portal's version. A missing file usually comes back as the page
+ * itself (200, text/html), which is why the content type is checked too.
+ */
+async function checkSite() {
+  if (!ADMIN_SITE) return { results: [] };
+  const started = Date.now();
+  let html = '', status = 0, message = '';
+  try {
+    const res = await fetch(ADMIN_SITE + '/', { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    status = res.status;
+    html = await res.text();
+  } catch (e) { message = e.name === 'TimeoutError' ? `no answer within ${TIMEOUT_MS / 1000} s` : 'could not connect'; }
+  const page = { key: 'site admin', name: 'Admin portal website', area: 'Websites', ok: status >= 200 && status < 400, status, ms: Date.now() - started, why: describe({ status, message }) };
+  if (!page.ok) return { results: [page] };
+  const assets = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"|<link[^>]*rel="(?:stylesheet|modulepreload)"[^>]*href="([^"]+)"|<link[^>]*href="([^"]+)"[^>]*rel="(?:stylesheet|modulepreload)"/g)]
+    .map((m) => m[1] || m[2] || m[3]).filter((u) => !/^https?:\/\//.test(u) || u.startsWith(ADMIN_SITE));
+  const broken = [];
+  for (const a of assets) {
+    const url = new URL(a, ADMIN_SITE + '/').toString();
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+      const type = res.headers.get('content-type') || '';
+      await res.body?.cancel();
+      if (res.status !== 200) broken.push(`${path.basename(a)} answered ${res.status}`);
+      else if (/text\/html/.test(type)) broken.push(`${path.basename(a)} is missing (the page came back instead)`);
+    } catch { broken.push(`${path.basename(a)} didn't load`); }
+  }
+  const files = {
+    key: 'site admin files', name: 'Admin portal script and style files', area: 'Websites', ok: assets.length > 0 && !broken.length, status: 200, ms: Date.now() - started,
+    why: assets.length ? broken.join('; ') : 'the page loads no script files',
+  };
+  return { results: [page, files], version: assets.map((a) => path.basename(a)).sort().join(' ') };
+}
+
 async function checkAll() {
   if (!API) throw new Error('API_BASE_URL is not set');
   const baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'));
@@ -88,10 +130,8 @@ async function checkAll() {
     if (s.skipped) continue;
     results.push({ key: `sign-in ${role}`, name: `${role === 'admin' ? 'Staff' : 'Customer'} sign-in`, area: 'Sign-in', ok: !!s.token, status: s.status, ms: s.ms, why: s.token ? '' : describe(s) });
   }
-  if (ADMIN_SITE) {
-    const r = await get(ADMIN_SITE);
-    results.push({ key: 'site admin', name: 'Admin portal website', area: 'Websites', ok: r.status >= 200 && r.status < 400, status: r.status, ms: r.ms, why: describe(r) });
-  }
+  const site = await checkSite();
+  results.push(...site.results);
   const watched = baseline.endpoints.filter((e) => sessions[e.role]?.token);
   const notWatched = baseline.endpoints.length - watched.length;
   const why = Object.entries(sessions).filter(([, s]) => !s.token)
@@ -104,7 +144,7 @@ async function checkAll() {
     return { key: e.key, name: `${e.summary} (${e.key})`, area: e.area, role: e.role, ok: r.status >= 200 && r.status < 300, status: r.status, ms: r.ms, why: describe(r) };
   });
   results.push(...checked);
-  return { results, notWatched, notWatchedNote, sessions, baseline };
+  return { results, notWatched, notWatchedNote, sessions, baseline, version: site.version };
 }
 
 async function calibrate() {
@@ -122,6 +162,24 @@ async function calibrate() {
   if (skipped.length) console.log(`No monitor account for: ${skipped.join(', ')} — those endpoints are kept but not checked yet.`);
 }
 
+const loadState = () => {
+  const file = path.join(STATE_DIR, 'state.json');
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : { targets: {} };
+};
+
+/** Before the main check: run the browser check if the portal has a new version, or it's been an hour. */
+async function plan() {
+  const state = loadState();
+  const { version } = await checkSite();
+  const last = state.ui?.lastAt ? (Date.now() - new Date(state.ui.lastAt)) / 60_000 : Infinity;
+  const reason = process.argv.includes('--ui-now') ? 'asked for'
+    : version && state.frontend?.version && version !== state.frontend.version ? 'new admin portal version'
+      : Object.entries(state.targets).some(([k, t]) => k.startsWith('ui ') && t.status === 'down') ? 'a page was broken at the last check'
+        : last >= UI_EVERY_MIN ? 'hourly' : '';
+  console.log(reason ? `Browser check: yes (${reason})` : `Browser check: not now (last one ${Math.round(last)} min ago, no new version)`);
+  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `ui=${reason ? 'true' : 'false'}\nui_reason=${reason}\n`);
+}
+
 function statusPage(state, run) {
   const items = Object.values(state.targets);
   const down = items.filter((t) => t.status === 'down');
@@ -136,14 +194,16 @@ function statusPage(state, run) {
     ``,
     `Last check: **${lagos(run.at)}** (Lagos time) · ${run.checked} checked · ${down.length ? `🔴 **${down.length} down**` : '🟢 all up'}${run.notWatchedNote ? ` · ${run.notWatchedNote}` : ''}`,
     ``,
-    `Checks run every 15 minutes, Monday to Friday, 6am–7pm. Something counts as down after ${DOWN_AFTER} failed checks in a row.`,
+    `Checks run every 15 minutes, Monday to Friday, 6am–7pm. Something counts as down after ${DOWN_AFTER} failed checks in a row. The browser check opens the main admin pages after each new portal version and otherwise about once an hour; a page counts as broken when it fails twice in the same check.`,
+    ``,
+    `Admin portal version: \`${state.frontend?.version || 'unknown'}\`${state.frontend?.since ? `, first seen ${lagos(state.frontend.since)}` : ''} · last browser check: ${state.ui?.lastAt ? lagos(state.ui.lastAt) : 'none yet'}`,
     ``,
     ...(down.length ? [`## Down now`, ``, `| Area | What | Answer | Down since |`, `|---|---|---|---|`, ...down.map(row), ``] : []),
     ...(failingNow.length ? [`## Failed the last check (not yet counted as down)`, ``, `| Area | What | Answer | |`, `|---|---|---|---|`, ...failingNow.map((t) => row({ ...t, since: '' })), ``] : []),
     ...(slow.length ? [`## Slow (over ${SLOW_MS / 1000} s)`, ``, ...slow.map((t) => `- ${t.name}: ${(t.ms / 1000).toFixed(1)} s`), ``] : []),
     `## Recent changes`,
     ``,
-    ...(incidents.length ? [`| When | What | Change |`, `|---|---|---|`, ...incidents.map((i) => `| ${lagos(i.at)} | ${i.name.replace(/\|/g, '\\|')} | ${i.change === 'down' ? `🔴 down: ${i.why}` : `🟢 back up after ${i.minutes} min`} |`)] : ['None yet.']),
+    ...(incidents.length ? [`| When | What | Change |`, `|---|---|---|`, ...incidents.map((i) => `| ${lagos(i.at)} | ${i.name.replace(/\|/g, '\\|')} | ${i.change === 'down' ? `🔴 down: ${i.why}` : i.change === 'deployed' ? `🔵 new version deployed (${i.why})` : `🟢 back up after ${i.minutes} min`} |`)] : ['None yet.']),
     ``,
   ].join('\n');
 }
@@ -154,6 +214,8 @@ function alertEmail(wentDown, cameBack, stillDown, run) {
     return Object.entries(byArea).map(([area, rs]) => `<p style="margin:12px 0 4px"><b>${esc(area)}</b></p><ul style="margin:0">${rs.map((r) => `<li>${fmt(r)}</li>`).join('')}</ul>`).join('');
   };
   const parts = [`<p>Check at ${esc(lagos(run.at))} (Lagos time), ${run.checked} items checked.</p>`];
+  if (run.deployedAt) parts.push(`<p>🔵 A new admin portal version was deployed (first seen ${esc(lagos(run.deployedAt))}).</p>`);
+  if (wentDown.some((r) => r.screenshot)) parts.push(`<p style="color:#555">Screenshots of the broken pages are attached.</p>`);
   if (wentDown.length) parts.push(`<h3 style="color:#b42318">🔴 Down (${wentDown.length})</h3>`, list(wentDown, (r) => `${esc(r.name)}: ${esc(r.why)}, failing since ${esc(lagos(r.since))}`));
   if (cameBack.length) parts.push(`<h3 style="color:#067647">🟢 Back up (${cameBack.length})</h3>`, list(cameBack, (r) => `${esc(r.name)}: was down for about ${r.minutes} min`));
   if (stillDown.length) parts.push(`<p style="color:#555">Still down from earlier: ${stillDown.length} (${esc(stillDown.slice(0, 5).map((r) => r.name).join('; '))}${stillDown.length > 5 ? '; …' : ''}).</p>`);
@@ -166,35 +228,49 @@ function alertEmail(wentDown, cameBack, stillDown, run) {
 
 async function watch() {
   const at = new Date().toISOString();
-  const { results, notWatched, notWatchedNote, baseline } = await checkAll();
+  const { results, notWatched, notWatchedNote, baseline, version } = await checkAll();
+  // The browser check already tried each page twice, so one failed run counts as down.
+  const ui = fs.existsSync(UI_RESULTS) ? JSON.parse(fs.readFileSync(UI_RESULTS, 'utf8')) : null;
+  if (ui) results.push(...ui.results.map((r) => ({ ...r, downAfter: 1 })));
   fs.mkdirSync(STATE_DIR, { recursive: true });
   const stateFile = path.join(STATE_DIR, 'state.json');
-  const state = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile, 'utf8')) : { targets: {} };
+  const state = loadState();
   const wentDown = [], cameBack = [], stillDown = [];
+  const incidents = path.join(STATE_DIR, 'incidents.jsonl');
+
+  let deployedAt;
+  if (version && state.frontend?.version !== version) {
+    if (state.frontend?.version) {
+      deployedAt = at;
+      fs.appendFileSync(incidents, JSON.stringify({ at, change: 'deployed', name: 'Admin portal', area: 'Websites', why: version }) + '\n');
+    }
+    state.frontend = { version, since: at };
+  }
+  if (ui) state.ui = { lastAt: ui.at, reason: process.env.UI_REASON || '' };
 
   for (const r of results) {
     const t = state.targets[r.key] || { status: 'up', fails: 0 };
-    Object.assign(t, { name: r.name, area: r.area, ok: r.ok, status_code: r.status, ms: r.ms, why: r.ok ? '' : r.why, checkedAt: at });
+    Object.assign(t, { name: r.name, area: r.area, ok: r.ok, status_code: r.status, ms: r.ms, why: r.ok ? '' : r.why, checkedAt: at, screenshot: r.screenshot });
     if (r.ok) {
       if (t.status === 'down') cameBack.push({ ...t, minutes: minutes(t.since, at) });
       Object.assign(t, { status: 'up', fails: 0, since: undefined });
     } else {
       t.fails += 1;
       if (t.fails === 1) t.since = at;
-      if (t.status === 'up' && t.fails >= DOWN_AFTER) { t.status = 'down'; wentDown.push({ ...t }); }
+      if (t.status === 'up' && t.fails >= (r.downAfter || DOWN_AFTER)) { t.status = 'down'; wentDown.push({ ...t }); }
       else if (t.status === 'down') stillDown.push(t);
     }
     state.targets[r.key] = t;
   }
-  // Endpoints dropped from the watch list (new baseline) stop being tracked; ones skipped because a sign-in failed keep their state.
+  // Endpoints dropped from the watch list (new baseline) stop being tracked; ones skipped because a sign-in
+  // failed keep their state, and so do the browser pages between browser checks.
   const known = new Set([...results.map((r) => r.key), ...baseline.endpoints.map((e) => e.key)]);
-  for (const k of Object.keys(state.targets)) if (!known.has(k) && !k.startsWith('sign-in')) delete state.targets[k];
+  for (const k of Object.keys(state.targets)) if (!known.has(k) && !/^(sign-in|ui |site )/.test(k)) delete state.targets[k];
 
-  const incidents = path.join(STATE_DIR, 'incidents.jsonl');
   for (const t of wentDown) fs.appendFileSync(incidents, JSON.stringify({ at, change: 'down', name: t.name, area: t.area, why: t.why, since: t.since }) + '\n');
   for (const t of cameBack) fs.appendFileSync(incidents, JSON.stringify({ at, change: 'up', name: t.name, area: t.area, minutes: t.minutes }) + '\n');
 
-  const run = { at, checked: results.length, notWatched, notWatchedNote, statusUrl: process.env.MONITOR_STATUS_URL };
+  const run = { at, checked: results.length, notWatched, notWatchedNote, deployedAt, statusUrl: process.env.MONITOR_STATUS_URL };
   state.lastRun = run;
   fs.writeFileSync(stateFile, JSON.stringify(state, null, 1) + '\n');
   fs.writeFileSync(path.join(STATE_DIR, 'status.md'), statusPage(state, run));
@@ -207,7 +283,8 @@ async function watch() {
     const { subject, html } = alertEmail(wentDown, cameBack, stillDown, run);
     fs.mkdirSync(OUT_DIR, { recursive: true });
     fs.writeFileSync(path.join(OUT_DIR, 'alert.html'), html);
-    if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `alert=true\nsubject=${subject}\n`);
+    const shots = wentDown.filter((r) => r.screenshot).map((r) => path.join(path.relative(process.cwd(), OUT_DIR), r.screenshot).replace(/\\/g, '/'));
+    if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `alert=true\nsubject=${subject}\nattachments=${shots.join(',')}\n`);
     console.log('ALERT:', subject);
   } else if (process.argv.includes('--test-email')) {
     // Manual run with "send a test email": confirms the mail settings without waiting for an outage.
@@ -223,4 +300,4 @@ subject=${subject}
   }
 }
 
-(CALIBRATE ? calibrate() : watch()).catch((e) => { console.error(e.message); process.exit(1); });
+(CALIBRATE ? calibrate() : PLAN ? plan() : watch()).catch((e) => { console.error(e.message); process.exit(1); });
