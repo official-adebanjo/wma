@@ -17,6 +17,8 @@
     "test:admin:dev": "playwright test --project=admin-dev",
     "test:api:dev": "playwright test --project=api-dev",
     "api:snapshot": "node scripts/api-snapshot.js",
+    "monitor:baseline": "node scripts/monitor-baseline.js && node scripts/monitor.js --calibrate",
+    "monitor": "node scripts/monitor.js",
     "report:admin": "playwright show-report reports/playwright-html",
     "report:summary": "node scripts/build-summary.js",
     "deploy:report": "npm run report:summary && npx --yes netlify-cli@17.38.1 deploy --dir=site --prod --message \"QA summary\""

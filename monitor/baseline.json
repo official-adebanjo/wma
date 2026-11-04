@@ -1,0 +1,763 @@
+{
+ "builtAt": "2026-11-04T09:33:30.731Z",
+ "from": "reports/api-results/records.jsonl",
+ "endpoints": [
+  {
+   "key": "GET /api/v3/account-controls",
+   "url": "/api/v3/account-controls?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Account Control Endpoints",
+   "summary": "List active freezes"
+  },
+  {
+   "key": "GET /api/v3/account-controls/metrics",
+   "url": "/api/v3/account-controls/metrics",
+   "role": "admin",
+   "area": "Account Control Endpoints",
+   "summary": "Account Controls counts"
+  },
+  {
+   "key": "GET /api/v3/admin-users/me",
+   "url": "/api/v3/admin-users/me",
+   "role": "admin",
+   "area": "Portal Admin User Endpoints",
+   "summary": "Current admin"
+  },
+  {
+   "key": "GET /api/v3/audit-logs",
+   "url": "/api/v3/audit-logs?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "System-Wide Audit Log Endpoints",
+   "summary": "Retrieve system audit logs"
+  },
+  {
+   "key": "GET /api/v3/audit-logs/export",
+   "url": "/api/v3/audit-logs/export",
+   "role": "admin",
+   "area": "System-Wide Audit Log Endpoints",
+   "summary": "Export audit log CSV"
+  },
+  {
+   "key": "GET /api/v3/audit-logs/metrics",
+   "url": "/api/v3/audit-logs/metrics",
+   "role": "admin",
+   "area": "System-Wide Audit Log Endpoints",
+   "summary": "Retrieve audit log metrics strip"
+  },
+  {
+   "key": "GET /api/v3/corridors",
+   "url": "/api/v3/corridors?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Corridor Endpoints",
+   "summary": "Get corridors"
+  },
+  {
+   "key": "GET /api/v3/corridors/active",
+   "url": "/api/v3/corridors/active",
+   "role": "customer",
+   "area": "Corridor Endpoints",
+   "summary": "Get active corridors"
+  },
+  {
+   "key": "GET /api/v3/country",
+   "url": "/api/v3/country",
+   "role": "customer",
+   "area": "Country and State Endpoints",
+   "summary": "Get countries"
+  },
+  {
+   "key": "GET /api/v3/document-setup",
+   "url": "/api/v3/document-setup?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Document Setup Endpoints",
+   "summary": "Get document setups"
+  },
+  {
+   "key": "GET /api/v3/field-classifications",
+   "url": "/api/v3/field-classifications",
+   "role": "customer",
+   "area": "Field Classification Endpoints",
+   "summary": "List field classifications"
+  },
+  {
+   "key": "GET /api/v3/general-approval-workflows",
+   "url": "/api/v3/general-approval-workflows?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "General Approval Workflow Endpoints",
+   "summary": "Get general approval workflows"
+  },
+  {
+   "key": "GET /api/v3/investment-management/approval-queue",
+   "url": "/api/v3/investment-management/approval-queue?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "The approval queue"
+  },
+  {
+   "key": "GET /api/v3/investment-management/audit-trail",
+   "url": "/api/v3/investment-management/audit-trail?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "Query the audit trail"
+  },
+  {
+   "key": "GET /api/v3/investment-management/auto-rollover-default/propagations",
+   "url": "/api/v3/investment-management/auto-rollover-default/propagations?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "List auto-rollover propagations"
+  },
+  {
+   "key": "GET /api/v3/investment-management/investment-requests",
+   "url": "/api/v3/investment-management/investment-requests?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "List investment requests"
+  },
+  {
+   "key": "GET /api/v3/investment-management/investments",
+   "url": "/api/v3/investment-management/investments?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "List investments"
+  },
+  {
+   "key": "GET /api/v3/investment-management/rollover-requests",
+   "url": "/api/v3/investment-management/rollover-requests?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "List rollover requests"
+  },
+  {
+   "key": "GET /api/v3/investment-management/statutory-rate-propagations",
+   "url": "/api/v3/investment-management/statutory-rate-propagations?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "List statutory rate propagations"
+  },
+  {
+   "key": "GET /api/v3/investment-management/system-alerts",
+   "url": "/api/v3/investment-management/system-alerts?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "List system alerts"
+  },
+  {
+   "key": "GET /api/v3/investment-management/unlock-requests",
+   "url": "/api/v3/investment-management/unlock-requests?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "List unlock requests"
+  },
+  {
+   "key": "GET /api/v3/investment-management/withdrawal-requests",
+   "url": "/api/v3/investment-management/withdrawal-requests?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "List withdrawal requests"
+  },
+  {
+   "key": "GET /api/v3/investment-penalty-ladders",
+   "url": "/api/v3/investment-penalty-ladders",
+   "role": "customer",
+   "area": "Investment Pricing Endpoints",
+   "summary": "Get penalty ladders"
+  },
+  {
+   "key": "GET /api/v3/investment-products",
+   "url": "/api/v3/investment-products?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Investment Product Catalogue Endpoints",
+   "summary": "Get investment products"
+  },
+  {
+   "key": "GET /api/v3/investment-products/metrics",
+   "url": "/api/v3/investment-products/metrics",
+   "role": "admin",
+   "area": "Investment Product Catalogue Endpoints",
+   "summary": "Get catalogue metrics"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/accrued-interest-amount",
+   "url": "/api/v3/investment-reports/accrued-interest-amount",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total accrued interest amount"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/active-investment-amount",
+   "url": "/api/v3/investment-reports/active-investment-amount",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total active investment amount"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/active-investments",
+   "url": "/api/v3/investment-reports/active-investments",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total active investments"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/investments",
+   "url": "/api/v3/investment-reports/investments",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total investments"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/liquidated-investments",
+   "url": "/api/v3/investment-reports/liquidated-investments",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total liquidated investments"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/matured-investment-amount",
+   "url": "/api/v3/investment-reports/matured-investment-amount",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total matured investment amount"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/matured-investments",
+   "url": "/api/v3/investment-reports/matured-investments",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total matured investments"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/pending-funding-investment-amount",
+   "url": "/api/v3/investment-reports/pending-funding-investment-amount",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total pending funding investment amount"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/pending-funding-investments",
+   "url": "/api/v3/investment-reports/pending-funding-investments",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total pending funding investments"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/pending-investment-amount",
+   "url": "/api/v3/investment-reports/pending-investment-amount",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total pending funding investment amount"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/pending-investments",
+   "url": "/api/v3/investment-reports/pending-investments",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total pending funding investments"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/rolled-over-investments",
+   "url": "/api/v3/investment-reports/rolled-over-investments",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total rolled over investments"
+  },
+  {
+   "key": "GET /api/v3/investment-reports/under-review-investments",
+   "url": "/api/v3/investment-reports/under-review-investments",
+   "role": "admin",
+   "area": "Investment Report Endpoints",
+   "summary": "Get total investments under review"
+  },
+  {
+   "key": "GET /api/v3/investment-tax-configs",
+   "url": "/api/v3/investment-tax-configs",
+   "role": "admin",
+   "area": "Investment Tax Endpoints",
+   "summary": "Get tax rates"
+  },
+  {
+   "key": "GET /api/v3/investment-tax-configs/remittance",
+   "url": "/api/v3/investment-tax-configs/remittance",
+   "role": "admin",
+   "area": "Investment Tax Endpoints",
+   "summary": "Get withholding tax remittance"
+  },
+  {
+   "key": "GET /api/v3/investments/my",
+   "url": "/api/v3/investments/my?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Investment Endpoints",
+   "summary": "Get my investments"
+  },
+  {
+   "key": "GET /api/v3/investments/summary",
+   "url": "/api/v3/investments/summary",
+   "role": "customer",
+   "area": "Investment Endpoints",
+   "summary": "Get portfolio summary"
+  },
+  {
+   "key": "GET /api/v3/kyc-tiers",
+   "url": "/api/v3/kyc-tiers?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "KYC Tier Endpoints",
+   "summary": "Get kyc tiers"
+  },
+  {
+   "key": "GET /api/v3/leads",
+   "url": "/api/v3/leads?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "lead-api-resource",
+   "summary": "retrieveLeads"
+  },
+  {
+   "key": "GET /api/v3/loan-applications",
+   "url": "/api/v3/loan-applications?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Application Endpoints",
+   "summary": "Get all loans"
+  },
+  {
+   "key": "GET /api/v3/loan-applications/my",
+   "url": "/api/v3/loan-applications/my?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Application Endpoints",
+   "summary": "Get my loans"
+  },
+  {
+   "key": "GET /api/v3/loan-applications/my-active",
+   "url": "/api/v3/loan-applications/my-active",
+   "role": "customer",
+   "area": "Loan Application Endpoints",
+   "summary": "Get my active loan"
+  },
+  {
+   "key": "GET /api/v3/loan-applications/my-recent",
+   "url": "/api/v3/loan-applications/my-recent",
+   "role": "customer",
+   "area": "Loan Application Endpoints",
+   "summary": "Get my recent loan"
+  },
+  {
+   "key": "GET /api/v3/loan-applications/overdue",
+   "url": "/api/v3/loan-applications/overdue",
+   "role": "customer",
+   "area": "Loan Application Endpoints",
+   "summary": "Overdue all loans"
+  },
+  {
+   "key": "GET /api/v3/loan-approval-workflows",
+   "url": "/api/v3/loan-approval-workflows?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Loan Approval Workflow Endpoints",
+   "summary": "Get loan fees"
+  },
+  {
+   "key": "GET /api/v3/loan-fees",
+   "url": "/api/v3/loan-fees?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Fee Endpoints",
+   "summary": "Get loan fees"
+  },
+  {
+   "key": "GET /api/v3/loan-fees/list",
+   "url": "/api/v3/loan-fees/list",
+   "role": "customer",
+   "area": "Loan Fee Endpoints",
+   "summary": "Get loan fees as list"
+  },
+  {
+   "key": "GET /api/v3/loan-pre-eligibilities",
+   "url": "/api/v3/loan-pre-eligibilities?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Pre-Eligibility Endpoints",
+   "summary": "Get pre-eligibilities"
+  },
+  {
+   "key": "GET /api/v3/loan-products",
+   "url": "/api/v3/loan-products?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Product Catalogue Endpoints",
+   "summary": "List loan products"
+  },
+  {
+   "key": "GET /api/v3/loan-products/check-bvn-metadata",
+   "url": "/api/v3/loan-products/check-bvn-metadata",
+   "role": "customer",
+   "area": "Loan Product Catalogue Endpoints",
+   "summary": "Check if user has bvn in metadata"
+  },
+  {
+   "key": "GET /api/v3/loan-products/my",
+   "url": "/api/v3/loan-products/my?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Product Catalogue Endpoints",
+   "summary": "Get my loan products"
+  },
+  {
+   "key": "GET /api/v3/loan-purposes",
+   "url": "/api/v3/loan-purposes?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Purpose Endpoints",
+   "summary": "Get loan purposes"
+  },
+  {
+   "key": "GET /api/v3/loan-repayments/collections",
+   "url": "/api/v3/loan-repayments/collections?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Loan Repayment Endpoints",
+   "summary": "Get loan collections"
+  },
+  {
+   "key": "GET /api/v3/loan-repayments/paystack-details",
+   "url": "/api/v3/loan-repayments/paystack-details",
+   "role": "customer",
+   "area": "Loan Repayment Endpoints",
+   "summary": "Get paystack details"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/active-loans",
+   "url": "/api/v3/loan-reports/active-loans",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total active loans"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/default-loan-amount",
+   "url": "/api/v3/loan-reports/default-loan-amount",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total default loan amount"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/default-loans",
+   "url": "/api/v3/loan-reports/default-loans",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total default loans"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/due-loans-between",
+   "url": "/api/v3/loan-reports/due-loans-between?startTime=2026-10-05T09%3A31%3A09&endTime=2026-11-04T09%3A31%3A09",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total due loans between"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/loans",
+   "url": "/api/v3/loan-reports/loans",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total loans"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/overdue-loan-amount",
+   "url": "/api/v3/loan-reports/overdue-loan-amount",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total overdue loan amount"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/overdue-loans",
+   "url": "/api/v3/loan-reports/overdue-loans",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total overdue loans"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/pending-customer-decision-loans",
+   "url": "/api/v3/loan-reports/pending-customer-decision-loans",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total pending customer decision loans"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/pending-loan-amount",
+   "url": "/api/v3/loan-reports/pending-loan-amount",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total pending loan amount"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/pending-loans",
+   "url": "/api/v3/loan-reports/pending-loans",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total pending loans"
+  },
+  {
+   "key": "GET /api/v3/loan-reports/ready-to-disburse-loans",
+   "url": "/api/v3/loan-reports/ready-to-disburse-loans",
+   "role": "admin",
+   "area": "Loan Report Endpoints",
+   "summary": "Get total ready to disburse loans"
+  },
+  {
+   "key": "GET /api/v3/message-templates",
+   "url": "/api/v3/message-templates?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Message Template Endpoints",
+   "summary": "Get message templates"
+  },
+  {
+   "key": "GET /api/v3/mono/bank-accounts",
+   "url": "/api/v3/mono/bank-accounts",
+   "role": "customer",
+   "area": "Mono Endpoints",
+   "summary": "Get linked bank accounts"
+  },
+  {
+   "key": "GET /api/v3/notification-preferences",
+   "url": "/api/v3/notification-preferences",
+   "role": "customer",
+   "area": "Notification Preference Endpoints",
+   "summary": "Get notification preferences"
+  },
+  {
+   "key": "GET /api/v3/notifications",
+   "url": "/api/v3/notifications?platform=CREDIT",
+   "role": "customer",
+   "area": "Notification Endpoints",
+   "summary": "Get notifications"
+  },
+  {
+   "key": "GET /api/v3/products",
+   "url": "/api/v3/products",
+   "role": "customer",
+   "area": "Product Management Endpoints",
+   "summary": "List products"
+  },
+  {
+   "key": "GET /api/v3/referral-histories",
+   "url": "/api/v3/referral-histories?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Referral History Endpoints",
+   "summary": "Get referral histories"
+  },
+  {
+   "key": "GET /api/v3/referral-histories/admin",
+   "url": "/api/v3/referral-histories/admin?email={email}&pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Referral History Endpoints",
+   "summary": "Get referral histories on admin"
+  },
+  {
+   "key": "GET /api/v3/referral-histories/histories",
+   "url": "/api/v3/referral-histories/histories?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Referral History Endpoints",
+   "summary": "Get referral reward histories"
+  },
+  {
+   "key": "GET /api/v3/referral-rewards",
+   "url": "/api/v3/referral-rewards?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Referral Reward Endpoints",
+   "summary": "Get referral rewards"
+  },
+  {
+   "key": "GET /api/v3/user-bank-accounts",
+   "url": "/api/v3/user-bank-accounts?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Bank Account Endpoints",
+   "summary": "Get bank accounts"
+  },
+  {
+   "key": "GET /api/v3/user-bank-accounts/banks",
+   "url": "/api/v3/user-bank-accounts/banks",
+   "role": "customer",
+   "area": "Bank Account Endpoints",
+   "summary": "Get all banks"
+  },
+  {
+   "key": "GET /api/v3/user-cards",
+   "url": "/api/v3/user-cards?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Card Endpoints",
+   "summary": "Get cards"
+  },
+  {
+   "key": "GET /api/v3/users",
+   "url": "/api/v3/users",
+   "role": "customer",
+   "area": "User Endpoints",
+   "summary": "Get user profile"
+  },
+  {
+   "key": "GET /api/v3/users/attestation",
+   "url": "/api/v3/users/attestation",
+   "role": "customer",
+   "area": "User Endpoints",
+   "summary": "Get User Consents"
+  },
+  {
+   "key": "GET /api/v3/users/net-worth",
+   "url": "/api/v3/users/net-worth",
+   "role": "customer",
+   "area": "User Endpoints",
+   "summary": "Get user net-worth"
+  },
+  {
+   "key": "GET /api/v3/variants",
+   "url": "/api/v3/variants?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Variant Endpoints",
+   "summary": "Get variants"
+  },
+  {
+   "key": "GET /api/v3/wallet-histories",
+   "url": "/api/v3/wallet-histories?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Wallet History Endpoints",
+   "summary": "Get wallet histories"
+  },
+  {
+   "key": "GET /api/v3/account-controls/customers/{id}",
+   "url": "/api/v3/account-controls/customers/3083",
+   "role": "admin",
+   "area": "Account Control Endpoints",
+   "summary": "A customer's freezes"
+  },
+  {
+   "key": "GET /api/v3/account-controls/customers/{id}/closure-check",
+   "url": "/api/v3/account-controls/customers/3083/closure-check",
+   "role": "admin",
+   "area": "Account Control Endpoints",
+   "summary": "Can this account close?"
+  },
+  {
+   "key": "GET /api/v3/audit-logs/customer/{customerId}",
+   "url": "/api/v3/audit-logs/customer/3083?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "System-Wide Audit Log Endpoints",
+   "summary": "Retrieve audit logs for Customer 360"
+  },
+  {
+   "key": "GET /api/v3/document-libraries/{userId}",
+   "url": "/api/v3/document-libraries/3083?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Document Library Endpoints",
+   "summary": "Get user documents"
+  },
+  {
+   "key": "GET /api/v3/general-approval-workflows/{userId}/pending-action",
+   "url": "/api/v3/general-approval-workflows/3083/pending-action?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "General Approval Workflow Endpoints",
+   "summary": "Get general pending actions"
+  },
+  {
+   "key": "GET /api/v3/general-approval-workflows/{userId}/pending-action/created-by",
+   "url": "/api/v3/general-approval-workflows/3083/pending-action/created-by?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "General Approval Workflow Endpoints",
+   "summary": "Get general pending actions created by me"
+  },
+  {
+   "key": "GET /api/v3/investment-management/investment-requests/{id}",
+   "url": "/api/v3/investment-management/investment-requests/20",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "Get investment request"
+  },
+  {
+   "key": "GET /api/v3/investment-management/investments/{id}",
+   "url": "/api/v3/investment-management/investments/81",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "Get investment details"
+  },
+  {
+   "key": "GET /api/v3/investment-management/investments/{id}/transitions",
+   "url": "/api/v3/investment-management/investments/81/transitions",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "Get allowed transitions"
+  },
+  {
+   "key": "GET /api/v3/investment-management/system-alerts/{id}",
+   "url": "/api/v3/investment-management/system-alerts/8",
+   "role": "admin",
+   "area": "Investment Management Endpoints",
+   "summary": "Get system alert"
+  },
+  {
+   "key": "GET /api/v3/investment-products/{slug}/retirement-impact",
+   "url": "/api/v3/investment-products/rwin-2-0/retirement-impact",
+   "role": "admin",
+   "area": "Investment Product Catalogue Endpoints",
+   "summary": "Preview retiring a product"
+  },
+  {
+   "key": "GET /api/v3/investment-products/{slug}/state-machine",
+   "url": "/api/v3/investment-products/rwin-2-0/state-machine",
+   "role": "admin",
+   "area": "Investment Product Catalogue Endpoints",
+   "summary": "Get lifecycle table"
+  },
+  {
+   "key": "GET /api/v3/investment-products/{slug}/withdrawal-rules",
+   "url": "/api/v3/investment-products/rwin-2-0/withdrawal-rules",
+   "role": "admin",
+   "area": "Investment Product Catalogue Endpoints",
+   "summary": "Get withdrawal rules"
+  },
+  {
+   "key": "GET /api/v3/investment-tax-configs/{id}",
+   "url": "/api/v3/investment-tax-configs/1",
+   "role": "admin",
+   "area": "Investment Tax Endpoints",
+   "summary": "Get tax rate"
+  },
+  {
+   "key": "GET /api/v3/loan-applications/{userId}/pending-approvals",
+   "url": "/api/v3/loan-applications/{me}/pending-approvals?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Application Endpoints",
+   "summary": "Get all loans pending approval"
+  },
+  {
+   "key": "GET /api/v3/loan-applications/{userId}/user",
+   "url": "/api/v3/loan-applications/{me}/user?pageNo=1&pageSize=10",
+   "role": "customer",
+   "area": "Loan Application Endpoints",
+   "summary": "Get user loans"
+  },
+  {
+   "key": "GET /api/v3/products/{productKey}/config/history",
+   "url": "/api/v3/products/RWIN/config/history",
+   "role": "admin",
+   "area": "Product Management Endpoints",
+   "summary": "Get configuration change history"
+  },
+  {
+   "key": "GET /api/v3/products/{productKey}/terms",
+   "url": "/api/v3/products/RWIN/terms",
+   "role": "admin",
+   "area": "Product Management Endpoints",
+   "summary": "Get resolved operating terms"
+  },
+  {
+   "key": "GET /api/v3/wallet-histories/{userId}",
+   "url": "/api/v3/wallet-histories/3083?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "Wallet History Endpoints",
+   "summary": "Get user wallet histories"
+  },
+  {
+   "key": "GET /api/v3/audit-logs/target/{targetType}/{targetId}",
+   "url": "/api/v3/audit-logs/target/AUDIT_LOG/3062?pageNo=1&pageSize=10",
+   "role": "admin",
+   "area": "System-Wide Audit Log Endpoints",
+   "summary": "Retrieve audit logs for a specific entity target"
+  },
+  {
+   "key": "GET /api/v3/document-libraries/{userId}/loan-product/{loanProductId}",
+   "url": "/api/v3/document-libraries/3083/loan-product/26",
+   "role": "admin",
+   "area": "Document Library Endpoints",
+   "summary": "Get user documents for loan product"
+  }
+ ],
+ "calibratedAt": "2026-11-04T09:33:34.821Z"
+}

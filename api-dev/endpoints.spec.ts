@@ -31,6 +31,8 @@ type ApiRecord = {
   role?: 'customer' | 'admin'; status?: number; ms?: number; checks: Checks; problems: string[]; reason?: string; at: string;
   /** Per failed check: the request and a redacted excerpt of the answer, shown behind "View" on the results page. */
   evidence?: Record<string, string>;
+  /** The address actually called (path + query, IDs filled in); the uptime watch replays it (scripts/monitor-baseline.js). */
+  url?: string;
 };
 
 /** Error fields the API fills with its own text; record fields are always blanked. */
@@ -312,7 +314,7 @@ test.describe('API › read-only endpoints (dev)', () => {
         problems.push(...schemaProblems.map((p) => `format: ${p}`));
       }
 
-      record({ ...meta, outcome: 'checked', role, status: res.status, ms: res.ms, checks, problems, ...(Object.keys(evidence).length ? { evidence } : {}) });
+      record({ ...meta, outcome: 'checked', role, status: res.status, ms: res.ms, checks, problems, url: built.url.slice(base().length), ...(Object.keys(evidence).length ? { evidence } : {}) });
       // Refusals with an unexpected status ('warn') are reported on the results page but don't fail the check.
       expect.soft(checks.noAuth ?? 'ok', 'refused without signing in').not.toBe('fail');
       expect.soft(checks.customerOnAdmin ?? 'ok', 'staff-only area refuses a customer').not.toBe('fail');

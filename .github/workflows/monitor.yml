@@ -1,0 +1,69 @@
+name: Uptime watch (dev)
+
+# Every 15 minutes, Monday–Friday, 06:00–19:00 Lagos time (cron is UTC; Lagos is UTC+1).
+# Checks the endpoints that passed the last full API run (monitor/baseline.json) and emails when
+# something goes down (2 failed checks in a row) or comes back. Read-only; see scripts/monitor.js.
+on:
+  schedule:
+    - cron: '*/15 5-17 * * 1-5'
+    - cron: '0 18 * * 1-5'
+  workflow_dispatch:
+
+concurrency:
+  group: uptime-watch
+  cancel-in-progress: false
+
+permissions:
+  contents: write # saves state and the status page to the monitor-state branch
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL }}
+      MONITOR_ADMIN_URL: ${{ vars.DEV_ADMIN_URL || vars.ADMIN_BASE_URL }}
+      MONITOR_ADMIN_EMAIL: ${{ secrets.MONITOR_ADMIN_EMAIL }}
+      MONITOR_ADMIN_PASSWORD: ${{ secrets.MONITOR_ADMIN_PASSWORD }}
+      MONITOR_CUSTOMER_EMAIL: ${{ secrets.MONITOR_CUSTOMER_EMAIL }}
+      MONITOR_CUSTOMER_PASSWORD: ${{ secrets.MONITOR_CUSTOMER_PASSWORD }}
+      MONITOR_STATUS_URL: ${{ github.server_url }}/${{ github.repository }}/blob/monitor-state/status.md
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+
+      - name: Load the previous check's state
+        run: |
+          if git ls-remote --exit-code --heads origin monitor-state >/dev/null; then
+            git fetch --depth=1 origin monitor-state
+            git worktree add -B monitor-state state FETCH_HEAD
+          else
+            git worktree add --orphan -b monitor-state state
+          fi
+
+      - name: Check
+        id: check
+        run: node scripts/monitor.js --state state --out out
+
+      - name: Save state and status page
+        if: always()
+        working-directory: state
+        run: |
+          git add -A
+          git -c user.name="uptime-watch" -c user.email="uptime-watch@users.noreply.github.com" commit -q -m "Check $(TZ=Africa/Lagos date '+%d %b %H:%M')" || exit 0
+          git push -q origin monitor-state
+
+      - name: Email the change
+        if: steps.check.outputs.alert == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          secure: ${{ secrets.SMTP_PORT == '465' }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          from: Rosabon uptime watch <${{ secrets.SMTP_FROM || secrets.SMTP_USERNAME }}>
+          to: ${{ secrets.ALERT_EMAIL_TO }}
+          subject: ${{ steps.check.outputs.subject }}
+          html_body: file://out/alert.html

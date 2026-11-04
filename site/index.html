@@ -669,7 +669,7 @@ Expected pattern: not /cannot|required|invalid|error|failed/i</pre>
     
     <p class="muted small">Rosabon Main Service 0.0.1 · 374 endpoints · dev environment</p>
     <h2 class="panel-title">API Test Results</h2>
-    <p class="muted">Automated check run on 3 November 2026 at 18:09 (WAT) · took about 2 minutes</p>
+    <p class="muted">Automated check run on 4 November 2026 at 10:30 (WAT) · took about 2 minutes</p>
 
     <div class="search" role="search">
       <label for="q-api">Search the API results</label>
@@ -765,13 +765,13 @@ Expected pattern: not /cannot|required|invalid|error|failed/i</pre>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <pre class="snippet">Request: GET /api/v3/notifications/inbox (signed in as the customer)
-Answer: 500 in 307 ms
+Answer: 500 in 203 ms
 (no JSON body)
 
 ────────
 
 Request: GET /api/v3/users/pep-declaration (signed in as the customer)
-Answer: 404 in 209 ms
+Answer: 404 in 187 ms
 {
  &quot;status&quot;: 404,
  &quot;message&quot;: &quot;PEP declaration not found for this user&quot;,
@@ -781,7 +781,7 @@ Answer: 404 in 209 ms
 ────────
 
 Request: GET /api/v3/users/residential-address (signed in as the customer)
-Answer: 404 in 898 ms
+Answer: 404 in 560 ms
 {
  &quot;status&quot;: 404,
  &quot;message&quot;: &quot;Residential address not found for this user&quot;,
@@ -791,7 +791,7 @@ Answer: 404 in 898 ms
 ────────
 
 Request: GET /api/v3/investment-products/{slug}/rate (signed in as the customer)
-Answer: 400 in 213 ms
+Answer: 400 in 194 ms
 {
  &quot;status&quot;: 400,
  &quot;message&quot;: &quot;Either tenorDays or tenorMonths is required&quot;,
@@ -801,7 +801,7 @@ Answer: 400 in 213 ms
 ────────
 
 Request: GET /api/v3/loan-products/{productId}/verify-loan-product-with-corridor (signed in as the customer)
-Answer: 400 in 249 ms
+Answer: 400 in 199 ms
 {
  &quot;status&quot;: 400,
  &quot;message&quot;: &quot;You are not eligible to take this loan&quot;,
@@ -826,7 +826,7 @@ Answer: 400 in 249 ms
           <pre class="snippet">$: expected object, got array
 
 Request: GET /api/v3/country (signed in as the customer)
-Answer: 200 in 197 ms
+Answer: 200 in 187 ms
 [
  {
   &quot;id&quot;: &quot;&lt;number&gt;&quot;,
@@ -841,7 +841,7 @@ $.content[1].proposedAt: expected text, got array
 $.content[2].proposedAt: expected text, got array
 
 Request: GET /api/v3/investment-management/approval-queue (signed in as staff)
-Answer: 200 in 289 ms
+Answer: 200 in 237 ms
 {
  &quot;totalPages&quot;: &quot;&lt;number&gt;&quot;,
  &quot;size&quot;: &quot;&lt;number&gt;&quot;,
@@ -880,7 +880,7 @@ Answer: 200 in 289 ms
 $.lastMaturityDate: expected text, got array
 
 Request: GET /api/v3/investment-products/{slug}/retirement-impact (signed in as staff)
-Answer: 200 in 223 ms
+Answer: 200 in 207 ms
 {
  &quot;slug&quot;: &quot;&lt;text&gt;&quot;,
  &quot;name&quot;: &quot;&lt;text&gt;&quot;,
@@ -905,7 +905,7 @@ $.minInitial: expected object, got number
 $.frequencies: expected object, got array
 
 Request: GET /api/v3/products/{productKey}/config (signed in as the customer)
-Answer: 200 in 755 ms
+Answer: 200 in 566 ms
 {
  &quot;cycleDays&quot;: &quot;&lt;number&gt;&quot;,
  &quot;maxPerPlan&quot;: &quot;&lt;number&gt;&quot;,
@@ -924,7 +924,7 @@ Answer: 200 in 755 ms
 $: expected object, got array
 
 Request: GET /api/v3/state/{countryId} (signed in as the customer)
-Answer: 200 in 308 ms
+Answer: 200 in 224 ms
 [
  {
   &quot;id&quot;: &quot;&lt;number&gt;&quot;,

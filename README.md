@@ -114,6 +114,36 @@ docs/            test-hook contract, selector contract, traceability
 
 [docs/TRACEABILITY.md](docs/TRACEABILITY.md) maps each source document section to its spec files, risk level and test count.
 
+## Uptime watch (email alerts when something stops working)
+
+[.github/workflows/monitor.yml](.github/workflows/monitor.yml) runs [scripts/monitor.js](scripts/monitor.js) every 15 minutes, Monday–Friday, 06:00–19:00 Lagos time. It checks:
+
+- the staff and customer sign-ins;
+- the admin website;
+- every read-only endpoint that passed the last full API run ([monitor/baseline.json](monitor/baseline.json)).
+
+After 2 failed checks in a row, it emails what went down. It emails again when it comes back. The current state and history are on the `monitor-state` branch (`status.md`). The watch only makes GET requests, and only with its own accounts, so it can't lock out the test customers.
+
+**Repository settings** (Settings → Secrets and variables → Actions):
+
+| Kind | Name | What |
+|---|---|---|
+| variable | `API_BASE_URL`, `DEV_ADMIN_URL` | the dev API and admin website |
+| secret | `MONITOR_ADMIN_EMAIL`, `MONITOR_ADMIN_PASSWORD` | read-only admin user |
+| secret | `MONITOR_CUSTOMER_EMAIL`, `MONITOR_CUSTOMER_PASSWORD` | dedicated customer account (customer endpoints are skipped until set) |
+| secret | `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` | the mailbox that sends alerts (e.g. smtp.office365.com, 587) |
+| secret | `ALERT_EMAIL_TO` | who receives them, comma-separated; optional `SMTP_FROM` |
+
+**Refreshing the watch list** after a full API run, so that newly fixed endpoints are watched and newly broken ones stop alerting:
+
+```bash
+npm run test:api:dev
+npm run monitor:baseline   # rebuild from the results, then drop anything the monitor accounts may not read
+git add monitor/baseline.json && git commit -m "Uptime watch: refresh list"
+```
+
+`npm run monitor` runs one check locally, with its state in `reports/monitor-state/`.
+
 ## Publishing the results page (Netlify or Vercel)
 
 `npm run report:summary` builds two copies of the plain-English results page (Admin portal | Mobile app tabs):
