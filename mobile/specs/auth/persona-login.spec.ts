@@ -18,19 +18,36 @@ describe('Auth › Persona sign-in (static dev accounts)', () => {
     await resetApp();
   });
 
-  // Stops at the passcode screen — never submits a code, so it can't use up sign-in attempts.
-  it(title('a local-format phone number (080…) is accepted at sign-in', Tag.high, Tag.spec('QAStrategy§14')), async function () {
-    const p = PERSONAS.find((x) => hasPersona(x, 'phone'));
-    if (!p) this.skip();
-    const local = process.env[`CUSTOMER_${p}_PHONE`]!.replace(/^\+?234/, '0');
-    const welcome = new WelcomeScreen();
-    const login = new LoginScreen();
-    await driver.waitUntil(async () => { await acceptSystemPermission(); return welcome.isShown(); }, { timeout: 45_000 });
-    await welcome.tapLogin();
-    await login.enterIdentifier(local);
-    await login.continue();
-    // Dev build 2026-10-29: Continue silently does nothing for 080… (only +234… works).
-    await expect(await byId('auth.login.pin.screen').waitForDisplayed({ timeout: 15_000 }).then(() => true, () => false)).toBe(true);
+  // Both ways of writing a Nigerian number should reach the passcode screen. These stop there and never
+  // submit a code, so they can't use up sign-in attempts — which is why they only need CUSTOMER_Tn_PHONE.
+  // The app takes about 20 s to move on (4 November build), so each gets 45 s; the speed is its own check.
+  const phoneOf = () => PERSONAS.map((x) => process.env[`CUSTOMER_${x}_PHONE`]).find(Boolean);
+  const secondsToPasscode: Record<string, number> = {};
+  const formats: [string, string, (n: string) => string][] = [
+    ['local', 'a local-format phone number (080…) is accepted at sign-in', (n) => n.replace(/^\+?234/, '0')],
+    ['intl', 'an international-format phone number (+234…) is accepted at sign-in', (n) => n.replace(/^0/, '+234').replace(/^234/, '+234')],
+  ];
+  for (const [key, name, write] of formats) {
+    it(title(name, Tag.high, Tag.spec('QAStrategy§14')), async function () {
+      const phone = phoneOf();
+      if (!phone) this.skip();
+      const welcome = new WelcomeScreen();
+      const login = new LoginScreen();
+      await driver.waitUntil(async () => { await acceptSystemPermission(); return welcome.isShown(); }, { timeout: 45_000 });
+      await welcome.tapLogin();
+      await login.enterIdentifier(write(phone!));
+      const started = Date.now();
+      await login.continue();
+      const reached = await byId('auth.login.pin.screen').waitForDisplayed({ timeout: 45_000 }).then(() => true, () => false);
+      if (reached) secondsToPasscode[key] = (Date.now() - started) / 1000;
+      await expect(reached ? 'passcode screen' : 'stayed on the sign-in screen for 45 s').toBe('passcode screen');
+    });
+  }
+
+  it(title('phone sign-in moves on to the passcode screen within 10 seconds', Tag.med, Tag.spec('QAStrategy§14')), async function () {
+    const s = secondsToPasscode.local ?? secondsToPasscode.intl;
+    if (s === undefined) this.skip(); // neither format got through — reported above
+    await expect(`${Math.round(s)} s`).toBe(s <= 10 ? `${Math.round(s)} s` : 'within 10 s');
   });
 
   for (const p of PERSONAS) {

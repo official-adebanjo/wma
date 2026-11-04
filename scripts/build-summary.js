@@ -204,8 +204,26 @@ const MOBILE_FINDINGS = [
     severity: 'Medium',
     owner: 'Engineering (mobile app)',
     impact: 'Customers who type their number the usual way (080…) are stuck on the sign-in screen with no explanation.',
-    saw: 'Entering a mobile number in the usual 080… form and tapping Continue does nothing — no next screen and no error. Only the +234 form of the same number works.',
+    saw: 'Entering a mobile number in the usual 080… form and tapping Continue did not reach the passcode screen within 45 seconds.',
     expected: 'The app should accept the usual Nigerian format, or clearly say which format it needs.',
+  },
+  {
+    match: /international-format phone number/,
+    title: 'Signing in with a +234 phone number does not work',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers who type their number with the country code (+234…) cannot sign in with it.',
+    saw: 'On the 4 November build, entering the Tier 2 test account’s number as +234… and tapping Continue never reached the passcode screen (watched for 90 seconds, twice). Once, by hand, the app said “Please enter a valid email or phone number”. The same number written 080… works.',
+    expected: 'Both 080… and +234… should be accepted, as they are the same number.',
+  },
+  {
+    match: /moves on to the passcode screen within 10 seconds/,
+    title: 'Phone sign-in takes 20 seconds or more to respond',
+    severity: 'Low',
+    owner: 'Engineering (mobile app and back end)',
+    impact: 'After tapping Continue nothing visibly happens for 20 seconds or more, so customers may think the app is stuck and tap again or give up. Signing in with an email moves on in about 1 second.',
+    saw: 'With a number written 080…, the passcode screen appeared after 19, 20 and 32 seconds, and once not within 45 seconds (4 November build). Until 4 November the automated check waited only 15 seconds, which is why it reported 080… as not working.',
+    expected: 'The next screen within a few seconds, or a visible “please wait” while the number is checked.',
   },
   {
     match: /Tier 3 customer has no identity steps left/,
@@ -430,7 +448,7 @@ const MOBILE_CHANGES = {
     ['Fixed: Nano and Payday crash', 'All four short-term loans (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) now open their amount screen. Checked by the automated run and by hand. No crashes were seen anywhere else in the app during the full run.'],
     ['Fixed: loan offer interest', 'The Public Sector offer (#194) shows ₦60,000 interest and ₦360,000 to repay on ₦300,000 over 9 months, matching the reducing-balance schedule. The #191 offer had shown ₦1,086,004.29 interest. The offer screen also now shows the tenor in months and a repayment date.'],
     ['Still seen: VAT taken from the payout', '#191 (₦300,000) was paid out as ₦277,500, and #193 (₦250,000) as ₦231,250: 7.5% VAT is still deducted at payout although no fee is charged. See “Problems found”.'],
-    ['Still not fixed', 'Phone sign-in with a number written the usual way (080…) still does nothing. Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. SmileID still can’t start (its settings file is missing). RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.'],
+    ['Still not fixed', 'Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. SmileID still can’t start (its settings file is missing). RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.'],
   ],
 }
 
