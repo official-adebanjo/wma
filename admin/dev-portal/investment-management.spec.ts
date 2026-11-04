@@ -49,7 +49,8 @@ test.describe('Dev portal › Investment Management', () => {
   });
 
   test('plan detail: summary sections, audit trail and admin actions are shown @smoke', async ({ page }) => {
-    await openFirstInvestment(page);
+    // Withdraw/top-up only apply to a live plan; the newest plan in the list may be cancelled or closed.
+    await openFirstInvestment(page, 'Active');
     // RTN is a one-off lump sum: no contribution plan and no top-up. RWIN and REAP have both.
     const lumpSum = await page.getByText(/\(RTN\)/).first().isVisible();
     for (const h of ['Summary', 'Customer', ...(lumpSum ? [] : ['Contribution plan']), 'Exit rules', 'What can happen next', 'Admin actions']) {
