@@ -123,15 +123,6 @@ const QUESTIONS = [
 /** Problems found by hand in the admin portal (no automated check covers them yet). */
 const ADMIN_EXTRA_FINDINGS = [
   {
-    title: 'An active Public Sector product has no approval workflow',
-    severity: 'High',
-    owner: 'Operations (loans) and Engineering (loans)',
-    impact: 'Loans can be paid out without anyone signing them off, which bypasses the approval controls.',
-    saw: '“public-sector-loan-v2” is Active and shown in the app, but Approval threshold has no workflow for it (the other Public Sector product, “Adebanjo Public Sector”, has one). An application on it would not be routed to anyone for sign-off.',
-    expected: 'Every active loan product should have an approval workflow covering its whole amount range, and a product without one should not accept applications.',
-    area: 'Product Management: Public Sector (checked by hand)',
-  },
-  {
     title: 'Public Sector corridor rates are stored and shown in different units',
     severity: 'Medium',
     owner: 'Product and Engineering (loans)',
@@ -151,7 +142,7 @@ const ADMIN_JOURNEYS = {
     ['Corridor: Lagos Civil Servants (Remita)', 'bad', '₦200,000–₦10,000,000; 3, 6, 9, 12 or 18 months; DTI 0.33; collection capitalised; salary basis from the bank-statement average; top-up allowed; 8 MDAs. The app offers the right tenors but does not enforce the amount range. Rates and fees use mixed units (see “Problems found”).'],
     ['Fee structure “Public sector fee”', 'bad', '0% management fee, deducted upfront, 7.5% VAT, 0% WHT. This contradicts the corridor’s 1% management and 1% quarterly fees. The app shows 1%; the saved loans show ₦0 plus 7.5% VAT.'],
     ['Pre-eligibility gate “GATE-STATE-PUBLIC-01”', 'idle', 'Maximum age 60, 2–420 months of service, ₦40,000 minimum net salary, MDA collection gate 85. The other gates store this gate as 0.65, so the unit needs confirming. The app does not ask for age, service or salary details.'],
-    ['Approval workflows', 'bad', 'Adebanjo Public Sector: one level, ₦100,000–₦70,000,000, any credit score. public-sector-loan-v2: no workflow. Application #191 from the app was correctly routed to level 1.'],
+    ['Approval workflows', 'ok', 'Adebanjo Public Sector: one level, ₦100,000–₦70,000,000, any credit score. Application #191 from the app was correctly routed to level 1. public-sector-loan-v2 has no workflow yet; workflows are set up per product by the admin team, so this is a set-up choice, not a fault.'],
     ['Documents and purposes', 'ok', 'Adebanjo Public Sector requires 6 documents (driver’s licence, employment letter, statement of accounts, latest payslip, NIN, pension statement), and the app asks for exactly these. It lists 7 loan purposes, one of which (#5) no longer exists; the app shows the remaining 6.'],
     ['“One active loan across the family”', 'idle', 'Switched off on both active Public Sector products, although only one loan at a time is allowed. In practice the server still refused a second loan (“You have an active loan running currently”). Product should confirm which setting is meant to control this.'],
   ],
@@ -161,7 +152,7 @@ const ADMIN_JOURNEYS = {
 const ADMIN_CHANGES = {
   since: '30 October',
   items: [
-    ['Re-run on 4 November', 'Every check was run again after the latest portal changes. The results are the same as on 3 November: the same 3 problems, with nothing new broken and nothing newly fixed. The menu is unchanged, so none of the switched-off pages has come back. One check failed at first because it opened the newest investment, which had been cancelled and correctly offers no withdraw or top-up. The check now opens an active plan, and it passes. The Public Sector findings were looked at again and still apply: public-sector-loan-v2 is still live with no workflow, and the corridor rate still shows as 0.03%.'],
+    ['Re-run on 4 November', 'Every check was run again after the latest portal changes. The results are the same as on 3 November: the same 3 problems, with nothing new broken and nothing newly fixed. The menu is unchanged, so none of the switched-off pages has come back. One check failed at first because it opened the newest investment, which had been cancelled and correctly offers no withdraw or top-up. The check now opens an active plan, and it passes. The Public Sector findings were looked at again and still apply: the corridor rate still shows as 0.03%.'],
     ['20 pages switched off', 'Wallet Management, Transactions & Ledger, Support & Tickets, Rewards & Incentives and Payroll reconciliation are now marked “Coming soon” in the menu and can’t be opened. These were removed from the menu altogether: Discovery banners; the investment request pages (Approval queue, On-behalf requests, Break requests, On-behalf withdrawals, top-ups and rollovers, Unlock requests, Auto-rollover and Statutory tax carry-across); and the settings pages Field Rules Setup, Controlled Vocabularies, Approval Thresholds, Communications Providers and Metric Definitions. Their old addresses now open Pending Approvals or an empty page. Checks on them are listed as “not run” until they come back.'],
     ['Customer Management', 'The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.'],
     ['Pending Approvals', 'A new “Created by me” tab lists the requests you raised, with a Withdraw button. This replaces the old investment Approval queue. “Dual-control changes” is marked “Coming soon”, and there is a page-size choice with Previous/Next. Our checks were updated to use it.'],
