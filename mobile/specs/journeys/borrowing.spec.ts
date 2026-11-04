@@ -91,8 +91,9 @@ describe('Journeys › Borrowing', () => {
       await openTab('borrow');
       if ((await borrowState()) !== 'offer') this.skip(); // only while an approved offer awaits acceptance
       const amount = await readAmount('Pre-Approved Amount');
-      const days = Number((await readValue('Tenor')).match(/\d+/)![0]);
-      const months = Math.max(1, Math.round(days / 30));
+      const tenor = await readValue('Tenor'); // "180 days" on older builds, "9 months" since 4 November
+      const n = Number(tenor.match(/\d+/)![0]);
+      const months = /month/i.test(tenor) ? n : Math.max(1, Math.round(n / 30));
       const ratePct = new Decimal((await driver.$('//android.widget.TextView[starts-with(@text,"Interest Fee")]').getText()).match(/([\d.]+)%/)![1]);
       const repay = await readAmount('Repayment Amount');
       const totals = (['A', 'B'] as const).map((m) => loanSchedule(amount, ratePct, months, m).reduce((a, r) => a.plus(r.totalDue), new Decimal(0)));

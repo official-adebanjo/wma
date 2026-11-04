@@ -105,11 +105,14 @@ export abstract class BaseScreen {
   }
 
   async scrollTo(id: string, maxSwipes = 8): Promise<void> {
-    for (let i = 0; i < maxSwipes; i++) {
-      if (await byId(id).isDisplayed().catch(() => false)) return;
-      await swipeUp();
+    // Down the page first, then back up: an earlier step may have left the page scrolled past it.
+    for (const swipe of [swipeUp, swipeDown]) {
+      for (let i = 0; i < maxSwipes; i++) {
+        if (await byId(id).isDisplayed().catch(() => false)) return;
+        await swipe();
+      }
     }
-    throw new Error(`Element ${id} not found after ${maxSwipes} swipes`);
+    throw new Error(`Element ${id} not found after ${maxSwipes} swipes each way`);
   }
 
   async goBack(): Promise<void> {
@@ -131,6 +134,19 @@ export async function swipeUp(): Promise<void> {
     .down()
     .pause(100)
     .move({ duration: 400, x: Math.round(width / 2), y: Math.round(height * 0.3) })
+    .up()
+    .perform();
+}
+
+/** Scrolls back towards the top of the page. */
+export async function swipeDown(): Promise<void> {
+  const { width, height } = await driver.getWindowSize();
+  await driver
+    .action('pointer', { parameters: { pointerType: 'touch' } })
+    .move({ x: Math.round(width / 2), y: Math.round(height * 0.3) })
+    .down()
+    .pause(100)
+    .move({ duration: 400, x: Math.round(width / 2), y: Math.round(height * 0.75) })
     .up()
     .perform();
 }

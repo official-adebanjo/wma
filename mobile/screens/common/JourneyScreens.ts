@@ -17,7 +17,8 @@ import { BaseScreen, allById, byId, driver, swipeUp } from '../BaseScreen';
  * of the text; the last match wins (forms repeat a label above the input and again in the summary).
  */
 export function valueAfterLabel(label: string) {
-  return driver.$(`(//android.widget.TextView[starts-with(@text,"${label}")])[last()]/following-sibling::android.widget.TextView[1]`);
+  // The next text after the label: a sibling on older builds, nested one level deeper since the 4 November build.
+  return driver.$(`(//android.widget.TextView[starts-with(@text,"${label}")])[last()]/following::android.widget.TextView[normalize-space(@text)!=""][1]`);
 }
 
 export async function readValue(label: string): Promise<string> {

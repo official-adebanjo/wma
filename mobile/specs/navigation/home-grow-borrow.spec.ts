@@ -93,7 +93,6 @@ describe('Navigation › Home, Grow and Borrow tabs (Tier 3 persona)', () => {
   describe('Borrow', () => {
     before(async function () {
       await openTab('borrow');
-      await borrow.waitForShown();
       // While the persona holds a loan (one at a time), Borrow shows that loan instead of the products.
       if ((await borrowState()) !== 'products') this.skip();
     });
@@ -134,7 +133,7 @@ describe('Navigation › Home, Grow and Borrow tabs (Tier 3 persona)', () => {
     await openTab('grow');
     await grow.waitForShown();
     await openTab('borrow');
-    await borrow.waitForShown();
+    await borrowState(); // the products, or the customer's loan / offer when one is in progress
     await openTab('home');
     await home.waitForShown();
   });

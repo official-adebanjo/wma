@@ -321,15 +321,6 @@ const MOBILE_FINDINGS = [
 /** Problems seen during the mobile run that no automated check covers yet (from the app’s own error log). */
 const MOBILE_EXTRA_FINDINGS = [
   {
-    title: 'The loan offer screen shows interest more than three times the amount borrowed',
-    severity: 'High',
-    owner: 'Engineering (mobile app and loans)',
-    impact: 'A customer is asked to accept an offer showing a repayment over four times the loan. They may turn down a fair offer, or accept terms they think they have agreed to that the system does not hold.',
-    saw: 'Public Sector application #191 (₦300,000, 6 months, 4% a month on a reducing balance), after approval on 4 November: the “Offer ready” screen showed “Interest Fee (4%) ₦1,086,004.29” and “Repayment Amount ₦1,386,004.29”. The same loan is shown elsewhere with four different totals: ₦345,000 on the application review, ₦342,000 in its repayment schedule, ₦312,000 on the Loans card, and ₦1,386,004.29 on the offer screen.',
-    expected: 'The offer should show the same interest and total repayment as the approved schedule (₦42,000 interest, ₦342,000 in total for this loan), and every screen should agree.',
-    area: 'Borrow: loan offer (checked by hand)',
-  },
-  {
     title: 'Identity verification (SmileID) fails to start in this app build',
     severity: 'High',
     owner: 'Engineering (mobile app build)',
@@ -408,9 +399,11 @@ const MOBILE_EXTRA_FINDINGS = [
 
 /** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
 const MOBILE_JOURNEYS = {
-  when: '2–4 November, 30 October and 3 November builds',
+  when: '2–4 November, 30 October, 3 November and 4 November builds',
   intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
+    ['4 Nov (4 November build): check a Public Sector loan offer (#194)', 'ok', 'Application #194 (₦300,000, 9 months, 4% a month on a reducing balance) was approved and waiting for the customer. The offer screen showed ₦60,000 interest and ₦360,000 to repay, which matches the reducing-balance schedule. The ₦1,086,004.29 interest shown on the #191 offer is no longer seen. The offer was left for the team to accept or decline.'],
+    ['4 Nov (4 November build): apply for a Nano or Payday loan', 'ok', 'Fixed. All four short-term loans on the Borrow screen (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) open their amount screen, with the limits set in the admin portal. Nano: ₦5,000 for 30 days showed 10% interest (₦500) and ₦5,500 to repay. Stopped before “Submit application”, so nothing was applied for.'],
     ['4 Nov: accept the approved Public Sector offer (#191)', 'bad', 'After admin approved #191, the Borrow tab showed “Offer ready” with Accept and Decline buttons. Accepting worked: the app showed “Your disbursement is in progress”, and in the admin portal #191 changed to “Accepted by customer” with a Disburse button. That matches the rule that the customer must accept before admin can pay out. Problem: the offer screen showed interest of ₦1,086,004.29 and a repayment of ₦1,386,004.29 on ₦300,000 (the schedule totals ₦342,000), and the Loans card already shows ₦312,000 owed although nothing has been paid out. Payout was left to the admin team. See “Problems found”.'],
     ['3 Nov: apply for a Public Sector loan (Adebanjo Public Sector, ₦300,000, 6 months)', 'bad', 'Submitted as application #191, which is waiting for approval in the admin portal. What matched the admin set-up: tenors of 3, 6, 9, 12 and 18 months; the reducing-balance interest model at 4% a month (schedule ₦62,000 down to ₦52,000); the 6 required documents; and the approval workflow (level 1). Problems: no employer, IPPIS or staff number, retirement date or affordability step; ₦100,000 and ₦11,000,000 accepted; a 1% fee shown but ₦0 fee and 7.5% VAT saved; and “Total Repayable” (₦345,000) doesn’t match the schedule (₦342,000). The repayment breakdown took about 10 seconds to open. The first try was refused with “You have an active loan running currently” while the customer’s previous loan was being closed; a minute later it went through. See “Problems found”.'],
     ['3 Nov: check the Borrow screen lists the right products', 'ok', 'Shows the active products from the admin portal, including both active Public Sector products (Adebanjo Public Sector and public-sector-loan-v2). The draft “Auto-public” is correctly hidden.'],
@@ -431,16 +424,15 @@ const MOBILE_JOURNEYS = {
 
 /** Shown on the Mobile tab: what this run found different from the previous one. */
 const MOBILE_CHANGES = {
-  since: '30 October',
+  since: '3 November',
   items: [
-    ['App build', 'Tested the 3 November build. It still has the same version number as the 29 and 30 October builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.'],
-    ['Still not fixed: Nano and Payday crash', 'Both still crash on the first screen with the same error (“useFocusEffect doesn’t exist”). Checked 3 times: twice by the automated run and once by hand.'],
-    ['Broken again: phone sign-in', 'Signing in with a phone number written the usual way (080…) failed again in this run. It had worked on the evening of 2 November.'],
-    ['Fixed: REAP rate on Grow', 'The “Recommended for you” card that said REAP earns “up to 20%” (while the REAP card said 30%) is gone.'],
-    ['Still not fixed', 'Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 and is asked to “Upgrade to Tier 2”. SmileID still can’t start (its settings file is missing). Uploaded documents are still marked “Verified” straight away. Times are still an hour behind. RWIN goals still offer tenors not in the rate table. The Settings screen still says v2.0.0.'],
-    ['New: Public Sector loan checked by hand', 'See “What we tried by hand” and “Problems found”. The application can be submitted, but it skips the employer and payroll steps the specification requires and accepts amounts outside the allowed range.'],
+    ['App build', 'Tested the 4 November build. It still has the same version number as the earlier builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.'],
+    ['Fixed: Nano and Payday crash', 'All four short-term loans (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) now open their amount screen. Checked by the automated run and by hand. No crashes were seen anywhere else in the app during the full run.'],
+    ['Fixed: loan offer interest', 'The Public Sector offer (#194) shows ₦60,000 interest and ₦360,000 to repay on ₦300,000 over 9 months, matching the reducing-balance schedule. The #191 offer had shown ₦1,086,004.29 interest. The offer screen also now shows the tenor in months and a repayment date.'],
+    ['Still seen: VAT taken from the payout', '#191 (₦300,000) was paid out as ₦277,500, and #193 (₦250,000) as ₦231,250: 7.5% VAT is still deducted at payout although no fee is charged. See “Problems found”.'],
+    ['Still not fixed', 'Phone sign-in with a number written the usual way (080…) still does nothing. Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. SmileID still can’t start (its settings file is missing). RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.'],
   ],
-};
+}
 
 const MOBILE_MISMATCHES = [
   ['App version', 'Settings shows “v2.0.0”, but the installed app is version 1.1.55.'],

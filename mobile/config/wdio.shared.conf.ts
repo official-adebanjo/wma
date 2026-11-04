@@ -52,10 +52,15 @@ export const sharedConfig: Options.Testrunner = {
     }],
   ],
   onPrepare: function () {
-    // Each run starts clean, but the previous run's results are kept (a single-spec re-run used to wipe a full run).
-    const previous = `${RESULTS_DIR}-previous`;
-    fs.rmSync(previous, { recursive: true, force: true });
-    if (fs.existsSync(RESULTS_DIR)) fs.renameSync(RESULTS_DIR, previous);
+    // Each run starts clean, but earlier runs' results are kept in reports/mobile-results-history/<time>,
+    // newest 10 (one "previous" copy wasn't enough: a couple of single-spec re-runs pushed out a full run).
+    const history = `${RESULTS_DIR}-history`;
+    if (fs.existsSync(RESULTS_DIR) && fs.readdirSync(RESULTS_DIR).length) {
+      fs.mkdirSync(history, { recursive: true });
+      fs.renameSync(RESULTS_DIR, path.join(history, new Date().toISOString().replace(/[:.]/g, '-')));
+      for (const old of fs.readdirSync(history).sort().reverse().slice(10)) fs.rmSync(path.join(history, old), { recursive: true, force: true });
+    }
+    fs.rmSync(RESULTS_DIR, { recursive: true, force: true });
     fs.mkdirSync(RESULTS_DIR, { recursive: true });
   },
   afterTest: async function (test, _context, { passed, error }) {
