@@ -339,6 +339,33 @@ const MOBILE_FINDINGS = [
 /** Problems seen during the mobile run that no automated check covers yet (from the app’s own error log). */
 const MOBILE_EXTRA_FINDINGS = [
   {
+    title: 'Investments cannot be paid for in the app',
+    severity: 'Critical',
+    owner: 'Engineering (mobile app and investments)',
+    impact: 'No customer can put money into RWIN, REAP or RTN from the app, so no new investment can start.',
+    saw: 'Tier 2 test account, 4 November build, with ₦9,900,707.51 in the wallet: an RWIN goal (#85), a REAP goal (#86) and an RTN note (#87) were created, then “Top up” → “Add ₦…” was tapped on each. Nothing happens: no PIN prompt, no message, and the wallet is not charged. All three stay “waiting for funding”. Calling the back end’s funding service directly answers “Your transaction PIN is required”, so the app appears never to ask for the PIN it needs.',
+    expected: 'Tapping “Add” should ask for the transaction PIN, take the amount from the wallet and start the plan (for an upfront RTN, also pay the interest to the wallet).',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'Unpaid investments are described as active and auto-debited',
+    severity: 'High',
+    owner: 'Engineering (mobile app and investments)',
+    impact: 'Customers are told their money is invested and earning when nothing has been taken, so they may not notice the plan is unpaid until it lapses.',
+    saw: 'After creating the RWIN and REAP goals the app said “Your first debit of ₦… will be automatically processed on 4 November 2026”, but the plans are saved with automatic debit switched off and nothing was taken that day. After placing the RTN note it said “Investment confirmed! Your ₦0.00 Rosabon Treasury Note (RTN) is now active and earning interest”, while the note is unpaid. The RTN confirmation also offers “Top up”, which RTN does not allow.',
+    expected: 'Until the first payment succeeds, say the plan is waiting for payment, by when, and how to pay.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'Home counts ₦300,000 in plans the customer does not have',
+    severity: 'Medium',
+    owner: 'Engineering (investments)',
+    impact: 'The total balance on Home is overstated by ₦300,000.',
+    saw: 'Tier 2 test account: Home shows a total balance of ₦10,200,707.51 (wallet ₦9,900,707.51 plus ₦300,000 in plans), but Grow shows “Active Plans (0)” and every plan on the account is unpaid, with ₦0 in it.',
+    expected: 'The total balance should only count money actually held in plans.',
+    area: 'Investing (tried by hand)',
+  },
+  {
     title: 'Identity verification (SmileID) fails to start in this app build',
     severity: 'High',
     owner: 'Engineering (mobile app build)',
@@ -420,6 +447,7 @@ const MOBILE_JOURNEYS = {
   when: '2–4 November, 30 October, 3 November and 4 November builds',
   intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
+    ['4 Nov (4 November build): invest in RWIN, REAP and RTN from the wallet (Tier 2)', 'bad', 'Created an RWIN goal (#85: ₦100,000 target, 90 days, 3 × ₦32,587.54 + ₦2,237.38 interest at 14%, maturity 2 February 2027), a REAP goal (#86: ₦50,000 target, 30 days, ₦48,796.80 + ₦1,203.21 interest at 30%, maturity 4 December 2026) and an RTN note (#87: ₦100,000, 90 days, upfront, ₦4,931.51 interest at 20%, maturity 2 February 2027). Every figure matches the product rules. None could be paid for: “Add ₦…” does nothing, and the wallet stayed at ₦9,900,707.51. Also seen: the REAP amount shown as “₦48,796.8”; the “Earn Up to 20% P.A.” REAP card is back on Grow (REAP itself shows 30%); RTN for 90 days gives 20% while its card says 25% (the rate table has two overlapping rows for 0–120 days). Payouts, withdrawals and early exits could not be tried, as no plan could be paid for. See “Problems found”.'],
     ['4 Nov (4 November build): check a Public Sector loan offer (#194)', 'ok', 'Application #194 (₦300,000, 9 months, 4% a month on a reducing balance) was approved and waiting for the customer. The offer screen showed ₦60,000 interest and ₦360,000 to repay, which matches the reducing-balance schedule. The ₦1,086,004.29 interest shown on the #191 offer is no longer seen. The offer was left for the team to accept or decline.'],
     ['4 Nov (4 November build): apply for a Nano or Payday loan', 'ok', 'Fixed. All four short-term loans on the Borrow screen (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) open their amount screen, with the limits set in the admin portal. Nano: ₦5,000 for 30 days showed 10% interest (₦500) and ₦5,500 to repay. Stopped before “Submit application”, so nothing was applied for.'],
     ['4 Nov: accept the approved Public Sector offer (#191)', 'bad', 'After admin approved #191, the Borrow tab showed “Offer ready” with Accept and Decline buttons. Accepting worked: the app showed “Your disbursement is in progress”, and in the admin portal #191 changed to “Accepted by customer” with a Disburse button. That matches the rule that the customer must accept before admin can pay out. Problem: the offer screen showed interest of ₦1,086,004.29 and a repayment of ₦1,386,004.29 on ₦300,000 (the schedule totals ₦342,000), and the Loans card already shows ₦312,000 owed although nothing has been paid out. Payout was left to the admin team. See “Problems found”.'],
@@ -446,6 +474,8 @@ const MOBILE_CHANGES = {
   items: [
     ['App build', 'Tested the 4 November build. It still has the same version number as the earlier builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.'],
     ['Fixed: Nano and Payday crash', 'All four short-term loans (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) now open their amount screen. Checked by the automated run and by hand. No crashes were seen anywhere else in the app during the full run.'],
+    ['New: investing tried by hand with the Tier 2 account', 'Plans can be created with correct figures, but none can be paid for in the app. See “Problems found”.'],
+    ['Phone sign-in re-checked', 'A number written 080… does work, but takes 20 seconds or more; the automated check used to give up after 15 seconds, which is why it was reported as not working. A number written +234… did not work.'],
     ['Fixed: loan offer interest', 'The Public Sector offer (#194) shows ₦60,000 interest and ₦360,000 to repay on ₦300,000 over 9 months, matching the reducing-balance schedule. The #191 offer had shown ₦1,086,004.29 interest. The offer screen also now shows the tenor in months and a repayment date.'],
     ['Still seen: VAT taken from the payout', '#191 (₦300,000) was paid out as ₦277,500, and #193 (₦250,000) as ₦231,250: 7.5% VAT is still deducted at payout although no fee is charged. See “Problems found”.'],
     ['Still not fixed', 'Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. SmileID still can’t start (its settings file is missing). RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.'],
