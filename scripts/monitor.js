@@ -3,6 +3,7 @@
  * website and the sign-ins, compares with the previous check, and reports what went down or came back.
  *
  *   node scripts/monitor.js --state <dir> [--out <dir>]     one check (the scheduled GitHub job)
+ *   node scripts/monitor.js --state <dir> --test-email       the same, and always write an email (checks mail settings)
  *   node scripts/monitor.js --calibrate                     drop endpoints the monitor accounts may not read
  *
  * Read-only: GET requests only, with dedicated monitor accounts (MONITOR_ADMIN_*, MONITOR_CUSTOMER_*),
@@ -204,6 +205,17 @@ async function watch() {
     fs.writeFileSync(path.join(OUT_DIR, 'alert.html'), html);
     if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `alert=true\nsubject=${subject}\n`);
     console.log('ALERT:', subject);
+  } else if (process.argv.includes('--test-email')) {
+    // Manual run with "send a test email": confirms the mail settings without waiting for an outage.
+    const failing = results.filter((r) => !r.ok);
+    const subject = `Rosabon dev uptime watch: test email (${failing.length ? `${failing.length} failing now` : 'all up'})`;
+    const html = `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px"><p>This is a test email from the uptime watch. Alerts will arrive like this when something goes down or comes back.</p><p>Check at ${esc(lagos(at))} (Lagos time): ${results.length} items checked, ${failing.length} failing${notWatched ? `, ${notWatched} not checked (no monitor customer account yet)` : ''}.</p>${failing.length ? `<ul>${failing.map((r) => `<li>${esc(r.name)}: ${esc(r.why)}</li>`).join('')}</ul>` : ''}<p style="color:#555">Status page: ${esc(run.statusUrl || 'status.md on the monitor-state branch')}.</p></div>`;
+    fs.mkdirSync(OUT_DIR, { recursive: true });
+    fs.writeFileSync(path.join(OUT_DIR, 'alert.html'), html);
+    if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `alert=true
+subject=${subject}
+`);
+    console.log('TEST EMAIL:', subject);
   }
 }
 

@@ -8,6 +8,11 @@ on:
     - cron: '*/15 5-17 * * 1-5'
     - cron: '0 18 * * 1-5'
   workflow_dispatch:
+    inputs:
+      test_email:
+        description: 'Also send a test email (to confirm the mail settings)'
+        type: boolean
+        default: false
 
 concurrency:
   group: uptime-watch
@@ -44,7 +49,7 @@ jobs:
 
       - name: Check
         id: check
-        run: node scripts/monitor.js --state state --out out
+        run: node scripts/monitor.js --state state --out out ${{ inputs.test_email && '--test-email' || '' }}
 
       - name: Save state and status page
         if: always()
