@@ -26,7 +26,8 @@ const STATE_DIR = path.resolve(arg('--state', path.join(root, 'reports/monitor-s
 const OUT_DIR = path.resolve(arg('--out', path.join(root, 'reports/monitor-out')));
 const CALIBRATE = process.argv.includes('--calibrate');
 
-const API = (process.env.API_BASE_URL || '').replace(/\/$/, '');
+// The server address only; a value ending in /api or /api/v3 is accepted too (the paths below add it).
+const API = (process.env.API_BASE_URL || '').replace(/\/+$/, '').replace(/\/api(\/v3)?$/, '');
 const ADMIN_SITE = (process.env.MONITOR_ADMIN_URL || process.env.DEV_ADMIN_URL || process.env.ADMIN_BASE_URL || '').replace(/\/$/, '');
 const TIMEOUT_MS = 15_000;
 const SLOW_MS = 5_000;
@@ -93,6 +94,9 @@ async function checkAll() {
   }
   const watched = baseline.endpoints.filter((e) => sessions[e.role]?.token);
   const notWatched = baseline.endpoints.length - watched.length;
+  const why = Object.entries(sessions).filter(([, s]) => !s.token)
+    .map(([role, s]) => (s.skipped ? `no monitor ${role} account set` : `${role === 'admin' ? 'staff' : 'customer'} sign-in failed`));
+  const notWatchedNote = notWatched ? `${notWatched} not checked (${why.join('; ')})` : '';
   const checked = await pool(watched, 6, async (e) => {
     const s = sessions[e.role];
     const email = process.env.MONITOR_CUSTOMER_EMAIL || process.env.MONITOR_ADMIN_EMAIL || '';
@@ -100,7 +104,7 @@ async function checkAll() {
     return { key: e.key, name: `${e.summary} (${e.key})`, area: e.area, role: e.role, ok: r.status >= 200 && r.status < 300, status: r.status, ms: r.ms, why: describe(r) };
   });
   results.push(...checked);
-  return { results, notWatched, sessions, baseline };
+  return { results, notWatched, notWatchedNote, sessions, baseline };
 }
 
 async function calibrate() {
@@ -130,7 +134,7 @@ function statusPage(state, run) {
   return [
     `# Dev system status`,
     ``,
-    `Last check: **${lagos(run.at)}** (Lagos time) · ${run.checked} checked · ${down.length ? `🔴 **${down.length} down**` : '🟢 all up'}${run.notWatched ? ` · ${run.notWatched} not checked (no monitor customer account yet)` : ''}`,
+    `Last check: **${lagos(run.at)}** (Lagos time) · ${run.checked} checked · ${down.length ? `🔴 **${down.length} down**` : '🟢 all up'}${run.notWatchedNote ? ` · ${run.notWatchedNote}` : ''}`,
     ``,
     `Checks run every 15 minutes, Monday to Friday, 6am–7pm. Something counts as down after ${DOWN_AFTER} failed checks in a row.`,
     ``,
@@ -162,7 +166,7 @@ function alertEmail(wentDown, cameBack, stillDown, run) {
 
 async function watch() {
   const at = new Date().toISOString();
-  const { results, notWatched, baseline } = await checkAll();
+  const { results, notWatched, notWatchedNote, baseline } = await checkAll();
   fs.mkdirSync(STATE_DIR, { recursive: true });
   const stateFile = path.join(STATE_DIR, 'state.json');
   const state = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile, 'utf8')) : { targets: {} };
@@ -190,7 +194,7 @@ async function watch() {
   for (const t of wentDown) fs.appendFileSync(incidents, JSON.stringify({ at, change: 'down', name: t.name, area: t.area, why: t.why, since: t.since }) + '\n');
   for (const t of cameBack) fs.appendFileSync(incidents, JSON.stringify({ at, change: 'up', name: t.name, area: t.area, minutes: t.minutes }) + '\n');
 
-  const run = { at, checked: results.length, notWatched, statusUrl: process.env.MONITOR_STATUS_URL };
+  const run = { at, checked: results.length, notWatched, notWatchedNote, statusUrl: process.env.MONITOR_STATUS_URL };
   state.lastRun = run;
   fs.writeFileSync(stateFile, JSON.stringify(state, null, 1) + '\n');
   fs.writeFileSync(path.join(STATE_DIR, 'status.md'), statusPage(state, run));
@@ -209,7 +213,7 @@ async function watch() {
     // Manual run with "send a test email": confirms the mail settings without waiting for an outage.
     const failing = results.filter((r) => !r.ok);
     const subject = `Rosabon dev uptime watch: test email (${failing.length ? `${failing.length} failing now` : 'all up'})`;
-    const html = `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px"><p>This is a test email from the uptime watch. Alerts will arrive like this when something goes down or comes back.</p><p>Check at ${esc(lagos(at))} (Lagos time): ${results.length} items checked, ${failing.length} failing${notWatched ? `, ${notWatched} not checked (no monitor customer account yet)` : ''}.</p>${failing.length ? `<ul>${failing.map((r) => `<li>${esc(r.name)}: ${esc(r.why)}</li>`).join('')}</ul>` : ''}<p style="color:#555">Status page: ${esc(run.statusUrl || 'status.md on the monitor-state branch')}.</p></div>`;
+    const html = `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px"><p>This is a test email from the uptime watch. Alerts will arrive like this when something goes down or comes back.</p><p>Check at ${esc(lagos(at))} (Lagos time): ${results.length} items checked, ${failing.length} failing${notWatchedNote ? `, ${notWatchedNote}` : ''}.</p>${failing.length ? `<ul>${failing.map((r) => `<li>${esc(r.name)}: ${esc(r.why)}</li>`).join('')}</ul>` : ''}<p style="color:#555">Status page: ${esc(run.statusUrl || 'status.md on the monitor-state branch')}.</p></div>`;
     fs.mkdirSync(OUT_DIR, { recursive: true });
     fs.writeFileSync(path.join(OUT_DIR, 'alert.html'), html);
     if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `alert=true
