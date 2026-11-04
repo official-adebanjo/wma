@@ -123,22 +123,13 @@ const QUESTIONS = [
 /** Problems found by hand in the admin portal (no automated check covers them yet). */
 const ADMIN_EXTRA_FINDINGS = [
   {
-    title: 'An active Public Sector product has no approval workflow, and a loan on it was paid out with no approver',
+    title: 'An active Public Sector product has no approval workflow',
     severity: 'High',
     owner: 'Operations (loans) and Engineering (loans)',
     impact: 'Loans can be paid out without anyone signing them off, which bypasses the approval controls.',
-    saw: '“public-sector-loan-v2” is Active and shown in the app, but Approval threshold has no workflow for it (the other Public Sector product, “Adebanjo Public Sector”, has one). Loan #190 on it (₦500,000, 3 November) was paid out with no workflow and no approvers recorded.',
+    saw: '“public-sector-loan-v2” is Active and shown in the app, but Approval threshold has no workflow for it (the other Public Sector product, “Adebanjo Public Sector”, has one). An application on it would not be routed to anyone for sign-off.',
     expected: 'Every active loan product should have an approval workflow covering its whole amount range, and a product without one should not accept applications.',
     area: 'Product Management: Public Sector (checked by hand)',
-  },
-  {
-    title: 'A Public Sector loan is marked “Repaid” although nothing was repaid',
-    severity: 'High',
-    owner: 'Engineering (loans) and Finance',
-    impact: 'A loan that is still owed looks settled, so it would not be collected, and the customer can borrow again straight away.',
-    saw: 'Loan #190 (₦500,000, 12 months) shows as Repaid within minutes of starting, with no repayments recorded. The customer’s wallet received the ₦500,000 payout (less ₦37,500 “Loan VAT”) after the loan was already marked Repaid. A new application from the same customer was then accepted.',
-    expected: 'A loan should only become Repaid when its repayments (or an approved write-off or force-close, with its reason shown on the loan) cover what is owed.',
-    area: 'Loan Management (checked by hand)',
   },
   {
     title: 'Public Sector corridor rates are stored and shown in different units',
@@ -170,7 +161,7 @@ const ADMIN_JOURNEYS = {
 const ADMIN_CHANGES = {
   since: '30 October',
   items: [
-    ['Re-run on 4 November', 'Every check was run again after the latest portal changes. The results are the same as on 3 November: the same 3 problems, with nothing new broken and nothing newly fixed. The menu is unchanged, so none of the switched-off pages has come back. One check failed at first because it opened the newest investment, which had been cancelled and correctly offers no withdraw or top-up. The check now opens an active plan, and it passes. The Public Sector findings were looked at again and still apply: loan #190 is still “Repaid” with no approval workflow, public-sector-loan-v2 is still live with no workflow, and the corridor rate still shows as 0.03%.'],
+    ['Re-run on 4 November', 'Every check was run again after the latest portal changes. The results are the same as on 3 November: the same 3 problems, with nothing new broken and nothing newly fixed. The menu is unchanged, so none of the switched-off pages has come back. One check failed at first because it opened the newest investment, which had been cancelled and correctly offers no withdraw or top-up. The check now opens an active plan, and it passes. The Public Sector findings were looked at again and still apply: public-sector-loan-v2 is still live with no workflow, and the corridor rate still shows as 0.03%.'],
     ['20 pages switched off', 'Wallet Management, Transactions & Ledger, Support & Tickets, Rewards & Incentives and Payroll reconciliation are now marked “Coming soon” in the menu and can’t be opened. These were removed from the menu altogether: Discovery banners; the investment request pages (Approval queue, On-behalf requests, Break requests, On-behalf withdrawals, top-ups and rollovers, Unlock requests, Auto-rollover and Statutory tax carry-across); and the settings pages Field Rules Setup, Controlled Vocabularies, Approval Thresholds, Communications Providers and Metric Definitions. Their old addresses now open Pending Approvals or an empty page. Checks on them are listed as “not run” until they come back.'],
     ['Customer Management', 'The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.'],
     ['Pending Approvals', 'A new “Created by me” tab lists the requests you raised, with a Withdraw button. This replaces the old investment Approval queue. “Dual-control changes” is marked “Coming soon”, and there is a page-size choice with Previous/Next. Our checks were updated to use it.'],
@@ -339,6 +330,15 @@ const MOBILE_FINDINGS = [
 /** Problems seen during the mobile run that no automated check covers yet (from the app’s own error log). */
 const MOBILE_EXTRA_FINDINGS = [
   {
+    title: 'The loan offer screen shows interest more than three times the amount borrowed',
+    severity: 'High',
+    owner: 'Engineering (mobile app and loans)',
+    impact: 'A customer is asked to accept an offer showing a repayment over four times the loan. They may turn down a fair offer, or accept terms they think they have agreed to that the system does not hold.',
+    saw: 'Public Sector application #191 (₦300,000, 6 months, 4% a month on a reducing balance), after approval on 4 November: the “Offer ready” screen showed “Interest Fee (4%) ₦1,086,004.29” and “Repayment Amount ₦1,386,004.29”. The same loan is shown elsewhere with four different totals: ₦345,000 on the application review, ₦342,000 in its repayment schedule, ₦312,000 on the Loans card, and ₦1,386,004.29 on the offer screen.',
+    expected: 'The offer should show the same interest and total repayment as the approved schedule (₦42,000 interest, ₦342,000 in total for this loan), and every screen should agree.',
+    area: 'Borrow: loan offer (checked by hand)',
+  },
+  {
     title: 'Identity verification (SmileID) fails to start in this app build',
     severity: 'High',
     owner: 'Engineering (mobile app build)',
@@ -381,7 +381,7 @@ const MOBILE_EXTRA_FINDINGS = [
     severity: 'Medium',
     owner: 'Engineering (loans) and Finance',
     impact: 'Customers cannot see the real cost of the loan before they accept it.',
-    saw: 'Personal loan #189 (2 November): the review screen showed “Management Fee (1%) ₦1,000” and “Total Repayable ₦126,500”, while its own schedule adds up to ₦125,500. The admin portal shows a ₦0 management fee, and no fee was charged. Instead, when ₦100,000 was paid out, ₦7,500 was taken straight back as “Loan VAT” (wallet credited ₦92,500). Same on 3 November with Public Sector loans. Application #191 (₦300,000): the review screen shows “Management Fee (1%) ₦3,000” and “Total Repayable ₦345,000”, its schedule adds up to ₦342,000, and the saved application has a ₦0 fee and 7.5% VAT. Loan #190 (₦500,000) was paid out, then ₦37,500 was taken as “Loan VAT”. VAT is not mentioned on any application or offer screen.',
+    saw: 'Personal loan #189 (2 November): the review screen showed “Management Fee (1%) ₦1,000” and “Total Repayable ₦126,500”, while its own schedule adds up to ₦125,500. The admin portal shows a ₦0 management fee, and no fee was charged. Instead, when ₦100,000 was paid out, ₦7,500 was taken straight back as “Loan VAT” (wallet credited ₦92,500). Same on 3 November with Public Sector loans. Application #191 (₦300,000): the review screen shows “Management Fee (1%) ₦3,000” and “Total Repayable ₦345,000”, its schedule adds up to ₦342,000, and the saved application has a ₦0 fee and 7.5% VAT. VAT is not mentioned on any application or offer screen.',
     expected: 'Every charge should be shown, with the correct amount, before the customer accepts. Finance should confirm whether VAT applies to the amount lent (VAT normally applies to fees).',
     area: 'Borrowing (tried by hand)',
   },
@@ -417,10 +417,11 @@ const MOBILE_EXTRA_FINDINGS = [
 
 /** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
 const MOBILE_JOURNEYS = {
-  when: '2–3 November, 30 October and 3 November builds',
+  when: '2–4 November, 30 October and 3 November builds',
   intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
-    ['3 Nov: apply for a Public Sector loan (Adebanjo Public Sector, ₦300,000, 6 months)', 'bad', 'Submitted as application #191, which is waiting for approval in the admin portal. What matched the admin set-up: tenors of 3, 6, 9, 12 and 18 months; the reducing-balance interest model at 4% a month (schedule ₦62,000 down to ₦52,000); the 6 required documents; and the approval workflow (level 1). Problems: no employer, IPPIS or staff number, retirement date or affordability step; ₦100,000 and ₦11,000,000 accepted; a 1% fee shown but ₦0 fee and 7.5% VAT saved; and “Total Repayable” (₦345,000) doesn’t match the schedule (₦342,000). The repayment breakdown took about 10 seconds to open. The first try was refused with “You have an active loan running currently” while loan #190 was being closed; a minute later it went through. See “Problems found”.'],
+    ['4 Nov: accept the approved Public Sector offer (#191)', 'bad', 'After admin approved #191, the Borrow tab showed “Offer ready” with Accept and Decline buttons. Accepting worked: the app showed “Your disbursement is in progress”, and in the admin portal #191 changed to “Accepted by customer” with a Disburse button. That matches the rule that the customer must accept before admin can pay out. Problem: the offer screen showed interest of ₦1,086,004.29 and a repayment of ₦1,386,004.29 on ₦300,000 (the schedule totals ₦342,000), and the Loans card already shows ₦312,000 owed although nothing has been paid out. Payout was left to the admin team. See “Problems found”.'],
+    ['3 Nov: apply for a Public Sector loan (Adebanjo Public Sector, ₦300,000, 6 months)', 'bad', 'Submitted as application #191, which is waiting for approval in the admin portal. What matched the admin set-up: tenors of 3, 6, 9, 12 and 18 months; the reducing-balance interest model at 4% a month (schedule ₦62,000 down to ₦52,000); the 6 required documents; and the approval workflow (level 1). Problems: no employer, IPPIS or staff number, retirement date or affordability step; ₦100,000 and ₦11,000,000 accepted; a 1% fee shown but ₦0 fee and 7.5% VAT saved; and “Total Repayable” (₦345,000) doesn’t match the schedule (₦342,000). The repayment breakdown took about 10 seconds to open. The first try was refused with “You have an active loan running currently” while the customer’s previous loan was being closed; a minute later it went through. See “Problems found”.'],
     ['3 Nov: check the Borrow screen lists the right products', 'ok', 'Shows the active products from the admin portal, including both active Public Sector products (Adebanjo Public Sector and public-sector-loan-v2). The draft “Auto-public” is correctly hidden.'],
     ['3 Nov: apply for a Nano or Payday loan', 'bad', 'Still crashes on the first screen (“useFocusEffect doesn’t exist”).'],
     ['3 Nov: Tier 3 profile and identity', 'bad', 'Still “2/3, 1 key identity step left”, and the list includes “Upgrade to Tier 2” for a Tier 3 customer. SmileID still reports its settings file missing.'],
