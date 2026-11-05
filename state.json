@@ -7,9 +7,9 @@
    "area": "Sign-in",
    "ok": true,
    "status_code": 200,
-   "ms": 375,
+   "ms": 281,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "site admin": {
    "status": "up",
@@ -18,9 +18,9 @@
    "area": "Websites",
    "ok": true,
    "status_code": 200,
-   "ms": 90,
+   "ms": 125,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/account-controls": {
    "status": "up",
@@ -29,9 +29,9 @@
    "area": "Account Control Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 76,
+   "ms": 53,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/account-controls/metrics": {
    "status": "up",
@@ -40,9 +40,9 @@
    "area": "Account Control Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 207,
+   "ms": 157,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/admin-users/me": {
    "status": "up",
@@ -51,9 +51,9 @@
    "area": "Portal Admin User Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 272,
+   "ms": 215,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/audit-logs": {
    "status": "up",
@@ -62,9 +62,9 @@
    "area": "System-Wide Audit Log Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 316,
+   "ms": 192,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/audit-logs/export": {
    "status": "up",
@@ -73,9 +73,9 @@
    "area": "System-Wide Audit Log Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 399,
+   "ms": 278,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/audit-logs/metrics": {
    "status": "up",
@@ -84,9 +84,9 @@
    "area": "System-Wide Audit Log Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 404,
+   "ms": 232,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/general-approval-workflows": {
    "status": "up",
@@ -95,9 +95,9 @@
    "area": "General Approval Workflow Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 347,
+   "ms": 237,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/approval-queue": {
    "status": "up",
@@ -106,9 +106,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 248,
+   "ms": 179,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/audit-trail": {
    "status": "up",
@@ -117,9 +117,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 181,
+   "ms": 151,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/auto-rollover-default/propagations": {
    "status": "up",
@@ -128,9 +128,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 269,
+   "ms": 58,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/investment-requests": {
    "status": "up",
@@ -139,9 +139,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 250,
+   "ms": 421,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/investments": {
    "status": "up",
@@ -150,9 +150,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 233,
+   "ms": 197,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/rollover-requests": {
    "status": "up",
@@ -161,9 +161,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 96,
+   "ms": 65,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/statutory-rate-propagations": {
    "status": "up",
@@ -172,9 +172,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 107,
+   "ms": 76,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/system-alerts": {
    "status": "up",
@@ -183,9 +183,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 326,
+   "ms": 277,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/unlock-requests": {
    "status": "up",
@@ -194,9 +194,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 120,
+   "ms": 77,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/withdrawal-requests": {
    "status": "up",
@@ -205,9 +205,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 103,
+   "ms": 93,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-products/metrics": {
    "status": "up",
@@ -216,9 +216,9 @@
    "area": "Investment Product Catalogue Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 109,
+   "ms": 104,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/accrued-interest-amount": {
    "status": "up",
@@ -227,9 +227,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 91,
+   "ms": 68,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/active-investment-amount": {
    "status": "up",
@@ -238,9 +238,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 88,
+   "ms": 84,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/active-investments": {
    "status": "up",
@@ -249,9 +249,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 93,
+   "ms": 79,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/investments": {
    "status": "up",
@@ -260,9 +260,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 97,
+   "ms": 81,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/liquidated-investments": {
    "status": "up",
@@ -271,9 +271,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 88,
+   "ms": 80,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/matured-investment-amount": {
    "status": "up",
@@ -282,9 +282,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 81,
+   "ms": 67,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/matured-investments": {
    "status": "up",
@@ -293,9 +293,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 80,
+   "ms": 79,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/pending-funding-investment-amount": {
    "status": "up",
@@ -304,9 +304,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 80,
+   "ms": 59,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/pending-funding-investments": {
    "status": "up",
@@ -315,9 +315,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 76,
+   "ms": 53,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/pending-investment-amount": {
    "status": "up",
@@ -326,9 +326,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 71,
+   "ms": 56,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/pending-investments": {
    "status": "up",
@@ -337,9 +337,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 76,
+   "ms": 54,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/rolled-over-investments": {
    "status": "up",
@@ -348,9 +348,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 76,
+   "ms": 69,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-reports/under-review-investments": {
    "status": "up",
@@ -359,9 +359,9 @@
    "area": "Investment Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 82,
+   "ms": 59,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-tax-configs": {
    "status": "up",
@@ -370,9 +370,9 @@
    "area": "Investment Tax Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 105,
+   "ms": 55,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-tax-configs/remittance": {
    "status": "up",
@@ -381,9 +381,9 @@
    "area": "Investment Tax Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 114,
+   "ms": 78,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-approval-workflows": {
    "status": "up",
@@ -392,9 +392,9 @@
    "area": "Loan Approval Workflow Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 103,
+   "ms": 58,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-repayments/collections": {
    "status": "up",
@@ -403,9 +403,9 @@
    "area": "Loan Repayment Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 171,
+   "ms": 97,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/active-loans": {
    "status": "up",
@@ -414,9 +414,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 102,
+   "ms": 61,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/default-loan-amount": {
    "status": "up",
@@ -425,9 +425,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 97,
+   "ms": 59,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/default-loans": {
    "status": "up",
@@ -436,9 +436,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 78,
+   "ms": 59,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/due-loans-between": {
    "status": "up",
@@ -447,9 +447,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 90,
+   "ms": 59,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/loans": {
    "status": "up",
@@ -458,9 +458,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 86,
+   "ms": 51,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/overdue-loan-amount": {
    "status": "up",
@@ -469,9 +469,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 82,
+   "ms": 63,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/overdue-loans": {
    "status": "up",
@@ -480,9 +480,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 78,
+   "ms": 49,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/pending-customer-decision-loans": {
    "status": "up",
@@ -491,9 +491,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 75,
+   "ms": 60,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/pending-loan-amount": {
    "status": "up",
@@ -502,9 +502,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 93,
+   "ms": 55,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/pending-loans": {
    "status": "up",
@@ -513,9 +513,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 108,
+   "ms": 65,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/loan-reports/ready-to-disburse-loans": {
    "status": "up",
@@ -524,9 +524,9 @@
    "area": "Loan Report Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 107,
+   "ms": 61,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/referral-histories/admin": {
    "status": "up",
@@ -535,9 +535,9 @@
    "area": "Referral History Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 110,
+   "ms": 108,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/account-controls/customers/{id}": {
    "status": "up",
@@ -546,9 +546,9 @@
    "area": "Account Control Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 109,
+   "ms": 118,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/account-controls/customers/{id}/closure-check": {
    "status": "up",
@@ -557,9 +557,9 @@
    "area": "Account Control Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 167,
+   "ms": 137,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/audit-logs/customer/{customerId}": {
    "status": "up",
@@ -568,9 +568,9 @@
    "area": "System-Wide Audit Log Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 80,
+   "ms": 105,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/document-libraries/{userId}": {
    "status": "up",
@@ -579,9 +579,9 @@
    "area": "Document Library Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 103,
+   "ms": 84,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/general-approval-workflows/{userId}/pending-action": {
    "status": "up",
@@ -590,9 +590,9 @@
    "area": "General Approval Workflow Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 112,
+   "ms": 83,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/general-approval-workflows/{userId}/pending-action/created-by": {
    "status": "up",
@@ -601,9 +601,9 @@
    "area": "General Approval Workflow Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 101,
+   "ms": 82,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/investment-requests/{id}": {
    "status": "up",
@@ -612,9 +612,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 136,
+   "ms": 161,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/investments/{id}": {
    "status": "up",
@@ -623,9 +623,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 132,
+   "ms": 160,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/investments/{id}/transitions": {
    "status": "up",
@@ -634,9 +634,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 113,
+   "ms": 67,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-management/system-alerts/{id}": {
    "status": "up",
@@ -645,9 +645,9 @@
    "area": "Investment Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 121,
+   "ms": 159,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-products/{slug}/retirement-impact": {
    "status": "up",
@@ -656,9 +656,9 @@
    "area": "Investment Product Catalogue Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 122,
+   "ms": 107,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-products/{slug}/state-machine": {
    "status": "up",
@@ -667,9 +667,9 @@
    "area": "Investment Product Catalogue Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 90,
+   "ms": 68,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-products/{slug}/withdrawal-rules": {
    "status": "up",
@@ -678,9 +678,9 @@
    "area": "Investment Product Catalogue Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 87,
+   "ms": 141,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/investment-tax-configs/{id}": {
    "status": "up",
@@ -689,9 +689,9 @@
    "area": "Investment Tax Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 75,
+   "ms": 58,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/products/{productKey}/config/history": {
    "status": "up",
@@ -700,9 +700,9 @@
    "area": "Product Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 115,
+   "ms": 62,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/products/{productKey}/terms": {
    "status": "up",
@@ -711,9 +711,9 @@
    "area": "Product Management Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 119,
+   "ms": 64,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/wallet-histories/{userId}": {
    "status": "up",
@@ -722,9 +722,9 @@
    "area": "Wallet History Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 137,
+   "ms": 87,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/audit-logs/target/{targetType}/{targetId}": {
    "status": "up",
@@ -733,9 +733,9 @@
    "area": "System-Wide Audit Log Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 118,
+   "ms": 47,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "GET /api/v3/document-libraries/{userId}/loan-product/{loanProductId}": {
    "status": "up",
@@ -744,9 +744,9 @@
    "area": "Document Library Endpoints",
    "ok": true,
    "status_code": 200,
-   "ms": 100,
+   "ms": 53,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "site admin files": {
    "status": "up",
@@ -755,9 +755,9 @@
    "area": "Websites",
    "ok": true,
    "status_code": 200,
-   "ms": 213,
+   "ms": 365,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "ui sign-in": {
    "status": "up",
@@ -765,9 +765,9 @@
    "name": "Admin portal sign-in (in the browser)",
    "area": "Admin portal (browser)",
    "ok": true,
-   "ms": 1231,
+   "ms": 1151,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "ui Home page after sign-in": {
    "status": "up",
@@ -775,9 +775,9 @@
    "name": "Home page after sign-in",
    "area": "Admin portal (browser)",
    "ok": true,
-   "ms": 2199,
+   "ms": 2139,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "ui Customers": {
    "status": "up",
@@ -787,7 +787,7 @@
    "ok": true,
    "ms": 1506,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "ui A customer’s page": {
    "status": "up",
@@ -795,9 +795,9 @@
    "name": "A customer’s page",
    "area": "Admin portal (browser)",
    "ok": true,
-   "ms": 1535,
+   "ms": 1542,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "ui Investments": {
    "status": "up",
@@ -807,7 +807,7 @@
    "ok": true,
    "ms": 1505,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "ui Loan applications": {
    "status": "up",
@@ -815,9 +815,9 @@
    "name": "Loan applications",
    "area": "Admin portal (browser)",
    "ok": true,
-   "ms": 1506,
+   "ms": 1503,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "ui Product Management": {
    "status": "up",
@@ -825,9 +825,9 @@
    "name": "Product Management",
    "area": "Admin portal (browser)",
    "ok": true,
-   "ms": 1505,
+   "ms": 1504,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   },
   "ui Pending Approvals": {
    "status": "up",
@@ -835,17 +835,16 @@
    "name": "Pending Approvals",
    "area": "Admin portal (browser)",
    "ok": true,
-   "ms": 1506,
+   "ms": 1505,
    "why": "",
-   "checkedAt": "2026-11-05T13:00:29.887Z"
+   "checkedAt": "2026-11-05T20:38:25.831Z"
   }
  },
  "lastRun": {
-  "at": "2026-11-05T13:00:29.887Z",
+  "at": "2026-11-05T20:38:25.831Z",
   "checked": 77,
   "notWatched": 42,
   "notWatchedNote": "42 not checked (no monitor customer account set)",
-  "deployedAt": "2026-11-05T13:00:29.887Z",
   "statusUrl": "https://github.com/official-adebanjo/wma/blob/monitor-state/status.md"
  },
  "frontend": {
@@ -853,7 +852,7 @@
   "since": "2026-11-05T13:00:29.887Z"
  },
  "ui": {
-  "lastAt": "2026-11-05T13:00:29.848Z",
-  "reason": "new admin portal version"
+  "lastAt": "2026-11-05T20:38:25.796Z",
+  "reason": "hourly"
  }
 }
