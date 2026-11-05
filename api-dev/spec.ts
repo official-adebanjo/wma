@@ -65,7 +65,7 @@ export function operations(spec: Spec): Operation[] {
 const ADMIN_TAGS = [
   'Account Control Endpoints', 'General Approval Workflow Endpoints', 'Investment Management Endpoints',
   'Investment Report Endpoints', 'Loan Report Endpoints', 'Loan Approval Workflow Endpoints',
-  'System-Wide Audit Log Endpoints', 'Portal Admin User Endpoints',
+  'System-Wide Audit Log Endpoints', 'Portal Admin User Endpoints', 'Message Template Endpoints',
 ];
 export const isAdminOnly = (op: Operation) => ADMIN_TAGS.includes(op.tag) || /\/admin(\/|-|$)/.test(op.path);
 

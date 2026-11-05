@@ -112,6 +112,8 @@ const MISMATCHES = [
 ];
 
 const QUESTIONS = [
+  'What status should a written-off or force-closed loan have? The API’s loan statuses have no “Written off” or “Force closed”, while the admin requirements expect a separate “Written off” state. No loan on the test system has been written off or force-closed yet.',
+  'Should defaulted loans be written off? “Write off” only appears on overdue loans; a defaulted loan (for example #183) shows no actions at all.',
   'Is the loan “Interest rate” shown in the portal a monthly rate (as in the specification’s 2% examples) or a yearly rate? Newer loans now treat it as monthly; loan #169 matches neither.',
   'Should monthly loan repayments be rounded to the whole naira, and if so, is the difference corrected in the last payment?',
   'Should existing loans (such as #169) be recalculated under the new interest rule, or keep their original schedule?',
@@ -122,6 +124,15 @@ const QUESTIONS = [
 
 /** Problems found by hand in the admin portal (no automated check covers them yet). */
 const ADMIN_EXTRA_FINDINGS = [
+  {
+    title: 'Force close, write-off and penalty waivers skip the approval workflow',
+    severity: 'High',
+    owner: 'Engineering (admin portal and loans) and Compliance',
+    impact: 'One administrator could close a loan, write off its balance or remove its penalty alone, although a sign-off is set up for each. A write-off cannot be undone from the portal.',
+    saw: 'On loan #196 (active) the “Force close” dialog, and on loan #169 (overdue) the “Waive penalty” and “Write off” dialogs, each say the action “takes effect immediately, with no second approval”, and ask only for an optional reason. General Approvals has a one-level workflow for each of these three actions (created 23 October), and the page says it decides “who signs off loan force-closes, penalty waivers and write-offs”. The dialogs were opened and cancelled; no action was carried out, so whether the server waits for approval is not yet proven.',
+    expected: 'Each action should become a request that waits for the configured approver, and the dialog should say so; a reason should be required.',
+    area: 'Loan Management (checked by hand)',
+  },
   {
     title: 'Public Sector corridor rates are stored and shown in different units',
     severity: 'Medium',
@@ -135,9 +146,15 @@ const ADMIN_EXTRA_FINDINGS = [
 
 /** Admin configuration reviewed by hand, with the outcome. */
 const ADMIN_JOURNEYS = {
-  when: '3 November',
-  intro: 'The Public Sector loan set-up was read in the admin portal and through the staff API (nothing was changed), then compared with the loan specification and with what the app does.',
+  when: '3 and 5 November',
+  intro: 'The Public Sector loan set-up was read in the admin portal and through the staff API (nothing was changed), then compared with the loan specification and with what the app does. On 5 November the status of 11 backlog items was checked: the pages and dialogs were opened and cancelled, and nothing was carried out.',
   items: [
+    ['5 Nov: Force close and write off a loan', 'bad', 'Available: “Force close” on active loans (e.g. #196) and “Write off” on overdue loans (e.g. #169). Each dialog shows the customer, product, amount and tenor and asks for an optional reason, but says it takes effect immediately with no second approval, although a workflow is set up for each. See “Problems found”.'],
+    ['5 Nov: Waive a loan penalty', 'bad', 'Available on overdue loans (e.g. #169); same “no second approval” wording. Not offered on a due loan with a 1% penalty rate (#82) or on defaulted loans.'],
+    ['5 Nov: General Approvals', 'ok', 'Lists the 5 workflows (loan force close, waive penalty and write off; investment top-up and reverse booking), each one level with an approver; 5 of the 12 possible actions are covered. New workflow and Edit are offered.'],
+    ['5 Nov: Message templates', 'ok', 'Communications → Campaigns → Templates lists the 3 templates, with New template, Edit and Delete.'],
+    ['5 Nov: Customer management actions', 'ok', 'A customer’s page offers Freeze wallet, Freeze account and Close account. Each asks for a reason code, a reason, a review date (freezes) and evidence, and the page says each is a request a second administrator (Compliance) must approve. Screening and Support are still “Coming soon”.'],
+    ['5 Nov: Human metrics', 'idle', 'Not built: there is no menu item, and the only related page (Settings → Metric Definitions) says “This page is coming soon”. The API has nothing for it either.'],
     ['Public Sector products', 'idle', 'Three exist: Adebanjo Public Sector (Active, reducing-balance interest, payroll-deduction repayment), public-sector-loan-v2 (Active, equal-instalment interest, bank transfer or card repayment), and Auto-public (Draft). All three use the Lagos Civil Servants corridor, a 30-day re-apply cooldown, a ₦1,000,000 control-gate threshold, CRC Credit Bureau, and loyalty discounts of 0.5% after 3 clean repayments and 1% after 6. None has its own amount range, rate or tenors; these come from the corridor. The product list therefore shows their amount range as “— – —”.'],
     ['Corridor: Lagos Civil Servants (Remita)', 'bad', '₦200,000–₦10,000,000; 3, 6, 9, 12 or 18 months; DTI 0.33; collection capitalised; salary basis from the bank-statement average; top-up allowed; 8 MDAs. The app offers the right tenors but does not enforce the amount range. Rates and fees use mixed units (see “Problems found”).'],
     ['Fee structure “Public sector fee”', 'bad', '0% management fee, deducted upfront, 7.5% VAT, 0% WHT. This contradicts the corridor’s 1% management and 1% quarterly fees. The app shows 1%; the saved loans show ₦0 plus 7.5% VAT.'],
@@ -152,6 +169,7 @@ const ADMIN_JOURNEYS = {
 const ADMIN_CHANGES = {
   since: '30 October',
   items: [
+    ['Backlog status check (5 November)', 'Done: force close, write off and waive penalty (API and portal), General Approvals, message templates, and the customer freeze and close actions. Not built: human metrics (portal and API). The NIN check is in the API but needs a NIN the provider accepts to be confirmed. One problem: the loan actions say they skip the approval workflow. See “What we checked by hand”.'],
     ['Re-run on 4 November', 'Every check was run again after the latest portal changes. The results are the same as on 3 November: the same 3 problems, with nothing new broken and nothing newly fixed. The menu is unchanged, so none of the switched-off pages has come back. One check failed at first because it opened the newest investment, which had been cancelled and correctly offers no withdraw or top-up. The check now opens an active plan, and it passes. The Public Sector findings were looked at again and still apply: the corridor rate still shows as 0.03%.'],
     ['20 pages switched off', 'Wallet Management, Transactions & Ledger, Support & Tickets, Rewards & Incentives and Payroll reconciliation are now marked “Coming soon” in the menu and can’t be opened. These were removed from the menu altogether: Discovery banners; the investment request pages (Approval queue, On-behalf requests, Break requests, On-behalf withdrawals, top-ups and rollovers, Unlock requests, Auto-rollover and Statutory tax carry-across); and the settings pages Field Rules Setup, Controlled Vocabularies, Approval Thresholds, Communications Providers and Metric Definitions. Their old addresses now open Pending Approvals or an empty page. Checks on them are listed as “not run” until they come back.'],
     ['Customer Management', 'The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.'],
@@ -831,7 +849,7 @@ const API_NOTES = {
 /** Reference lists that are fine to be public: answering without sign-in is a documentation gap there, not a leak. */
 const PUBLIC_REFERENCE = /^\/api\/v3\/(country|state|lga)(\/|$)/;
 /** Same rule as api-dev/spec.ts isAdminOnly. */
-const API_ADMIN_TAGS = ['Account Control Endpoints', 'General Approval Workflow Endpoints', 'Investment Management Endpoints', 'Investment Report Endpoints', 'Loan Report Endpoints', 'Loan Approval Workflow Endpoints', 'System-Wide Audit Log Endpoints', 'Portal Admin User Endpoints'];
+const API_ADMIN_TAGS = ['Account Control Endpoints', 'General Approval Workflow Endpoints', 'Investment Management Endpoints', 'Investment Report Endpoints', 'Loan Report Endpoints', 'Loan Approval Workflow Endpoints', 'System-Wide Audit Log Endpoints', 'Portal Admin User Endpoints', 'Message Template Endpoints'];
 const apiAdminOnly = (op) => API_ADMIN_TAGS.includes(op.tag) || /\/admin(\/|-|$)/.test(op.path);
 /** Found by hand while building the checks (2026-11-03). */
 const API_DOC_NOTES = [
@@ -847,6 +865,7 @@ const apiAreaName = (tag) => (tag === 'lead-api-resource' ? 'Leads' : tag.replac
 
 /** What the latest backend update changed, written up after each re-run (shown above the live comparison). */
 const API_UPDATES = [
+  ['5 November: backlog status check', 'Force close, write off and waive penalty are live: they refuse a signed-out caller and a customer, and accept staff (tried only with a loan number that doesn’t exist, so nothing changed). The general approval workflow (create, edit, delete, approve, reject, withdraw, pending actions), message templates (add, list, update, delete) and NIN verification are live; NIN verification answers “nin is required” without a NIN and was not tried with a real one. There is nothing for human metrics. A customer can read the message templates as well as the approval set-up; message templates are now treated as staff-only, so the next full run checks this.'],
   ['3 November: 7 new notification endpoints', 'The saved copy was refreshed and the 4 read-only ones were checked. The notifications list works; the notification inbox fails with a server error (see “Problems found”); the live notification stream stays open by design, so it is listed as not run; a single notification needs an ID that no list provided.'],
   ['3 November: fixed', 'The overdue-loans list now answers. It used to fail with “Principal must be greater than zero”.'],
   ['3 November: still not fixed', 'Customer leads are still readable without signing in, and a customer can still read other customers’ loan applications and the approval set-up. Everything else is also as before.'],
