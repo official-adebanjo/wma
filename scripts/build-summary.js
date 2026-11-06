@@ -209,6 +209,15 @@ const MOBILE_AREAS = {
 
 const MOBILE_FINDINGS = [
   {
+    match: /Personal loan quote/,
+    title: 'The Personal loan repayment breakdown does not open',
+    severity: 'High',
+    owner: 'Engineering (mobile app and loans)',
+    impact: 'Customers cannot see their monthly repayments before applying for a Personal loan; the review screen only shows the total.',
+    saw: 'Tier 3 test account, Adebanjo Personal, ₦100,000 over 3 months: after the three documents are uploaded, the review screen shows 8.5% a month, a ₦1,000 management fee and ₦126,500 to repay, but tapping “See Breakdown” next to “Estimated Monthly Pay” does nothing (watched for 30 and 60 seconds by hand, and 45 seconds by the automated check). The breakdown opened normally on 2 and 3 November. Reaching the review screen took 9 seconds once and over 20 seconds another time.',
+    expected: 'The breakdown should list each month’s repayment, adding up to the total repayable.',
+  },
+  {
     match: /recommended offer stays within the product limits/,
     title: 'The app offers a Payday loan ten times bigger than allowed',
     severity: 'High',
@@ -491,6 +500,7 @@ const MOBILE_JOURNEYS = {
 const MOBILE_CHANGES = {
   since: '3 November',
   items: [
+    ['Re-run on 6 November (same 4 November build)', 'No new app build was available, so the 4 November build was tested against the latest back end. No crashes. New problem: the Personal loan “See Breakdown” no longer opens (see “Problems found”). Everything else is as on 4 November. The Nano and Payday checks did not run, because the Tier 1 test account now has a ₦4,000,000 Personal loan (#199) waiting to be paid out, so its Borrow screen shows that loan instead of the products. Screenshots of the app now show the screen (they used to come out black).'],
     ['App build', 'Tested the 4 November build. It still has the same version number as the earlier builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.'],
     ['Fixed: Nano and Payday crash', 'All four short-term loans (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) now open their amount screen. Checked by the automated run and by hand. No crashes were seen anywhere else in the app during the full run.'],
     ['New: investing tried by hand with the Tier 2 account', 'Plans can be created with correct figures, but none can be paid for in the app. See “Problems found”.'],

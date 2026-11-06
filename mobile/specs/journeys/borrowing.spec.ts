@@ -60,6 +60,14 @@ describe('Journeys › Borrowing', () => {
       await openTab('borrow');
     });
 
+    // A check that stops part-way (e.g. on the review screen) must not leave the next one without the tab bar.
+    afterEach(async () => {
+      for (let i = 0; i < 5 && !(await byId('home.tabbar').isDisplayed().catch(() => false)); i++) {
+        await driver.back();
+        await driver.pause(1000);
+      }
+    });
+
     it(title('Personal loan quote: the schedule follows the interest rule and adds up to the total', Tag.crit, Tag.spec('LoanSpec§4.2')), async function () {
       if ((await borrowState()) !== 'products') this.skip(); // a loan is already in progress
       await borrow.tileShown('personal');

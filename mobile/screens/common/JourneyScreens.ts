@@ -252,7 +252,7 @@ export class LoanApplication extends BaseScreen {
   /** Open "See Breakdown" (it can take a few seconds) and read every "(Month n)" line. */
   async schedule(): Promise<ScheduleLine[]> {
     await this.tap('loan.review.seeBreakdown');
-    await byId('loan.review.breakdownSheet').waitForDisplayed({ timeout: 15_000 });
+    await byId('loan.review.breakdownSheet').waitForDisplayed({ timeout: 45_000 }); // took ~10 s on 3 Nov
     const rows = await allById('loan.review.breakdownRow');
     const out: ScheduleLine[] = [];
     for (const r of rows) {
