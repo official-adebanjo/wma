@@ -131,8 +131,15 @@ const cachedUnder = (concretePrefix: string) => {
   const stem = path.basename(cacheFile(concretePrefix), '.json');
   return cacheBodies((f) => f.startsWith(`${stem}_`));
 };
-/** Answers from lists whose path ends in a name, e.g. "/api/v3/country" for {countryId}. */
-const cachedNamed = (name: string) => cacheBodies((f) => new RegExp(`_${name}s?\\.json$`, 'i').test(f));
+/**
+ * Answers from lists whose path ends in a name, e.g. "/api/v3/country" for {countryId}. The customer's
+ * own list ("…/loan-applications/my") comes first: a customer-only endpoint such as a loan's mandate
+ * rightly refuses another customer's loan, and the full list's newest record usually isn't ours.
+ */
+const cachedNamed = (name: string) => [
+  ...cacheBodies((f) => new RegExp(`_${name}s?_my\\.json$`, 'i').test(f)),
+  ...cacheBodies((f) => new RegExp(`_${name}s?\\.json$`, 'i').test(f)),
+];
 
 /** Cached answers, closest area first: "/api/v3/loan-products…" answers before "/api/v3/investment-products…". */
 function cachedNear(opPath: string): unknown[] {

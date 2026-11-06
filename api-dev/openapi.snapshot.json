@@ -98,6 +98,10 @@
    "description": "These endpoints manages kyc tiers on Rosabon"
   },
   {
+   "name": "Liveness webhooks",
+   "description": "Liveness Webhook Resource"
+  },
+  {
    "name": "Loan Application Endpoints",
    "description": "These endpoints manages loan applications on Rosabon"
   },
@@ -13746,6 +13750,59 @@
     ]
    }
   },
+  "/api/v3/webhooks/liveness/{provider}": {
+   "post": {
+    "tags": [
+     "Liveness webhooks"
+    ],
+    "summary": "Liveness vendor callback",
+    "description": "Called by the liveness vendor only; authenticated by the vendor's signature",
+    "operationId": "receiveUsingPOST",
+    "parameters": [
+     {
+      "name": "provider",
+      "in": "path",
+      "description": "provider",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/loan-applications": {
    "get": {
     "tags": [
@@ -19453,32 +19510,45 @@
       }
      },
      {
-      "name": "platform",
+      "name": "pageNo",
       "in": "query",
-      "description": "platform",
+      "description": "pageNo",
       "required": true,
       "style": "form",
       "schema": {
-       "type": "string",
-       "enum": [
-        "CREDIT",
-        "TREASURY",
-        "TREASURY_PORTAL"
-       ]
+       "type": "integer",
+       "format": "int32"
       }
      },
      {
-      "name": "readStatus",
+      "name": "pageSize",
       "in": "query",
-      "description": "readStatus",
+      "description": "pageSize",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "isRead",
+      "in": "query",
+      "description": "isRead",
       "required": false,
       "style": "form",
       "schema": {
-       "type": "string",
-       "enum": [
-        "READ",
-        "UNREAD"
-       ]
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "area",
+      "in": "query",
+      "description": "area",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
       }
      }
     ],
@@ -19488,13 +19558,58 @@
       "content": {
        "text/event-stream": {
         "schema": {
-         "type": "array",
-         "items": {
-          "$ref": "#/components/schemas/InAppEvent"
-         }
+         "$ref": "#/components/schemas/CustomPageResponse«NotificationMessageResponse»"
         }
        }
       }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/notifications/mark-as-read": {
+   "post": {
+    "tags": [
+     "Notification Endpoints"
+    ],
+    "summary": "Mark notification as read",
+    "description": "This endpoint marks notification as read",
+    "operationId": "markAsReadUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BulkIdOperationRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
      },
      "401": {
       "description": "Unauthorized"
@@ -23658,6 +23773,101 @@
     ]
    }
   },
+  "/api/v3/users/liveliness-check/start": {
+   "post": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Start a liveliness check",
+    "description": "Tells the app how to capture the next liveliness check for a PIN or passcode change: SELFIE_UPLOAD, PROVIDER_SDK (with the vendor job to run) or BVN_REQUIRED. Works logged in or out.",
+    "operationId": "startLivelinessCheckUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LivenessStartRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LivenessStartResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/users/login": {
    "post": {
     "tags": [
@@ -23866,6 +24076,66 @@
      },
      "201": {
       "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/users/pending-address-verification": {
+   "get": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Get pending address verification",
+    "description": "This endpoint retrieves residential addresses pending verification",
+    "operationId": "retrieveAddressesPendingVerificationUsingGET",
+    "parameters": [
+     {
+      "name": "pageNo",
+      "in": "query",
+      "description": "pageNo",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "description": "pageSize",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "text/event-stream": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomPageResponse«ResidentialAddressResponse»"
+        }
+       }
+      }
      },
      "401": {
       "description": "Unauthorized"
@@ -24953,6 +25223,164 @@
         }
        }
       }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/users/{locationId}/request-physical-verification": {
+   "put": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Request physical residential address verification",
+    "description": "This endpoint requests physical residential address verification",
+    "operationId": "requestPhysicalVerificationUsingPUT",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "locationId",
+      "in": "path",
+      "description": "locationId",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PhysicalVerificationResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/users/{userId}/validate-residential-address/{verificationId}": {
+   "put": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Validate physical residential address verification",
+    "description": "This endpoint requests physical residential address verification",
+    "operationId": "validateAddressVerificationUsingPUT",
+    "parameters": [
+     {
+      "name": "userId",
+      "in": "path",
+      "description": "userId",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     },
+     {
+      "name": "verificationId",
+      "in": "path",
+      "description": "verificationId",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
      },
      "401": {
       "description": "Unauthorized"
@@ -28275,6 +28703,9 @@
      },
      "isSubjectConsent": {
       "type": "boolean"
+     },
+     "phoneNumber": {
+      "type": "string"
      }
     }
    },
@@ -30688,6 +31119,36 @@
      }
     }
    },
+   "CustomPageResponse«NotificationMessageResponse»": {
+    "title": "CustomPageResponse«NotificationMessageResponse»",
+    "type": "object",
+    "properties": {
+     "content": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/NotificationMessageResponse"
+      }
+     },
+     "hasNext": {
+      "type": "boolean"
+     },
+     "hasPrevious": {
+      "type": "boolean"
+     },
+     "size": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalElements": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "totalPages": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
    "CustomPageResponse«ReferralHistoryResponse»": {
     "title": "CustomPageResponse«ReferralHistoryResponse»",
     "type": "object",
@@ -30756,6 +31217,36 @@
       "type": "array",
       "items": {
        "$ref": "#/components/schemas/ReferralRewardResponse"
+      }
+     },
+     "hasNext": {
+      "type": "boolean"
+     },
+     "hasPrevious": {
+      "type": "boolean"
+     },
+     "size": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalElements": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "totalPages": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
+   "CustomPageResponse«ResidentialAddressResponse»": {
+    "title": "CustomPageResponse«ResidentialAddressResponse»",
+    "type": "object",
+    "properties": {
+     "content": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/ResidentialAddressResponse"
       }
      },
      "hasNext": {
@@ -31616,6 +32107,21 @@
      }
     }
    },
+   "IdInfo": {
+    "title": "IdInfo",
+    "type": "object",
+    "properties": {
+     "country": {
+      "type": "string"
+     },
+     "idNumber": {
+      "type": "string"
+     },
+     "idType": {
+      "type": "string"
+     }
+    }
+   },
    "IdentificationTypeDto": {
     "title": "IdentificationTypeDto",
     "type": "object",
@@ -31639,66 +32145,6 @@
        "ACTIVE",
        "INACTIVE"
       ]
-     }
-    }
-   },
-   "InAppEvent": {
-    "title": "InAppEvent",
-    "required": [
-     "category",
-     "message",
-     "platform",
-     "recipientUserId"
-    ],
-    "type": "object",
-    "properties": {
-     "category": {
-      "type": "string",
-      "enum": [
-       "APPROVAL",
-       "LOAN",
-       "PLAN",
-       "PLAN_ACTION",
-       "TICKET",
-       "WALLET"
-      ]
-     },
-     "dateSent": {
-      "type": "string",
-      "format": "date-time"
-     },
-     "id": {
-      "type": "integer",
-      "format": "int64"
-     },
-     "initiatorUserId": {
-      "type": "integer",
-      "format": "int64"
-     },
-     "message": {
-      "type": "string"
-     },
-     "platform": {
-      "type": "string",
-      "enum": [
-       "CREDIT",
-       "TREASURY",
-       "TREASURY_PORTAL"
-      ]
-     },
-     "readStatus": {
-      "type": "string",
-      "enum": [
-       "READ",
-       "UNREAD"
-      ]
-     },
-     "recipientUserId": {
-      "type": "integer",
-      "format": "int64"
-     },
-     "title": {
-      "type": "string"
      }
     }
    },
@@ -35746,8 +36192,7 @@
    "LivelinessCheckRequest": {
     "title": "LivelinessCheckRequest",
     "required": [
-     "email",
-     "image"
+     "email"
     ],
     "type": "object",
     "properties": {
@@ -35757,7 +36202,64 @@
      "image": {
       "type": "string"
      },
+     "phoneNumber": {
+      "type": "string"
+     },
+     "providerReference": {
+      "type": "string"
+     },
      "securityCategory": {
+      "type": "string"
+     }
+    }
+   },
+   "LivenessStartRequest": {
+    "title": "LivenessStartRequest",
+    "required": [
+     "email",
+     "securityCategory"
+    ],
+    "type": "object",
+    "properties": {
+     "bvn": {
+      "type": "string"
+     },
+     "email": {
+      "type": "string"
+     },
+     "phoneNumber": {
+      "type": "string"
+     },
+     "securityCategory": {
+      "type": "string"
+     }
+    }
+   },
+   "LivenessStartResponse": {
+    "title": "LivenessStartResponse",
+    "type": "object",
+    "properties": {
+     "captureMode": {
+      "type": "string",
+      "enum": [
+       "BVN_REQUIRED",
+       "PROVIDER_SDK",
+       "SELFIE_UPLOAD"
+      ]
+     },
+     "checkType": {
+      "type": "string"
+     },
+     "idInfo": {
+      "$ref": "#/components/schemas/IdInfo"
+     },
+     "provider": {
+      "type": "string"
+     },
+     "providerReference": {
+      "type": "string"
+     },
+     "providerUserId": {
       "type": "string"
      }
     }
@@ -36975,6 +37477,42 @@
      }
     }
    },
+   "NotificationMessageResponse": {
+    "title": "NotificationMessageResponse",
+    "type": "object",
+    "properties": {
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "isRead": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "notificationArea": {
+      "type": "string",
+      "enum": [
+       "MARKETING",
+       "SECURITY",
+       "SOCIAL",
+       "TRANSACTION"
+      ]
+     },
+     "title": {
+      "type": "string"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
    "NotificationPreferenceResponse": {
     "title": "NotificationPreferenceResponse",
     "type": "object",
@@ -37001,7 +37539,8 @@
       "enum": [
        "MARKETING",
        "SECURITY",
-       "SOCIAL"
+       "SOCIAL",
+       "TRANSACTION"
       ]
      }
     }
@@ -37623,6 +38162,15 @@
      }
     }
    },
+   "PhysicalVerificationResponse": {
+    "title": "PhysicalVerificationResponse",
+    "type": "object",
+    "properties": {
+     "report_id": {
+      "type": "string"
+     }
+    }
+   },
    "PlanSummary": {
     "title": "PlanSummary",
     "type": "object",
@@ -38210,6 +38758,9 @@
      "ipAddress": {
       "type": "string"
      },
+     "isVerified": {
+      "type": "boolean"
+     },
      "landmark": {
       "type": "string"
      },
@@ -38319,10 +38870,10 @@
      "allowEmail": {
       "type": "boolean"
      },
-     "allowPushNotification": {
+     "allowInApp": {
       "type": "boolean"
      },
-     "allowSMS": {
+     "allowPushNotification": {
       "type": "boolean"
      },
      "notificationArea": {

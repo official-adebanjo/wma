@@ -63,15 +63,14 @@ test.describe('Dev portal › Approvals, Support & Communications', () => {
     await expect(btn(page, 'Next')).toBeVisible();
   });
 
-  test('Campaigns: templates, delivery log, filters and export @smoke', async ({ page }) => {
+  // 6 Nov portal update: the "State" filter became "Status" and the Delivery log button was removed.
+  test('Campaigns: templates, filters and export @smoke', async ({ page }) => {
     await open(page, ROUTES.campaigns);
     await expect(page.getByRole('heading', { name: 'Campaigns' })).toBeVisible();
-    for (const f of ['State', 'Channel']) await expect(page.getByRole('combobox', { name: f, exact: true })).toBeVisible();
+    for (const f of ['Status', 'Channel']) await expect(page.getByRole('combobox', { name: f, exact: true })).toBeVisible();
     await exportCsv(page);
-    for (const b of ['Templates', 'Delivery log']) {
-      await btn(page, b).click();
-      await open(page, ROUTES.campaigns);
-    }
+    await btn(page, 'Templates').click();
+    await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible();
   });
 
   test('Discovery banners: open a banner editor and close without saving @smoke', async ({ page }) => {
