@@ -102,6 +102,15 @@ const FINDINGS = [
     saw: 'After revealing a customer’s hidden BVN/NIN, the customer’s Audit tab still says “No audit entries found”.',
     expected: 'Each time an admin reveals private details, it should appear in that customer’s audit history.',
   },
+  {
+    match: /rates and fees are stored in percent/,
+    title: 'Public Sector corridors still hold rates as fractions, though the portal now treats them as percent',
+    severity: 'Medium',
+    owner: 'Product and Engineering (loans)',
+    impact: 'Staff cannot tell from the portal what rate customers will be charged, and a rate typed in the wrong unit would go live unnoticed.',
+    saw: 'Since the 9 November portal update the corridor form labels every rate and fee “%” and fills a new corridor with 3%, 1% and 0.5%, so percent is now the intended unit. The two existing corridors were not converted: Lagos Civil Servants still stores a policy rate of 0.03 and a management fee of 0.01, which the list and form now show as “0.03%” and “0.01%” (its quarterly fee is now 0.4 and a 2.5% penalty rate was added); lagos-v1 shows a 25% policy rate and a 0.01% quarterly fee. The app quotes Lagos Civil Servants loans at 4% a month, which is the corridor’s booked average interim rate. An automated check now flags any rate or fee below 0.1%.',
+    expected: 'The existing corridors’ values re-entered in percent (for example a 3% policy rate and a 1% management fee, if those were meant), the period stated (for example “% per month”), and the customer’s rate clearly identified.',
+  },
 ];
 
 const MISMATCHES = [
@@ -142,15 +151,6 @@ const ADMIN_EXTRA_FINDINGS = [
     expected: 'Each action should become a request that waits for the configured approver, and the dialog should say so; a reason should be required.',
     area: 'Loan Management (checked by hand)',
   },
-  {
-    title: 'Public Sector corridor rates are stored and shown in different units',
-    severity: 'Medium',
-    owner: 'Product and Engineering (loans)',
-    impact: 'Staff cannot tell from the portal what rate customers will be charged, and a rate typed in the wrong unit would go live unnoticed.',
-    saw: 'Corridors & partners shows the Lagos Civil Servants rate as “0.03%” (stored as 0.03, with a booked average interim rate of 4), and lagos-v1 as “25%” (booked average 2.5). Its management fee (0.01) and quarterly fee (0.01) are stored as fractions; lagos-v1’s management fee is 2.5. The app quotes Lagos Civil Servants loans at 4% a month.',
-    expected: 'One unit for every rate and fee, labelled in the portal (for example “% per month”), with the customer’s rate clearly identified.',
-    area: 'Product Management: corridors (checked by hand)',
-  },
 ];
 
 /** Admin configuration reviewed by hand, with the outcome. */
@@ -178,6 +178,7 @@ const ADMIN_JOURNEYS = {
 const ADMIN_CHANGES = {
   since: '30 October',
   items: [
+    ['Re-run on 9 November (afternoon)', 'A new portal version went live on 9 November. The menu is unchanged; the changes are in Corridors & partners: a new “Duplicate” action (copies a corridor under a new code; checked, opened and cancelled), a “Penalty interest rate” field, every rate and fee now labelled “%” with at most 2 decimals, new corridors filled with 3%, 1% and 0.5%, and at least one tenor required. The two existing corridors were not converted to percent, so a new check fails (see “Problems found”). The other 3 problems are unchanged; nothing was fixed.'],
     ['Re-run on 9 November', 'No new portal version since 6 November. Same results: the same 3 problems, nothing newly broken or fixed. Checked by hand: notifications the system sends by itself are not recorded anywhere in the portal, and the customers’ in-app inboxes are empty (see “Problems found”).'],
     ['Re-run on 6 November', 'Two new portal versions went live (5 November 14:00 and 6 November 13:49). The menu is unchanged and the results are the same as on 4 November: the same 3 problems. The Campaigns page was redesigned: it now lists drafts, scheduled and sent campaigns, the “State” filter is called “Status”, and the Delivery log button is gone. The check was updated to match.'],
     ['Backlog status check (5 November)', 'Done: force close, write off and waive penalty (API and portal), General Approvals, message templates, and the customer freeze and close actions. Not built: human metrics (portal and API). NIN verification is in the API but fails with a server error for any NIN (checked 9 November). One problem: the loan actions say they skip the approval workflow. See “What we checked by hand”.'],
@@ -893,6 +894,8 @@ const apiAreaName = (tag) => (tag === 'lead-api-resource' ? 'Leads' : tag.replac
 
 /** What the latest backend update changed, written up after each re-run (shown above the live comparison). */
 const API_UPDATES = [
+  ['9 November (afternoon): 2 new endpoints', 'Start and verify an onboarding liveliness check (the selfie check during sign-up, before the account is finished). Both expect the short-lived token issued during sign-up, so they could not be tried end to end without creating a new account. Two small problems: with no token they answer 400 “Authorization token is required” instead of the 401 the document promises, and a normal signed-in customer’s token gets the same message, which wrongly suggests no token was sent. The saved copy was refreshed.'],
+  ['9 November (afternoon): re-run', 'Same results as this morning: 126 checks passed and the same 16 problems remain; nothing was fixed. NIN verification still fails with a server error for any NIN, and the customer’s pending address verifications still fail.'],
   ['9 November: NIN verification tried', 'Called as the Tier 1 and Tier 3 test customers with values that can’t belong to a real person. Without a NIN it answers “nin is required” (correct). With any NIN — too short (123), letters, or 11 digits (00000000000, 12345678901) — it fails with a server error (500), returning the web server’s own error page instead of the API’s JSON. A malformed NIN should be refused with a clear message, and an unknown one reported as not found; the identity provider may not be connected on the test system. Not tried with a real NIN. None of the three test accounts has a verified NIN, including Tier 3.'],
   ['9 November: re-run', 'No endpoints added or removed. Fixed: the notification inbox now answers (it used to fail with a server error); its document now says it returns a normal JSON page instead of a live stream. Everything else answers as on 6 November, including the server error on the customer’s pending address verifications.'],
   ['6 November: 6 new endpoints', 'Liveness checks (a provider callback and “start a liveliness check”), residential address verification (list pending, request a physical check, validate) and “mark notification as read”. The saved copy was refreshed. The one read-only endpoint among them, the customer’s pending address verifications, fails with a server error (see “Problems found”). The notification inbox’s answer format also changed.'],

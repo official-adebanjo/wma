@@ -23773,6 +23773,102 @@
     ]
    }
   },
+  "/api/v3/users/liveliness-check/onboarding/start": {
+   "post": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Start the onboarding liveliness check",
+    "description": "Uses the onboarding token. PROVIDER_SDK: run the vendor's SDK with the job returned, then call /liveliness-check/onboarding/verify. BVN_REQUIRED: call again with the BVN. SELFIE_UPLOAD: use /liveliness-check as before.",
+    "operationId": "startOnboardingLivenessCheckUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OnboardingLivenessStartRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LivenessStartResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/users/liveliness-check/onboarding/verify": {
+   "post": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Verify the onboarding liveliness check",
+    "description": "Uses the onboarding token. Answers 417 while the vendor is still checking (poll again); on a pass the sign-up's liveliness check is done.",
+    "operationId": "verifyOnboardingLivenessCheckUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OnboardingLivenessVerifyRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/users/liveliness-check/start": {
    "post": {
     "tags": [
@@ -37591,6 +37687,30 @@
       "type": "string"
      },
      "state": {
+      "type": "string"
+     }
+    }
+   },
+   "OnboardingLivenessStartRequest": {
+    "title": "OnboardingLivenessStartRequest",
+    "type": "object",
+    "properties": {
+     "bvn": {
+      "type": "string"
+     }
+    }
+   },
+   "OnboardingLivenessVerifyRequest": {
+    "title": "OnboardingLivenessVerifyRequest",
+    "required": [
+     "providerReference"
+    ],
+    "type": "object",
+    "properties": {
+     "providerJobId": {
+      "type": "string"
+     },
+     "providerReference": {
       "type": "string"
      }
     }

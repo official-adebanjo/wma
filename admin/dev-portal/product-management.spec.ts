@@ -136,4 +136,26 @@ test.describe('Dev portal › Product Management', () => {
       await expect(page.getByRole('heading').nth(1)).toBeVisible();
     }
   });
+
+  // 9 Nov portal update: corridors gained "Duplicate" (PATCH /corridors/{id}/clone?code=…).
+  test('Corridors: Duplicate asks for a new corridor code @smoke', async ({ page }) => {
+    await open(page, ROUTES.corridors);
+    await page.locator('main tbody tr').first().getByRole('button', { name: 'Duplicate' }).click();
+    const dialog = page.locator('div.fixed.inset-0').last();
+    await expect(dialog).toContainText('New corridor code');
+    await expect(dialog.getByRole('button', { name: 'Duplicate corridor' })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+  });
+
+  // Since 9 Nov the corridor form labels every rate and fee "%" and defaults a new corridor to 3% / 1% / 0.5%,
+  // so a stored value like 0.03 (a fraction) now reads as 0.03%.
+  test('Corridors: rates and fees are stored in percent, as the form labels them', async ({ page }) => {
+    const res = page.waitForResponse((r) => /\/api\/v3\/corridors\?/.test(r.url()) && r.ok());
+    await open(page, ROUTES.corridors);
+    const { content } = await (await res).json();
+    const fields = ['policyRate', 'managementFee', 'quarterlyFee', 'bookedAverageInterimRate', 'penaltyInterestRate'] as const;
+    const fractions = (content as Record<string, unknown>[]).flatMap((c) =>
+      fields.filter((f) => typeof c[f] === 'number' && (c[f] as number) > 0 && (c[f] as number) < 0.1).map((f) => `${c.code}: ${f} ${c[f]}%`));
+    expect(fractions, 'values that look like fractions, not percent').toEqual([]);
+  });
 });
