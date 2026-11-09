@@ -19556,7 +19556,7 @@
      "200": {
       "description": "OK",
       "content": {
-       "text/event-stream": {
+       "application/json": {
         "schema": {
          "$ref": "#/components/schemas/CustomPageResponse«NotificationMessageResponse»"
         }
@@ -27174,74 +27174,68 @@
     "title": "$table.tableComment",
     "type": "object",
     "properties": {
-     "allowCustomization": {
+     "acceptsRollover": {
+      "type": "boolean"
+     },
+     "allowsLiquidation": {
+      "type": "boolean"
+     },
+     "allowsMonthlyDraw": {
+      "type": "boolean"
+     },
+     "allowsTopUp": {
+      "type": "boolean"
+     },
+     "allowsTransfer": {
       "type": "boolean"
      },
      "createdDate": {
       "type": "string",
       "format": "date"
      },
-     "currency": {
-      "uniqueItems": true,
-      "type": "array",
-      "items": {
-       "$ref": "#/components/schemas/TrCurrencyOutDto"
-      }
+     "hasContributionValue": {
+      "type": "boolean"
+     },
+     "hasDirectDebit": {
+      "type": "boolean"
+     },
+     "hasSavingFrequency": {
+      "type": "boolean"
+     },
+     "hasTargetAmount": {
+      "type": "boolean"
      },
      "id": {
       "type": "integer",
       "format": "int64"
      },
-     "imageUrl": {
-      "type": "string"
-     },
-     "maxTransactionLimit": {
-      "type": "number",
-      "format": "double"
-     },
-     "minTransactionLimit": {
-      "type": "number",
-      "format": "double"
-     },
-     "productCategory": {
-      "$ref": "#/components/schemas/TrProductCategoryOutDto"
-     },
-     "productCode": {
-      "type": "string"
-     },
-     "productDescription": {
-      "type": "string"
-     },
-     "productName": {
-      "type": "string"
-     },
-     "properties": {
-      "$ref": "$table.tableComment"
-     },
-     "status": {
+     "interestFormula": {
       "type": "string",
       "enum": [
-       "ACTIVE",
-       "ASSIGNED",
-       "DELETED",
-       "INACTIVE",
-       "UNASSIGNED"
+       "COMPOUND_INTEREST_FORMULAR",
+       "SIMPLE_INTEREST_FORMULAR"
       ]
      },
-     "tenorDisplayIn": {
+     "interestOptions": {
+      "$ref": "#/components/schemas/InterestOption"
+     },
+     "paymentType": {
       "type": "string",
       "enum": [
-       "IN_DAYS",
-       "IN_MONTHS",
-       "IN_YEARS"
+       "BANK_TRANSFER",
+       "DEBIT_CARD",
+       "WALLET"
       ]
      },
-     "tenors": {
-      "uniqueItems": true,
-      "type": "array",
-      "items": {
-       "$ref": "#/components/schemas/TrTenorOutDto"
-      }
+     "penaltyFormula": {
+      "type": "string",
+      "enum": [
+       "FIXED_FORMULA",
+       "TARGET_FORMULA"
+      ]
+     },
+     "receivesTransfer": {
+      "type": "boolean"
      }
     }
    },
@@ -32114,10 +32108,19 @@
      "country": {
       "type": "string"
      },
+     "firstName": {
+      "type": "string"
+     },
      "idNumber": {
       "type": "string"
      },
      "idType": {
+      "type": "string"
+     },
+     "lastName": {
+      "type": "string"
+     },
+     "middleName": {
       "type": "string"
      }
     }
@@ -36205,6 +36208,9 @@
      "phoneNumber": {
       "type": "string"
      },
+     "providerJobId": {
+      "type": "string"
+     },
      "providerReference": {
       "type": "string"
      },
@@ -36239,6 +36245,9 @@
     "title": "LivenessStartResponse",
     "type": "object",
     "properties": {
+     "callbackUrl": {
+      "type": "string"
+     },
      "captureMode": {
       "type": "string",
       "enum": [
