@@ -704,6 +704,12 @@ function evidence(f, i, pub) {
         </details>`;
 }
 
+/** A collapsible table under a document-gap item: [[area, endpoint, detail], …]. */
+function gapTable(rows) {
+  const body = rows.map(([area, ep, detail]) => `<tr><td>${esc(area)}</td><td><code>${esc(ep)}</code></td><td>${esc(detail)}</td></tr>`).join('');
+  return `<details class="ref"><summary>Show all ${rows.length} <span class="muted">· endpoint and the fields its request body accepts</span></summary><div class="table-wrap"><table><thead><tr><th>Area</th><th>Endpoint</th><th>Fields in the request body (none marked required)</th></tr></thead><tbody>${body}</tbody></table></div></details>`;
+}
+
 function genericFinding(t) {
   return {
     title: t.title, severity: 'Medium', owner: 'Engineering',
@@ -822,7 +828,7 @@ ${d.changes ? `
     <div class="sec">
     <h2>${esc(d.mismatchesHeading || 'Differences from the documents (not failures)')}</h2>
     <p class="muted">${esc(d.mismatchesIntro || 'These work, but don’t match what the specifications say. Product should confirm which is correct.')}</p>
-    <ul class="clean">${d.mismatches.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
+    <ul class="clean">${d.mismatches.map(([t, x, rows]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}${rows ? gapTable(rows) : ''}</li>`).join('')}</ul>
     </div>
 
     <div class="sec">
@@ -1015,9 +1021,15 @@ function readApi() {
   const leaky = ops.filter((o) => o.params.some((p) => /^(principal|credentials|authorities|details|authenticated)/.test(p.name)));
   if (leaky.length) docGaps.push(['Internal sign-in fields shown as request parameters', `${leaky.length} endpoint${leaky.length > 1 ? 's list' : ' lists'} the server’s own sign-in fields (principal, credentials, authorities…) as parameters a caller could send. They should be hidden from the document.`]);
   const resolve = (s) => (s && s.$ref ? schemas[s.$ref.split('/').pop()] : s);
-  const bodies = ops.map((o) => resolve(o.body)).filter((s) => s && s.properties);
-  const noRequired = bodies.filter((s) => !(s.required && s.required.length));
-  if (noRequired.length) docGaps.push(['Required fields are not marked', `${noRequired.length} of ${bodies.length} request bodies don’t say which fields are mandatory (for example the sign-in request), so callers only find out from errors.`]);
+  const withBody = ops.map((o) => ({ o, s: resolve(o.body) })).filter((x) => x.s && x.s.properties);
+  const noRequired = withBody.filter((x) => !(x.s.required && x.s.required.length));
+  const fieldList = (sch) => Object.entries(sch.properties).map(([k, v]) => { const t = resolve(v); return t && t.type === 'array' ? `${k} (list)` : k; }).join(', ');
+  if (noRequired.length) {
+    const rows = noRequired
+      .sort((a, b) => apiAreaName(a.o.tag).localeCompare(apiAreaName(b.o.tag)) || a.o.path.localeCompare(b.o.path))
+      .map(({ o, s: sch }) => [apiAreaName(o.tag), `${o.method} ${o.path}`, fieldList(sch)]);
+    docGaps.push(['Required fields are not marked', `${noRequired.length} of ${withBody.length} request bodies don’t say which of their fields are mandatory, so callers only find out from errors. For example, the customer sign-in (POST /api/v3/users/login) lists email and password with neither marked required. Each endpoint below needs its mandatory fields listed in the document’s “required”.`, rows]);
+  }
 
   // ---- What changed since the saved copy
   let changes = null;
