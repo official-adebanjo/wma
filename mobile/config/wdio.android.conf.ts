@@ -12,6 +12,8 @@ export const config: WebdriverIO.Config = {
       platformName: 'Android',
       'appium:automationName': 'UiAutomator2',
       'appium:deviceName': process.env.ANDROID_DEVICE_NAME ?? 'Android Emulator',
+      // Pin the device when other emulators share this machine (e.g. ANDROID_SERIAL=emulator-5558).
+      ...(process.env.ANDROID_SERIAL ? { 'appium:udid': process.env.ANDROID_SERIAL } : {}),
       // Optional: pin a version / let Appium boot a named emulator (AVD) when none is running.
       ...(process.env.ANDROID_PLATFORM_VERSION ? { 'appium:platformVersion': process.env.ANDROID_PLATFORM_VERSION } : {}),
       ...(process.env.ANDROID_AVD ? { 'appium:avd': process.env.ANDROID_AVD, 'appium:avdLaunchTimeout': 180_000 } : {}),
