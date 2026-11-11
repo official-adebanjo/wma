@@ -406,13 +406,31 @@ const MOBILE_EXTRA_FINDINGS = [
     area: 'Investing (tried by hand)',
   },
   {
-    title: 'Identity verification (SmileID) fails to start in this app build',
-    severity: 'High',
-    owner: 'Engineering (mobile app build)',
-    impact: 'Selfie / ID verification for upgrading a customer’s KYC tier is likely to fail in this build.',
-    saw: 'Every time the app starts, its error log reports “SmileID initialize error: smile_config.json not found in assets”. The file is missing from the app package.',
-    expected: 'The SmileID configuration file should be included in the build so identity checks can run.',
-    area: 'App start-up (seen in the app’s error log)',
+    title: 'New customers cannot finish sign-up: the Smile ID selfie is refused as “Unauthorized”',
+    severity: 'Critical',
+    owner: 'Engineering (mobile app and Smile ID set-up)',
+    impact: 'No new customer can open an account: sign-up stops at the selfie (step 3 of 6), and the half-made account cannot be used.',
+    saw: '11 November, 9 November build, a new sign-up with a real phone number, BVN and the tester’s own face (laptop webcam). Phone code, email, passcode and BVN all worked, and the BVN matched NIBSS (“Is this you?”). The Smile ID selfie screen then opened, took the selfie and the smile, and asked “Is this a good quality selfie?”. After “Yes, use this” it showed “Your selfie failed to process — Unauthorized”, and “Retry” failed the same way (4 tries). The app’s log shows why: before anything is uploaded, the Smile ID library asks Smile ID’s test service for permission (POST testapi.smileidentity.com/v1/auth_smile) and is refused every time (HTTP 400, “Error authenticating request”). This points to the Smile ID partner ID, key or signature the app gives the library, not to the selfie itself. The earlier start-up error (“smile_config.json not found”) no longer appears in this build.',
+    expected: 'With valid Smile ID test credentials, the selfie should be accepted and sign-up should go on to step 4. If the check can’t run, the app should fall back to the selfie upload, as this build is meant to, and show a message a customer can act on, not “Unauthorized”.',
+    area: 'Sign-up (tried by hand)',
+  },
+  {
+    title: 'A sign-up stopped part-way leaves an account that cannot sign in',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app and API)',
+    impact: 'A customer whose app closes during sign-up is told their password is wrong and pointed to “Forgot password”, although they never set one.',
+    saw: 'After the passcode step, the app was restarted. It opened on the Welcome screen with the sign-up forgotten. “I already have an account” recognised the email and asked for a password; the 6-digit passcode was refused with “Incorrect email and password combination. Please click on forgot password link to reset your password”. Starting “Create account” again with the same phone number (a new SMS code) and the same email did pick up the sign-up again.',
+    expected: 'Sign-in with an unfinished account should say the sign-up isn’t complete and take the customer back to where they stopped.',
+    area: 'Sign-up (tried by hand)',
+  },
+  {
+    title: 'The selfie screen waits forever when it can’t see a face',
+    severity: 'Low',
+    owner: 'Engineering (mobile app)',
+    impact: 'A customer with a poor camera or bad light is left on “Position your face in the oval” with no help and no way out except the phone’s Back button.',
+    saw: 'On a camera with no face in view, the Smile ID screen showed “Position your face in the oval” for over a minute with no timeout, tip, Cancel or Close button.',
+    expected: 'After a short while, offer help (light, distance) and a way to cancel or use the selfie upload instead.',
+    area: 'Sign-up (tried by hand)',
   },
   // Found by hand on 2 November (30 October build) and not yet covered by an automated check —
   // the rest of that round's findings are in MOBILE_FINDINGS, matched to mobile/specs/journeys.
@@ -484,9 +502,10 @@ const MOBILE_EXTRA_FINDINGS = [
 
 /** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
 const MOBILE_JOURNEYS = {
-  when: '2–4 November, 30 October, 3 November and 4 November builds',
+  when: '2–11 November, 30 October, 3, 4 and 9 November builds',
   intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
+    ['11 Nov (9 November build): sign up as a new customer with the Smile ID selfie', 'bad', 'A new account was started with a real phone number, BVN and email, with the tester’s face on the laptop webcam. Steps 1–3 worked: SMS code, email, a 6-digit passcode, and the BVN, which matched NIBSS and showed the customer’s name, date of birth and gender to confirm. The Smile ID selfie screen opened and took the selfie, but every submission was refused with “Your selfie failed to process — Unauthorized”, so sign-up stopped at step 3 of 6. Steps 4–6 could not be reached. The fallback selfie upload was never offered. See “Problems found”.'],
     ['4 Nov (4 November build): invest in RWIN, REAP and RTN from the wallet (Tier 2)', 'bad', 'Created an RWIN goal (#85: ₦100,000 target, 90 days, 3 × ₦32,587.54 + ₦2,237.38 interest at 14%, maturity 2 February 2027), a REAP goal (#86: ₦50,000 target, 30 days, ₦48,796.80 + ₦1,203.21 interest at 30%, maturity 4 December 2026) and an RTN note (#87: ₦100,000, 90 days, upfront, ₦4,931.51 interest at 20%, maturity 2 February 2027). Every figure matches the product rules. None could be paid for: “Add ₦…” does nothing, and the wallet stayed at ₦9,900,707.51. Also seen: the REAP amount shown as “₦48,796.8”; the “Earn Up to 20% P.A.” REAP card is back on Grow (REAP itself shows 30%); RTN for 90 days gives 20% while its card says 25% (the rate table has two overlapping rows for 0–120 days). Payouts, withdrawals and early exits could not be tried, as no plan could be paid for. Checked again on 6 November: still nothing taken. The scheduled payment run moved the RWIN and REAP goals’ next payment from 4 November to 5 December without collecting anything or counting a missed payment, and the two RTN notes are still open, marked “Underfunded”, a day after their payment deadline passed. See “Problems found”.'],
     ['4 Nov (4 November build): check a Public Sector loan offer (#194)', 'ok', 'Application #194 (₦300,000, 9 months, 4% a month on a reducing balance) was approved and waiting for the customer. The offer screen showed ₦60,000 interest and ₦360,000 to repay, which matches the reducing-balance schedule. The ₦1,086,004.29 interest shown on the #191 offer is no longer seen. The offer was left for the team to accept or decline.'],
     ['4 Nov (4 November build): apply for a Nano or Payday loan', 'ok', 'Fixed. All four short-term loans on the Borrow screen (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) open their amount screen, with the limits set in the admin portal. Nano: ₦5,000 for 30 days showed 10% interest (₦500) and ₦5,500 to repay. Stopped before “Submit application”, so nothing was applied for.'],
@@ -512,7 +531,8 @@ const MOBILE_JOURNEYS = {
 const MOBILE_CHANGES = {
   since: '3 November',
   items: [
-    ['Re-run on 10 November (9 November build)', 'The 9 November build was installed and every check was run again. The results are the same as on 6 November: 23 passed, the same 10 problems, nothing newly broken or fixed. The build again keeps the same version number (1.1.55, code 92), so the test tools treated it as already installed until it was removed and installed by hand. This build adds the Smile ID selfie check during sign-up (using the two new onboarding liveness endpoints), a BVN prompt when the server asks for one, and a fallback to the old selfie upload if the check cannot start. That sign-up check has not been tried yet.'],
+    ['11 November: Smile ID sign-up tried (9 November build)', 'A new customer sign-up was tried by hand with a real phone number, BVN and the tester’s face. The Smile ID check now starts (the “settings file missing” error is gone) and the camera, selfie and smile prompts work. But Smile ID refuses the app’s credentials (“Unauthorized”), so no selfie can be submitted and sign-up can’t be finished. Also found: an unfinished sign-up leaves an account that can’t sign in, and the selfie screen never times out. See “Problems found”.'],
+    ['Re-run on 10 November (9 November build)', 'The 9 November build was installed and every check was run again. The results are the same as on 6 November: 23 passed, the same 10 problems, nothing newly broken or fixed. The build again keeps the same version number (1.1.55, code 92), so the test tools treated it as already installed until it was removed and installed by hand. This build adds the Smile ID selfie check during sign-up (using the two new onboarding liveness endpoints), a BVN prompt when the server asks for one, and a fallback to the old selfie upload if the check cannot start. That sign-up check was tried by hand on 11 November (see above).'],
     ['Re-run on 6 November (same 4 November build)', 'No new app build was available, so the 4 November build was tested against the latest back end. No crashes. New problem: the Personal loan “See Breakdown” no longer opens (see “Problems found”). Everything else is as on 4 November. The Nano and Payday checks did not run, because the Tier 1 test account now has a ₦4,000,000 Personal loan (#199) waiting to be paid out, so its Borrow screen shows that loan instead of the products. Screenshots of the app now show the screen (they used to come out black).'],
     ['App build', 'Tested the 4 November build. It still has the same version number as the earlier builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.'],
     ['Fixed: Nano and Payday crash', 'All four short-term loans (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) now open their amount screen. Checked by the automated run and by hand. No crashes were seen anywhere else in the app during the full run.'],
@@ -520,7 +540,7 @@ const MOBILE_CHANGES = {
     ['Phone sign-in re-checked', 'A number written 080… does work, but takes 20 seconds or more; the automated check used to give up after 15 seconds, which is why it was reported as not working. A number written +234… did not work.'],
     ['Fixed: loan offer interest', 'The Public Sector offer (#194) shows ₦60,000 interest and ₦360,000 to repay on ₦300,000 over 9 months, matching the reducing-balance schedule. The #191 offer had shown ₦1,086,004.29 interest. The offer screen also now shows the tenor in months and a repayment date.'],
     ['Still seen: VAT taken from the payout', '#191 (₦300,000) was paid out as ₦277,500, and #193 (₦250,000) as ₦231,250: 7.5% VAT is still deducted at payout although no fee is charged. See “Problems found”.'],
-    ['Still not fixed', 'Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. SmileID still can’t start (its settings file is missing). RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.'],
+    ['Still not fixed', 'Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.'],
   ],
 }
 

@@ -145,7 +145,7 @@
 
   <div class="tabs" role="tablist" aria-label="Which results to show">
     <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="true" tabindex="0"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">6 problems</span></button>
-    <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">21 problems</span></button>
+    <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">23 problems</span></button>
     <button class="tab" role="tab" id="tab-api" aria-controls="panel-api" aria-selected="false" tabindex="-1"><span aria-hidden="true">🔌</span> API <span class="pill bad">6 problems</span></button>
   </div>
 
@@ -356,8 +356,8 @@ expect(received).toEqual(expected) // deep equality
     </div>
 
     <section class="card verdict warn">
-      <h3>Not ready for release — 21 problems need attention (including 11 found by hand or in the app’s error log)</h3>
-      <p>7 of them affect money or compliance and should be fixed before release.</p>
+      <h3>Not ready for release — 23 problems need attention (including 13 found by hand or in the app’s error log)</h3>
+      <p>6 of them affect money or compliance and should be fixed before release.</p>
     </section>
 
     <div class="stats">
@@ -373,16 +373,16 @@ expect(received).toEqual(expected) // deep equality
 
     <div class="sec">
     <h2>What changed since the last run (3 November)</h2>
-    <ul class="clean"><li><strong>Re-run on 10 November (9 November build).</strong> The 9 November build was installed and every check was run again. The results are the same as on 6 November: 23 passed, the same 10 problems, nothing newly broken or fixed. The build again keeps the same version number (1.1.55, code 92), so the test tools treated it as already installed until it was removed and installed by hand. This build adds the Smile ID selfie check during sign-up (using the two new onboarding liveness endpoints), a BVN prompt when the server asks for one, and a fallback to the old selfie upload if the check cannot start. That sign-up check has not been tried yet.</li><li><strong>Re-run on 6 November (same 4 November build).</strong> No new app build was available, so the 4 November build was tested against the latest back end. No crashes. New problem: the Personal loan “See Breakdown” no longer opens (see “Problems found”). Everything else is as on 4 November. The Nano and Payday checks did not run, because the Tier 1 test account now has a ₦4,000,000 Personal loan (#199) waiting to be paid out, so its Borrow screen shows that loan instead of the products. Screenshots of the app now show the screen (they used to come out black).</li><li><strong>App build.</strong> Tested the 4 November build. It still has the same version number as the earlier builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.</li><li><strong>Fixed: Nano and Payday crash.</strong> All four short-term loans (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) now open their amount screen. Checked by the automated run and by hand. No crashes were seen anywhere else in the app during the full run.</li><li><strong>New: investing tried by hand with the Tier 2 account.</strong> Plans can be created with correct figures, but none can be paid for in the app. See “Problems found”.</li><li><strong>Phone sign-in re-checked.</strong> A number written 080… does work, but takes 20 seconds or more; the automated check used to give up after 15 seconds, which is why it was reported as not working. A number written +234… did not work.</li><li><strong>Fixed: loan offer interest.</strong> The Public Sector offer (#194) shows ₦60,000 interest and ₦360,000 to repay on ₦300,000 over 9 months, matching the reducing-balance schedule. The #191 offer had shown ₦1,086,004.29 interest. The offer screen also now shows the tenor in months and a repayment date.</li><li><strong>Still seen: VAT taken from the payout.</strong> #191 (₦300,000) was paid out as ₦277,500, and #193 (₦250,000) as ₦231,250: 7.5% VAT is still deducted at payout although no fee is charged. See “Problems found”.</li><li><strong>Still not fixed.</strong> Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. SmileID still can’t start (its settings file is missing). RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.</li></ul>
+    <ul class="clean"><li><strong>11 November: Smile ID sign-up tried (9 November build).</strong> A new customer sign-up was tried by hand with a real phone number, BVN and the tester’s face. The Smile ID check now starts (the “settings file missing” error is gone) and the camera, selfie and smile prompts work. But Smile ID refuses the app’s credentials (“Unauthorized”), so no selfie can be submitted and sign-up can’t be finished. Also found: an unfinished sign-up leaves an account that can’t sign in, and the selfie screen never times out. See “Problems found”.</li><li><strong>Re-run on 10 November (9 November build).</strong> The 9 November build was installed and every check was run again. The results are the same as on 6 November: 23 passed, the same 10 problems, nothing newly broken or fixed. The build again keeps the same version number (1.1.55, code 92), so the test tools treated it as already installed until it was removed and installed by hand. This build adds the Smile ID selfie check during sign-up (using the two new onboarding liveness endpoints), a BVN prompt when the server asks for one, and a fallback to the old selfie upload if the check cannot start. That sign-up check was tried by hand on 11 November (see above).</li><li><strong>Re-run on 6 November (same 4 November build).</strong> No new app build was available, so the 4 November build was tested against the latest back end. No crashes. New problem: the Personal loan “See Breakdown” no longer opens (see “Problems found”). Everything else is as on 4 November. The Nano and Payday checks did not run, because the Tier 1 test account now has a ₦4,000,000 Personal loan (#199) waiting to be paid out, so its Borrow screen shows that loan instead of the products. Screenshots of the app now show the screen (they used to come out black).</li><li><strong>App build.</strong> Tested the 4 November build. It still has the same version number as the earlier builds (1.1.55, code 92). The version should go up with each build so testers and devices can tell them apart.</li><li><strong>Fixed: Nano and Payday crash.</strong> All four short-term loans (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) now open their amount screen. Checked by the automated run and by hand. No crashes were seen anywhere else in the app during the full run.</li><li><strong>New: investing tried by hand with the Tier 2 account.</strong> Plans can be created with correct figures, but none can be paid for in the app. See “Problems found”.</li><li><strong>Phone sign-in re-checked.</strong> A number written 080… does work, but takes 20 seconds or more; the automated check used to give up after 15 seconds, which is why it was reported as not working. A number written +234… did not work.</li><li><strong>Fixed: loan offer interest.</strong> The Public Sector offer (#194) shows ₦60,000 interest and ₦360,000 to repay on ₦300,000 over 9 months, matching the reducing-balance schedule. The #191 offer had shown ₦1,086,004.29 interest. The offer screen also now shows the tenor in months and a repayment date.</li><li><strong>Still seen: VAT taken from the payout.</strong> #191 (₦300,000) was paid out as ₦277,500, and #193 (₦250,000) as ₦231,250: 7.5% VAT is still deducted at payout although no fee is charged. See “Problems found”.</li><li><strong>Still not fixed.</strong> Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.</li></ul>
     </div>
 
     <div class="sec">
-    <h2>What we tried by hand (2–4 November, 30 October, 3 November and 4 November builds)</h2>
+    <h2>What we tried by hand (2–11 November, 30 October, 3, 4 and 9 November builds)</h2>
     <p class="muted">A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.</p>
     <div class="table-wrap">
     <table>
       <thead><tr><th>Activity</th><th>Result</th></tr></thead>
-      <tbody><tr><td class="area"><strong>4 Nov (4 November build): invest in RWIN, REAP and RTN from the wallet (Tier 2)</strong><div class="muted">Created an RWIN goal (#85: ₦100,000 target, 90 days, 3 × ₦32,587.54 + ₦2,237.38 interest at 14%, maturity 2 February 2027), a REAP goal (#86: ₦50,000 target, 30 days, ₦48,796.80 + ₦1,203.21 interest at 30%, maturity 4 December 2026) and an RTN note (#87: ₦100,000, 90 days, upfront, ₦4,931.51 interest at 20%, maturity 2 February 2027). Every figure matches the product rules. None could be paid for: “Add ₦…” does nothing, and the wallet stayed at ₦9,900,707.51. Also seen: the REAP amount shown as “₦48,796.8”; the “Earn Up to 20% P.A.” REAP card is back on Grow (REAP itself shows 30%); RTN for 90 days gives 20% while its card says 25% (the rate table has two overlapping rows for 0–120 days). Payouts, withdrawals and early exits could not be tried, as no plan could be paid for. Checked again on 6 November: still nothing taken. The scheduled payment run moved the RWIN and REAP goals’ next payment from 4 November to 5 December without collecting anything or counting a missed payment, and the two RTN notes are still open, marked “Underfunded”, a day after their payment deadline passed. See “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>4 Nov (4 November build): check a Public Sector loan offer (#194)</strong><div class="muted">Application #194 (₦300,000, 9 months, 4% a month on a reducing balance) was approved and waiting for the customer. The offer screen showed ₦60,000 interest and ₦360,000 to repay, which matches the reducing-balance schedule. The ₦1,086,004.29 interest shown on the #191 offer is no longer seen. The offer was left for the team to accept or decline.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>4 Nov (4 November build): apply for a Nano or Payday loan</strong><div class="muted">Fixed. All four short-term loans on the Borrow screen (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) open their amount screen, with the limits set in the admin portal. Nano: ₦5,000 for 30 days showed 10% interest (₦500) and ₦5,500 to repay. Stopped before “Submit application”, so nothing was applied for.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>4 Nov: accept the approved Public Sector offer (#191)</strong><div class="muted">After admin approved #191, the Borrow tab showed “Offer ready” with Accept and Decline buttons. Accepting worked: the app showed “Your disbursement is in progress”, and in the admin portal #191 changed to “Accepted by customer” with a Disburse button. That matches the rule that the customer must accept before admin can pay out. Problem: the offer screen showed interest of ₦1,086,004.29 and a repayment of ₦1,386,004.29 on ₦300,000 (the schedule totals ₦342,000), and the Loans card already shows ₦312,000 owed although nothing has been paid out. Payout was left to the admin team. See “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>3 Nov: apply for a Public Sector loan (Adebanjo Public Sector, ₦300,000, 6 months)</strong><div class="muted">Submitted as application #191, which is waiting for approval in the admin portal. What matched the admin set-up: tenors of 3, 6, 9, 12 and 18 months; the reducing-balance interest model at 4% a month (schedule ₦62,000 down to ₦52,000); the 6 required documents; and the approval workflow (level 1). Problems: no employer, IPPIS or staff number, retirement date or affordability step; ₦100,000 and ₦11,000,000 accepted; a 1% fee shown but ₦0 fee and 7.5% VAT saved; and “Total Repayable” (₦345,000) doesn’t match the schedule (₦342,000). The repayment breakdown took about 10 seconds to open. The first try was refused with “You have an active loan running currently” while the customer’s previous loan was being closed; a minute later it went through. See “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>3 Nov: check the Borrow screen lists the right products</strong><div class="muted">Shows the active products from the admin portal, including both active Public Sector products (Adebanjo Public Sector and public-sector-loan-v2). The draft “Auto-public” is correctly hidden.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>3 Nov: apply for a Nano or Payday loan</strong><div class="muted">Still crashes on the first screen (“useFocusEffect doesn’t exist”).</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>3 Nov: Tier 3 profile and identity</strong><div class="muted">Still “2/3, 1 key identity step left”, and the list includes “Upgrade to Tier 2” for a Tier 3 customer. SmileID still reports its settings file missing.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: apply for a Personal loan (₦100,000, 3 months), accept it and receive it</strong><div class="muted">Full journey done: applied in the app (after uploading three documents), approved in the admin portal (#189), offer accepted in the app, paid out from the admin portal. The repayment schedule (3 × about ₦41,833, ₦125,500 in total) follows the “Monthly equal” rule correctly, and the Borrow screen correctly blocks new loans until this one is repaid. But the offer showed ₦865,000 to repay, ₦7,500 “Loan VAT” was taken from the payout, and the next-payment countdown is wrong — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: apply for a Nano or Payday loan</strong><div class="muted">Crashes on the first screen — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: invest in RWIN, REAP or RTN as a Tier 3 customer</strong><div class="muted">Blocked as “not available on your current tier” in the early afternoon, with an upgrade screen saying “You are on Tier 3 … upgrade to Tier 3”. By the automated run later that day all three products opened, so it now passes.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>2 Nov: create, top up and delete an RWIN goal as a Tier 1 customer</strong><div class="muted">Goal created (₦100,000 over 90 days, maturity 31 January 2027 — correct) and deleted. The top-up could not be paid: the wallet was empty and card funding does not work.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: edit employment details</strong><div class="muted">Job title changed, saved and still there after restarting the app; then changed back.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>2 Nov: add a home address</strong><div class="muted">Not saved: the app briefly shows “You can no longer update your residential address”, although no address is on file — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: add a next of kin</strong><div class="muted">Cannot be saved (“City cannot be empty”, no City field).</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: fund the wallet</strong><div class="muted">Card payment does nothing. Bank transfer (dedicated account) and USSD are offered but were not used, as they move real money.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: send money and pay bills</strong><div class="muted">Screens open; not completed, as they move real money. Send Money shows recipients the customer never added.</div></td><td class="result"><span class="badge idle">Partly checked</span></td></tr><tr><td class="area"><strong>2 Nov: log out and switch account</strong><div class="muted">“Log out” does nothing; “Switch Account” on the sign-in screen works.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr></tbody>
+      <tbody><tr><td class="area"><strong>11 Nov (9 November build): sign up as a new customer with the Smile ID selfie</strong><div class="muted">A new account was started with a real phone number, BVN and email, with the tester’s face on the laptop webcam. Steps 1–3 worked: SMS code, email, a 6-digit passcode, and the BVN, which matched NIBSS and showed the customer’s name, date of birth and gender to confirm. The Smile ID selfie screen opened and took the selfie, but every submission was refused with “Your selfie failed to process — Unauthorized”, so sign-up stopped at step 3 of 6. Steps 4–6 could not be reached. The fallback selfie upload was never offered. See “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>4 Nov (4 November build): invest in RWIN, REAP and RTN from the wallet (Tier 2)</strong><div class="muted">Created an RWIN goal (#85: ₦100,000 target, 90 days, 3 × ₦32,587.54 + ₦2,237.38 interest at 14%, maturity 2 February 2027), a REAP goal (#86: ₦50,000 target, 30 days, ₦48,796.80 + ₦1,203.21 interest at 30%, maturity 4 December 2026) and an RTN note (#87: ₦100,000, 90 days, upfront, ₦4,931.51 interest at 20%, maturity 2 February 2027). Every figure matches the product rules. None could be paid for: “Add ₦…” does nothing, and the wallet stayed at ₦9,900,707.51. Also seen: the REAP amount shown as “₦48,796.8”; the “Earn Up to 20% P.A.” REAP card is back on Grow (REAP itself shows 30%); RTN for 90 days gives 20% while its card says 25% (the rate table has two overlapping rows for 0–120 days). Payouts, withdrawals and early exits could not be tried, as no plan could be paid for. Checked again on 6 November: still nothing taken. The scheduled payment run moved the RWIN and REAP goals’ next payment from 4 November to 5 December without collecting anything or counting a missed payment, and the two RTN notes are still open, marked “Underfunded”, a day after their payment deadline passed. See “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>4 Nov (4 November build): check a Public Sector loan offer (#194)</strong><div class="muted">Application #194 (₦300,000, 9 months, 4% a month on a reducing balance) was approved and waiting for the customer. The offer screen showed ₦60,000 interest and ₦360,000 to repay, which matches the reducing-balance schedule. The ₦1,086,004.29 interest shown on the #191 offer is no longer seen. The offer was left for the team to accept or decline.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>4 Nov (4 November build): apply for a Nano or Payday loan</strong><div class="muted">Fixed. All four short-term loans on the Borrow screen (Adebanjo Nano, Adebanjo Payday, nano-loan-v2 and payday-loan-v2) open their amount screen, with the limits set in the admin portal. Nano: ₦5,000 for 30 days showed 10% interest (₦500) and ₦5,500 to repay. Stopped before “Submit application”, so nothing was applied for.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>4 Nov: accept the approved Public Sector offer (#191)</strong><div class="muted">After admin approved #191, the Borrow tab showed “Offer ready” with Accept and Decline buttons. Accepting worked: the app showed “Your disbursement is in progress”, and in the admin portal #191 changed to “Accepted by customer” with a Disburse button. That matches the rule that the customer must accept before admin can pay out. Problem: the offer screen showed interest of ₦1,086,004.29 and a repayment of ₦1,386,004.29 on ₦300,000 (the schedule totals ₦342,000), and the Loans card already shows ₦312,000 owed although nothing has been paid out. Payout was left to the admin team. See “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>3 Nov: apply for a Public Sector loan (Adebanjo Public Sector, ₦300,000, 6 months)</strong><div class="muted">Submitted as application #191, which is waiting for approval in the admin portal. What matched the admin set-up: tenors of 3, 6, 9, 12 and 18 months; the reducing-balance interest model at 4% a month (schedule ₦62,000 down to ₦52,000); the 6 required documents; and the approval workflow (level 1). Problems: no employer, IPPIS or staff number, retirement date or affordability step; ₦100,000 and ₦11,000,000 accepted; a 1% fee shown but ₦0 fee and 7.5% VAT saved; and “Total Repayable” (₦345,000) doesn’t match the schedule (₦342,000). The repayment breakdown took about 10 seconds to open. The first try was refused with “You have an active loan running currently” while the customer’s previous loan was being closed; a minute later it went through. See “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>3 Nov: check the Borrow screen lists the right products</strong><div class="muted">Shows the active products from the admin portal, including both active Public Sector products (Adebanjo Public Sector and public-sector-loan-v2). The draft “Auto-public” is correctly hidden.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>3 Nov: apply for a Nano or Payday loan</strong><div class="muted">Still crashes on the first screen (“useFocusEffect doesn’t exist”).</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>3 Nov: Tier 3 profile and identity</strong><div class="muted">Still “2/3, 1 key identity step left”, and the list includes “Upgrade to Tier 2” for a Tier 3 customer. SmileID still reports its settings file missing.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: apply for a Personal loan (₦100,000, 3 months), accept it and receive it</strong><div class="muted">Full journey done: applied in the app (after uploading three documents), approved in the admin portal (#189), offer accepted in the app, paid out from the admin portal. The repayment schedule (3 × about ₦41,833, ₦125,500 in total) follows the “Monthly equal” rule correctly, and the Borrow screen correctly blocks new loans until this one is repaid. But the offer showed ₦865,000 to repay, ₦7,500 “Loan VAT” was taken from the payout, and the next-payment countdown is wrong — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: apply for a Nano or Payday loan</strong><div class="muted">Crashes on the first screen — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: invest in RWIN, REAP or RTN as a Tier 3 customer</strong><div class="muted">Blocked as “not available on your current tier” in the early afternoon, with an upgrade screen saying “You are on Tier 3 … upgrade to Tier 3”. By the automated run later that day all three products opened, so it now passes.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>2 Nov: create, top up and delete an RWIN goal as a Tier 1 customer</strong><div class="muted">Goal created (₦100,000 over 90 days, maturity 31 January 2027 — correct) and deleted. The top-up could not be paid: the wallet was empty and card funding does not work.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: edit employment details</strong><div class="muted">Job title changed, saved and still there after restarting the app; then changed back.</div></td><td class="result"><span class="badge ok">Worked</span></td></tr><tr><td class="area"><strong>2 Nov: add a home address</strong><div class="muted">Not saved: the app briefly shows “You can no longer update your residential address”, although no address is on file — see “Problems found”.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: add a next of kin</strong><div class="muted">Cannot be saved (“City cannot be empty”, no City field).</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: fund the wallet</strong><div class="muted">Card payment does nothing. Bank transfer (dedicated account) and USSD are offered but were not used, as they move real money.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr><tr><td class="area"><strong>2 Nov: send money and pay bills</strong><div class="muted">Screens open; not completed, as they move real money. Send Money shows recipients the customer never added.</div></td><td class="result"><span class="badge idle">Partly checked</span></td></tr><tr><td class="area"><strong>2 Nov: log out and switch account</strong><div class="muted">“Log out” does nothing; “Switch Account” on the sign-in screen works.</div></td><td class="result"><span class="badge bad">Problem</span></td></tr></tbody>
     </table>
     </div>
     </div>
@@ -453,20 +453,7 @@ Expected: 0</pre>
       <article class="card finding">
         <header>
           <span class="sev high">High priority</span>
-          <h3>4. Identity verification (SmileID) fails to start in this app build</h3>
-          <p class="muted">Area: App start-up (seen in the app’s error log) · Who should look at this: Engineering (mobile app build)</p>
-        </header>
-        <p class="impact">Selfie / ID verification for upgrading a customer’s KYC tier is likely to fail in this build.</p>
-        <dl>
-          <dt>What we saw</dt><dd>Every time the app starts, its error log reports “SmileID initialize error: smile_config.json not found in assets”. The file is missing from the app package.</dd>
-          <dt>What should happen</dt><dd>The SmileID configuration file should be included in the build so identity checks can run.</dd>
-        </dl>
-        
-      </article>
-      <article class="card finding">
-        <header>
-          <span class="sev high">High priority</span>
-          <h3>5. The loan offer asks the customer to repay ₦865,000 on a ₦100,000 loan</h3>
+          <h3>4. The loan offer asks the customer to repay ₦865,000 on a ₦100,000 loan</h3>
           <p class="muted">Area: Borrowing (tried by hand) · Who should look at this: Engineering (loans and mobile app)</p>
         </header>
         <p class="impact">Customers are asked to accept terms that are wildly wrong. Most would decline; anyone who accepts is agreeing to repay more than eight times what they borrowed.</p>
@@ -479,7 +466,7 @@ Expected: 0</pre>
       <article class="card finding">
         <header>
           <span class="sev high">High priority</span>
-          <h3>6. Public Sector loans accept amounts outside the allowed range</h3>
+          <h3>5. Public Sector loans accept amounts outside the allowed range</h3>
           <p class="muted">Area: Borrowing: Public Sector (tried by hand) · Who should look at this: Engineering (loans and mobile app)</p>
         </header>
         <p class="impact">Customers can apply for, and be shown offers on, loans the product does not allow, so the lending limits are not enforced.</p>
@@ -492,7 +479,7 @@ Expected: 0</pre>
       <article class="card finding">
         <header>
           <span class="sev high">High priority</span>
-          <h3>7. The Public Sector application skips the employer and payroll steps</h3>
+          <h3>6. The Public Sector application skips the employer and payroll steps</h3>
           <p class="muted">Area: Borrowing: Public Sector (tried by hand) · Who should look at this: Product and Engineering (loans and mobile app)</p>
         </header>
         <p class="impact">Loans meant to be repaid through the employer’s payroll can be applied for without saying who the employer is or checking the customer can afford the deductions.</p>
@@ -505,7 +492,7 @@ Expected: 0</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>8. Funding the wallet by card does nothing</h3>
+          <h3>7. Funding the wallet by card does nothing</h3>
           <p class="muted">Area: Account · Who should look at this: Engineering (mobile app and payments)</p>
         </header>
         <p class="impact">Customers cannot add money by card, so they cannot fund investments or repayments that way.</p>
@@ -523,7 +510,7 @@ Expected: &quot;payment page opened&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>9. “Log out” does nothing</h3>
+          <h3>8. “Log out” does nothing</h3>
           <p class="muted">Area: Account · Who should look at this: Engineering (mobile app)</p>
         </header>
         <p class="impact">Customers cannot sign out — a risk on shared or lost phones.</p>
@@ -541,7 +528,7 @@ Expected: &quot;signed out&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>10. The Tier 3 test account still shows an identity step to complete</h3>
+          <h3>9. The Tier 3 test account still shows an identity step to complete</h3>
           <p class="muted">Area: Home, Grow and Borrow screens · Who should look at this: Product and Compliance (KYC)</p>
         </header>
         <p class="impact">Either the test account is not really Tier 3, or the “Complete your profile” card does not follow the customer’s verification level — which would confuse fully verified customers.</p>
@@ -559,7 +546,7 @@ Expected: 3</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>11. Next of kin cannot be saved</h3>
+          <h3>10. Next of kin cannot be saved</h3>
           <p class="muted">Area: Profile · Who should look at this: Engineering (mobile app and API)</p>
         </header>
         <p class="impact">Customers cannot add a next of kin, which is normally required for KYC.</p>
@@ -577,7 +564,7 @@ Expected pattern: not /cannot|required|invalid|error|failed/i</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>12. Signing in with a +234 phone number does not work</h3>
+          <h3>11. Signing in with a +234 phone number does not work</h3>
           <p class="muted">Area: Signing in · Who should look at this: Engineering (mobile app)</p>
         </header>
         <p class="impact">Customers who type their number with the country code (+234…) cannot sign in with it.</p>
@@ -595,7 +582,7 @@ Expected: &quot;passcode screen&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>13. RWIN goals offer tenors that are not in the RWIN rate table</h3>
+          <h3>12. RWIN goals offer tenors that are not in the RWIN rate table</h3>
           <p class="muted">Area: Investing · Who should look at this: Product and Engineering (mobile app)</p>
         </header>
         <p class="impact">Customers can book a term with no published rate, so the rate they get is unclear.</p>
@@ -613,7 +600,7 @@ Expected substring: &quot;not in table: none&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>14. Investment goals can be created and topped up with an empty wallet, with no warning</h3>
+          <h3>13. Investment goals can be created and topped up with an empty wallet, with no warning</h3>
           <p class="muted">Area: Investing · Who should look at this: Engineering (mobile app) and Product</p>
         </header>
         <p class="impact">Customers set up a plan whose first payment will fail, and get no message telling them why nothing happens.</p>
@@ -631,7 +618,7 @@ Expected: &quot;the app responded&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Critical priority</span>
-          <h3>15. Investments cannot be paid for in the app</h3>
+          <h3>14. Investments cannot be paid for in the app</h3>
           <p class="muted">Area: Investing (tried by hand) · Who should look at this: Engineering (mobile app and investments)</p>
         </header>
         <p class="impact">No customer can put money into RWIN, REAP or RTN from the app, so no new investment can start.</p>
@@ -644,7 +631,7 @@ Expected: &quot;the app responded&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>16. Home counts ₦300,000 in plans the customer does not have</h3>
+          <h3>15. Home counts ₦300,000 in plans the customer does not have</h3>
           <p class="muted">Area: Investing (tried by hand) · Who should look at this: Engineering (investments)</p>
         </header>
         <p class="impact">The total balance on Home is overstated by ₦300,000.</p>
@@ -656,8 +643,34 @@ Expected: &quot;the app responded&quot;</pre>
       </article>
       <article class="card finding">
         <header>
+          <span class="sev med">Critical priority</span>
+          <h3>16. New customers cannot finish sign-up: the Smile ID selfie is refused as “Unauthorized”</h3>
+          <p class="muted">Area: Sign-up (tried by hand) · Who should look at this: Engineering (mobile app and Smile ID set-up)</p>
+        </header>
+        <p class="impact">No new customer can open an account: sign-up stops at the selfie (step 3 of 6), and the half-made account cannot be used.</p>
+        <dl>
+          <dt>What we saw</dt><dd>11 November, 9 November build, a new sign-up with a real phone number, BVN and the tester’s own face (laptop webcam). Phone code, email, passcode and BVN all worked, and the BVN matched NIBSS (“Is this you?”). The Smile ID selfie screen then opened, took the selfie and the smile, and asked “Is this a good quality selfie?”. After “Yes, use this” it showed “Your selfie failed to process — Unauthorized”, and “Retry” failed the same way (4 tries). The app’s log shows why: before anything is uploaded, the Smile ID library asks Smile ID’s test service for permission (POST testapi.smileidentity.com/v1/auth_smile) and is refused every time (HTTP 400, “Error authenticating request”). This points to the Smile ID partner ID, key or signature the app gives the library, not to the selfie itself. The earlier start-up error (“smile_config.json not found”) no longer appears in this build.</dd>
+          <dt>What should happen</dt><dd>With valid Smile ID test credentials, the selfie should be accepted and sign-up should go on to step 4. If the check can’t run, the app should fall back to the selfie upload, as this build is meant to, and show a message a customer can act on, not “Unauthorized”.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
           <span class="sev med">Medium priority</span>
-          <h3>17. A customer with no address on file is told they can no longer change it</h3>
+          <h3>17. A sign-up stopped part-way leaves an account that cannot sign in</h3>
+          <p class="muted">Area: Sign-up (tried by hand) · Who should look at this: Engineering (mobile app and API)</p>
+        </header>
+        <p class="impact">A customer whose app closes during sign-up is told their password is wrong and pointed to “Forgot password”, although they never set one.</p>
+        <dl>
+          <dt>What we saw</dt><dd>After the passcode step, the app was restarted. It opened on the Welcome screen with the sign-up forgotten. “I already have an account” recognised the email and asked for a password; the 6-digit passcode was refused with “Incorrect email and password combination. Please click on forgot password link to reset your password”. Starting “Create account” again with the same phone number (a new SMS code) and the same email did pick up the sign-up again.</dd>
+          <dt>What should happen</dt><dd>Sign-in with an unfinished account should say the sign-up isn’t complete and take the customer back to where they stopped.</dd>
+        </dl>
+        
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev med">Medium priority</span>
+          <h3>18. A customer with no address on file is told they can no longer change it</h3>
           <p class="muted">Area: Profile (tried by hand) · Who should look at this: Engineering (mobile app and API) and Product</p>
         </header>
         <p class="impact">Customers without an address cannot add one, although an address is normally needed for KYC.</p>
@@ -670,7 +683,7 @@ Expected: &quot;the app responded&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>18. Loan documents are marked “Verified” the moment they are uploaded</h3>
+          <h3>19. Loan documents are marked “Verified” the moment they are uploaded</h3>
           <p class="muted">Area: Borrowing (tried by hand) · Who should look at this: Engineering (mobile app) and Operations</p>
         </header>
         <p class="impact">Customers are told their documents are verified before anyone has checked them, and are asked to upload documents already on file.</p>
@@ -683,7 +696,7 @@ Expected: &quot;the app responded&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>19. Loan screens show a fee that is never charged, and hide the 7.5% VAT that is</h3>
+          <h3>20. Loan screens show a fee that is never charged, and hide the 7.5% VAT that is</h3>
           <p class="muted">Area: Borrowing (tried by hand) · Who should look at this: Engineering (loans) and Finance</p>
         </header>
         <p class="impact">Customers cannot see the real cost of the loan before they accept it.</p>
@@ -696,7 +709,7 @@ Expected: &quot;the app responded&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev med">Medium priority</span>
-          <h3>20. Times are shown an hour behind Nigerian time</h3>
+          <h3>21. Times are shown an hour behind Nigerian time</h3>
           <p class="muted">Area: Times and dates (tried by hand) · Who should look at this: Engineering (mobile app, admin portal and API)</p>
         </header>
         <p class="impact">Transaction and application times look wrong to customers and staff, which matters for disputes and audits.</p>
@@ -709,7 +722,7 @@ Expected: &quot;the app responded&quot;</pre>
       <article class="card finding">
         <header>
           <span class="sev low">Low priority</span>
-          <h3>21. Phone sign-in takes 20 seconds or more to respond</h3>
+          <h3>22. Phone sign-in takes 20 seconds or more to respond</h3>
           <p class="muted">Area: Signing in · Who should look at this: Engineering (mobile app and back end)</p>
         </header>
         <p class="impact">After tapping Continue nothing visibly happens for 20 seconds or more, so customers may think the app is stuck and tap again or give up. Signing in with an email moves on in about 1 second.</p>
@@ -723,6 +736,19 @@ Expected: &quot;within 10 s&quot;</pre>
           
           
         </details>
+      </article>
+      <article class="card finding">
+        <header>
+          <span class="sev low">Low priority</span>
+          <h3>23. The selfie screen waits forever when it can’t see a face</h3>
+          <p class="muted">Area: Sign-up (tried by hand) · Who should look at this: Engineering (mobile app)</p>
+        </header>
+        <p class="impact">A customer with a poor camera or bad light is left on “Position your face in the oval” with no help and no way out except the phone’s Back button.</p>
+        <dl>
+          <dt>What we saw</dt><dd>On a camera with no face in view, the Smile ID screen showed “Position your face in the oval” for over a minute with no timeout, tip, Cancel or Close button.</dd>
+          <dt>What should happen</dt><dd>After a short while, offer help (light, distance) and a way to cancel or use the selfie upload instead.</dd>
+        </dl>
+        
       </article>
     </div>
 
