@@ -1,27 +1,23 @@
 # Dev system status
 
-Last check: **16 Nov, 14:28** (Lagos time) · 4 checked · 🔴 **1 down** · 108 not checked (staff sign-in failed; no monitor customer account set)
+Last check: **17 Nov, 00:00** (Lagos time) · 77 checked · 🟢 all up · 42 not checked (no monitor customer account set)
 
 Checks run every 15 minutes, Monday to Friday, 6am–7pm. Something counts as down after 2 failed checks in a row. The browser check opens the main admin pages after each new portal version and otherwise about once an hour; a page counts as broken when it fails twice in the same check.
 
-Admin portal version: `index-9chHSX_N.js index-DjyodVZp.css`, first seen 9 Nov, 14:44 · last browser check: 16 Nov, 14:28
+Admin portal version: `index-CBmwQ25T.js index-PGXXf3wZ.css`, first seen 17 Nov, 00:00 · last browser check: 17 Nov, 00:00
 
-## Down now
+## Slow (over 5 s)
 
-| Area | What | Answer | Down since |
-|---|---|---|---|
-| Admin portal (browser) | Admin portal sign-in (in the browser) | the sign-in page didn’t move on within 30 s | 16 Nov, 14:28 |
-
-## Failed the last check (not yet counted as down)
-
-| Area | What | Answer | |
-|---|---|---|---|
-| Sign-in | Staff sign-in | could not connect |  |
+- List system alerts (GET /api/v3/investment-management/system-alerts): 14.3 s
+- Get loan collections (GET /api/v3/loan-repayments/collections): 10.7 s
+- Can this account close? (GET /api/v3/account-controls/customers/{id}/closure-check): 6.0 s
 
 ## Recent changes
 
 | When | What | Change |
 |---|---|---|
+| 17 Nov, 00:00 | Admin portal sign-in (in the browser) | 🟢 back up after 572 min |
+| 17 Nov, 00:00 | Admin portal | 🔵 new version deployed (index-CBmwQ25T.js index-PGXXf3wZ.css) |
 | 16 Nov, 14:28 | Admin portal sign-in (in the browser) | 🔴 down: the sign-in page didn’t move on within 30 s |
 | 9 Nov, 14:44 | Admin portal | 🔵 new version deployed (index-9chHSX_N.js index-DjyodVZp.css) |
 | 6 Nov, 13:49 | Admin portal | 🔵 new version deployed (index-DjyodVZp.css index-u3PfbocH.js) |
