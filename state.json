@@ -2,14 +2,15 @@
  "targets": {
   "sign-in admin": {
    "status": "up",
-   "fails": 0,
+   "fails": 1,
    "name": "Staff sign-in",
    "area": "Sign-in",
-   "ok": true,
-   "status_code": 200,
-   "ms": 240,
-   "why": "",
-   "checkedAt": "2026-11-13T23:17:32.303Z"
+   "ok": false,
+   "status_code": 0,
+   "ms": 10556,
+   "why": "could not connect",
+   "checkedAt": "2026-11-16T13:28:47.515Z",
+   "since": "2026-11-16T13:28:47.515Z"
   },
   "site admin": {
    "status": "up",
@@ -18,9 +19,9 @@
    "area": "Websites",
    "ok": true,
    "status_code": 200,
-   "ms": 151,
+   "ms": 271,
    "why": "",
-   "checkedAt": "2026-11-13T23:17:32.303Z"
+   "checkedAt": "2026-11-16T13:28:47.515Z"
   },
   "GET /api/v3/account-controls": {
    "status": "up",
@@ -755,19 +756,21 @@
    "area": "Websites",
    "ok": true,
    "status_code": 200,
-   "ms": 279,
+   "ms": 832,
    "why": "",
-   "checkedAt": "2026-11-13T23:17:32.303Z"
+   "checkedAt": "2026-11-16T13:28:47.515Z"
   },
   "ui sign-in": {
-   "status": "up",
-   "fails": 0,
+   "status": "down",
+   "fails": 1,
    "name": "Admin portal sign-in (in the browser)",
    "area": "Admin portal (browser)",
-   "ok": true,
-   "ms": 847,
-   "why": "",
-   "checkedAt": "2026-11-13T23:17:32.303Z"
+   "ok": false,
+   "ms": 30724,
+   "why": "the sign-in page didn’t move on within 30 s",
+   "checkedAt": "2026-11-16T13:28:47.515Z",
+   "screenshot": "ui-sign-in.png",
+   "since": "2026-11-16T13:28:47.515Z"
   },
   "ui Home page after sign-in": {
    "status": "up",
@@ -841,10 +844,10 @@
   }
  },
  "lastRun": {
-  "at": "2026-11-13T23:17:32.303Z",
-  "checked": 77,
-  "notWatched": 42,
-  "notWatchedNote": "42 not checked (no monitor customer account set)",
+  "at": "2026-11-16T13:28:47.515Z",
+  "checked": 4,
+  "notWatched": 108,
+  "notWatchedNote": "108 not checked (staff sign-in failed; no monitor customer account set)",
   "statusUrl": "https://github.com/official-adebanjo/wma/blob/monitor-state/status.md"
  },
  "frontend": {
@@ -852,7 +855,7 @@
   "since": "2026-11-09T13:44:48.290Z"
  },
  "ui": {
-  "lastAt": "2026-11-13T23:17:32.253Z",
+  "lastAt": "2026-11-16T13:28:47.464Z",
   "reason": "hourly"
  }
 }
