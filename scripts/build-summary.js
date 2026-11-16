@@ -760,7 +760,7 @@ function panel(d, pub) {
   const notRun = count('not-run', tests);
   const checked = total - notRun;
   const passRate = checked ? Math.round((passed / checked) * 100) : 0;
-  const high = findings.filter((f) => f.severity === 'High').length;
+  const high = findings.filter((f) => f.severity === 'High' || f.severity === 'Critical').length;
   const n = findings.length;
   const extra = d.extraCount ? ` (including ${d.extraCount} ${d.extraNote || 'found by hand or in the app’s error log'})` : '';
   const verdict = n === 0
@@ -780,7 +780,7 @@ function panel(d, pub) {
   const cards = findings.map((f, i) => `
       <article class="card finding">
         <header>
-          <span class="sev ${f.severity === 'High' ? 'high' : f.severity === 'Low' ? 'low' : 'med'}">${esc(f.severity)} priority</span>
+          <span class="sev ${f.severity === 'Critical' ? 'crit' : f.severity === 'High' ? 'high' : f.severity === 'Low' ? 'low' : 'med'}">${esc(f.severity)} priority</span>
           <h3>${i + 1}. ${esc(f.title)}</h3>
           <p class="muted">Area: ${esc(f.area)} · Who should look at this: ${esc(f.owner)}</p>
         </header>
@@ -795,6 +795,86 @@ function panel(d, pub) {
   const notRunRows = tests.filter((t) => t.status === 'not-run')
     .map((t) => `<li><strong>${esc(t.title)}</strong> <span class="muted">(${esc(d.areas[t.file]?.name || t.file)})</span><br><span class="muted">${esc(d.notRunReason(t))}</span></li>`)
     .join('');
+
+  // Checks that worked, grouped by area, in the same order as "What was checked".
+  const passedGroups = Object.entries(d.areas).map(([file, a]) => {
+    const list = tests.filter((t) => t.file === file && t.status === 'passed');
+    if (!list.length) return '';
+    return `<details class="ref passed-group"><summary>${esc(a.name)} <span class="muted">· ${list.length} worked</span></summary><ul class="clean checks">${list.map((t) => `<li><span class="tick" aria-hidden="true">✓</span> ${esc(t.title)}</li>`).join('')}</ul></details>`;
+  }).join('');
+  const passedOther = tests.filter((t) => t.status === 'passed' && !d.areas[t.file]);
+  const passedList = passedGroups + (passedOther.length ? `<details class="ref passed-group"><summary>Other <span class="muted">· ${passedOther.length} worked</span></summary><ul class="clean checks">${passedOther.map((t) => `<li><span class="tick" aria-hidden="true">✓</span> ${esc(t.title)}</li>`).join('')}</ul></details>` : '');
+
+  // Sub-tabs inside this area: one per kind of result, so the page doesn't scroll forever.
+  const subs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'problems', label: 'Problems', n: n, tone: n ? 'bad' : 'ok' },
+    { id: 'passed', label: 'Passed', n: passed, tone: 'ok' },
+    { id: 'notrun', label: 'Not run', n: notRun, tone: 'idle' },
+    ...(d.journeys ? [{ id: 'byhand', label: d.id === 'admin' ? 'Checked by hand' : 'Tried by hand', n: d.journeys.items.length, tone: 'idle' }] : []),
+    ...(d.reference ? [{ id: 'endpoints', label: 'Endpoints' }] : []),
+    { id: 'notes', label: 'Notes & questions' },
+  ];
+  const subBody = {
+    overview: `${d.changes ? `
+    <div class="sec">
+    <h2>${d.changes.heading ? esc(d.changes.heading) : `What changed since the last run (${esc(d.changes.since)})`}</h2>
+    <ul class="clean">${d.changes.items.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
+    </div>` : ''}
+    <div class="sec">
+    <h2>What was checked</h2>
+    <p class="muted">${esc(d.intro)}</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Area</th><th class="num">Checks run</th><th class="num">Worked</th><th>Result</th></tr></thead>
+      <tbody>${areaRows}</tbody>
+    </table>
+    </div>
+    </div>`,
+    problems: `
+    <div class="sec">
+    <h2>Problems found</h2>
+    <p class="muted">These did not behave the way the product documents say they should. “High priority” means it affects customers’ money or a compliance requirement.</p>
+    ${cards || '<p>No problems were found.</p>'}
+    </div>`,
+    passed: `
+    <div class="sec">
+    <h2>Checks that worked</h2>
+    <p class="muted">${passed} check${passed === 1 ? '' : 's'} behaved as the product documents say. Open an area to see each one.</p>
+    ${passedList || '<p>No check passed in this run.</p>'}
+    </div>`,
+    notrun: `
+    <div class="sec">
+    <h2>Not run in this round</h2>
+    <ul class="clean">${notRunRows || '<li>Everything was run.</li>'}</ul>
+    </div>`,
+    byhand: d.journeys ? `
+    <div class="sec">
+    <h2>${d.id === 'admin' ? 'What we checked by hand' : 'What we tried by hand'} (${esc(d.journeys.when)})</h2>
+    <p class="muted">${esc(d.journeys.intro)}</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Activity</th><th>Result</th></tr></thead>
+      <tbody>${d.journeys.items.map(([t, tone, x]) => `<tr><td class="area"><strong>${esc(t)}</strong><div class="muted">${esc(x)}</div></td><td class="result"><span class="badge ${tone}">${tone === 'ok' ? 'Worked' : tone === 'bad' ? 'Problem' : 'Partly checked'}</span></td></tr>`).join('')}</tbody>
+    </table>
+    </div>
+    </div>` : '',
+    endpoints: d.reference ? `<div class="sec">${d.reference(pub)}</div>` : '',
+    notes: `
+    <div class="sec">
+    <h2>${esc(d.mismatchesHeading || 'Differences from the documents (not failures)')}</h2>
+    <p class="muted">${esc(d.mismatchesIntro || 'These work, but don’t match what the specifications say. Product should confirm which is correct.')}</p>
+    <ul class="clean">${d.mismatches.map(([t, x, rows]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}${rows ? gapTable(rows) : ''}</li>`).join('')}</ul>
+    </div>
+
+    <div class="sec">
+    <h2>Questions for the product team</h2>
+    <ul class="clean">${d.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ul>
+    </div>
+
+    <h2>Need the technical detail?</h2>
+    ${pub ? d.techPublic : d.techInternal}`,
+  };
 
   const pct = (x) => (total ? (x / total) * 100 : 0);
   return `
@@ -814,69 +894,23 @@ function panel(d, pub) {
     </section>
 
     <div class="stats">
-      <div class="stat"><div class="n">${total}</div><div class="muted">checks in total</div></div>
-      <div class="stat ok"><div class="n">${passed}</div><div class="muted">worked as expected</div></div>
-      <div class="stat bad"><div class="n">${failed}</div><div class="muted">checks with a problem</div></div>
-      <div class="stat"><div class="n">${notRun}</div><div class="muted">not run (see below)</div></div>
+      <a class="stat" href="#${d.id}"><div class="n">${total}</div><div class="muted">checks in total</div></a>
+      <a class="stat ok" href="#${d.id}/passed"><div class="n">${passed}</div><div class="muted">worked as expected <span class="go" aria-hidden="true">→</span></div></a>
+      <a class="stat bad" href="#${d.id}/problems"><div class="n">${failed}</div><div class="muted">checks with a problem <span class="go" aria-hidden="true">→</span></div></a>
+      <a class="stat" href="#${d.id}/notrun"><div class="n">${notRun}</div><div class="muted">not run <span class="go" aria-hidden="true">→</span></div></a>
     </div>
     <div class="bar" role="img" aria-label="${passed} passed, ${failed} problems, ${notRun} not run">
       <span class="p" style="width:${pct(passed)}%"></span><span class="f" style="width:${pct(failed)}%"></span><span class="s" style="width:${pct(notRun)}%"></span>
     </div>
     <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (${passRate}% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
-${d.changes ? `
-    <div class="sec">
-    <h2>${d.changes.heading ? esc(d.changes.heading) : `What changed since the last run (${esc(d.changes.since)})`}</h2>
-    <ul class="clean">${d.changes.items.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
-    </div>
-` : ''}${d.journeys ? `
-    <div class="sec">
-    <h2>${d.id === 'admin' ? 'What we checked by hand' : 'What we tried by hand'} (${esc(d.journeys.when)})</h2>
-    <p class="muted">${esc(d.journeys.intro)}</p>
-    <div class="table-wrap">
-    <table>
-      <thead><tr><th>Activity</th><th>Result</th></tr></thead>
-      <tbody>${d.journeys.items.map(([t, tone, x]) => `<tr><td class="area"><strong>${esc(t)}</strong><div class="muted">${esc(x)}</div></td><td class="result"><span class="badge ${tone}">${tone === 'ok' ? 'Worked' : tone === 'bad' ? 'Problem' : 'Partly checked'}</span></td></tr>`).join('')}</tbody>
-    </table>
-    </div>
-    </div>
-` : ''}
-    <div class="sec">
-    <h2>What was checked</h2>
-    <p class="muted">${esc(d.intro)}</p>
-    <div class="table-wrap">
-    <table>
-      <thead><tr><th>Area</th><th class="num">Checks run</th><th class="num">Worked</th><th>Result</th></tr></thead>
-      <tbody>${areaRows}</tbody>
-    </table>
-    </div>
-    </div>
 
-    <div class="sec">
-    <h2>Problems found</h2>
-    <p class="muted">These did not behave the way the product documents say they should. “High priority” means it affects customers’ money or a compliance requirement.</p>
-    ${cards || '<p>No problems were found.</p>'}
+    <div class="subtabs" role="tablist" aria-label="${esc(d.label)} results by kind">
+      ${subs.map((s, i) => `<button class="subtab${s.tone ? ' t-' + s.tone : ''}" role="tab" id="sub-${d.id}-${s.id}" aria-controls="subpanel-${d.id}-${s.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-panel="${d.id}" data-sub="${s.id}">${esc(s.label)}${s.n !== undefined ? ` <span class="count">${s.n}</span>` : ''}</button>`).join('\n      ')}
     </div>
-
-    <div class="sec">
-    <h2>${esc(d.mismatchesHeading || 'Differences from the documents (not failures)')}</h2>
-    <p class="muted">${esc(d.mismatchesIntro || 'These work, but don’t match what the specifications say. Product should confirm which is correct.')}</p>
-    <ul class="clean">${d.mismatches.map(([t, x, rows]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}${rows ? gapTable(rows) : ''}</li>`).join('')}</ul>
-    </div>
-
-    <div class="sec">
-    <h2>Questions for the product team</h2>
-    <ul class="clean">${d.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ul>
-    </div>
-
-${d.reference ? `<div class="sec">${d.reference(pub)}</div>` : ''}
-
-    <div class="sec">
-    <h2>Not run in this round</h2>
-    <ul class="clean">${notRunRows || '<li>Everything was run.</li>'}</ul>
-    </div>
-
-    <h2>Need the technical detail?</h2>
-    ${pub ? d.techPublic : d.techInternal}`;
+    ${subs.map((s, i) => `<div class="subpanel${i === 0 ? ' on' : ''}" role="tabpanel" id="subpanel-${d.id}-${s.id}" aria-labelledby="sub-${d.id}-${s.id}" data-sub="${s.id}">
+      <p class="subpanel-label">${esc(s.label)}</p>
+      ${subBody[s.id]}
+    </div>`).join('\n    ')}`;
 }
 
 function emptyPanel(label, how) {
@@ -1181,7 +1215,7 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 104px; }
   h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 4px; color: var(--accent); }
   h2 { font-size: 1.3rem; margin: 40px 0 6px; }
   h2.panel-title { margin-top: 4px; font-size: 1.5rem; }
@@ -1210,6 +1244,11 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
   .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
   .stat .n { font-size: 2rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  a.stat { display: block; color: inherit; text-decoration: none; }
+  .js a.stat:hover { border-color: var(--accent); }
+  .js a.stat:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .stat .go { display: none; }
+  .js .stat .go { display: inline; color: var(--accent); }
   .stat.ok .n { color: var(--good); } .stat.bad .n { color: var(--bad); }
   .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--line); margin-top: 16px; }
   .bar span { display: block; }
@@ -1225,7 +1264,7 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .85rem; font-weight: 600; white-space: nowrap; }
   .badge.ok { background: var(--good-bg); color: var(--good); } .badge.bad { background: var(--bad-bg); color: var(--bad); } .badge.idle { background: var(--idle-bg); color: var(--muted); }
   .sev { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .sev.high { background: var(--bad-bg); color: var(--bad); } .sev.med { background: var(--med-bg); color: var(--med); } .sev.low { background: var(--idle-bg); color: var(--muted); }
+  .sev.crit { background: var(--bad); color: var(--surface); } .sev.high { background: var(--bad-bg); color: var(--bad); } .sev.med { background: var(--med-bg); color: var(--med); } .sev.low { background: var(--idle-bg); color: var(--muted); }
   .method { display: inline-block; min-width: 3.6em; font: 700 .72rem/1.6 ui-monospace, monospace; text-align: center; padding: 0 6px; border-radius: 6px; background: var(--idle-bg); color: var(--muted); }
   .method.m-get { background: var(--good-bg); color: var(--good); } .method.m-delete { background: var(--bad-bg); color: var(--bad); } .method.m-post, .method.m-put, .method.m-patch { background: var(--med-bg); color: var(--med); }
   .finding .impact { font-weight: 600; }
@@ -1246,13 +1285,49 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .search input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
   .search-count { margin: 6px 0 0; min-height: 1.2em; }
   .sec[hidden], .sec [hidden] { display: none !important; }
+  /* Result kinds inside a tab: Overview | Problems | Passed | Not run | … */
+  .subtabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 28px 0 4px; padding: 0 0 0; border-bottom: 2px solid var(--line); }
+  .subtab { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; min-height: 44px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; background: transparent; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px 8px 0 0; }
+  .subtab:hover { color: var(--text); background: var(--surface); }
+  .subtab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); background: var(--surface); }
+  .subtab:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .subtab .count { font-size: .75rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--idle-bg); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .subtab.t-bad .count { background: var(--bad-bg); color: var(--bad); }
+  .subtab.t-ok .count { background: var(--good-bg); color: var(--good); }
+  .subpanel > .sec:first-of-type > h2, .subpanel > h2:first-of-type { margin-top: 20px; }
+  .subpanel-label { margin: 36px 0 0; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  /* Without JavaScript every kind shows, one after another, each with its label. */
+  .subtabs { display: none; }
+  .js .subtabs { display: flex; }
+  .js .subpanel:not(.on) { display: none; }
+  .js .subpanel-label { display: none; }
+  /* While searching, every kind is searched and shown at once. */
+  .js .searching .subpanel { display: block; }
+  .js .searching .subpanel-label { display: block; margin-top: 28px; }
+  .js .searching .subpanel.empty { display: none; }
+  .js .searching .subtabs { opacity: .45; }
+  ul.checks { list-style: none; padding-left: 4px; margin: 4px 0 8px; }
+  ul.checks li { margin: 6px 0; }
+  .tick { color: var(--good); font-weight: 700; margin-right: 6px; }
+
+  /* Back to top */
+  .to-top { position: fixed; right: 20px; bottom: 20px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--accent); color: var(--surface); font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s; }
+  .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+  .to-top:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .to-top { transition: none; } }
+
   footer { margin-top: 48px; font-size: .85rem; color: var(--muted); }
   dd, li, .finding h3 { overflow-wrap: anywhere; }
 
   /* Phones and narrow windows */
   @media (max-width: 600px) {
     body { font-size: 15px; }
-    main { padding: 20px 16px 48px; }
+    main { padding: 20px 16px 96px; }
+    /* Result kinds: one row that scrolls sideways instead of wrapping */
+    .js .subtabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-left: -16px; margin-right: -16px; padding: 0 16px; }
+    .js .subtabs::-webkit-scrollbar { display: none; }
+    .subtab { flex: 0 0 auto; padding: 10px 12px; }
+    .to-top { right: 16px; bottom: 16px; }
     h1 { font-size: 1.55rem; }
     h2 { font-size: 1.15rem; margin-top: 32px; }
     h2.panel-title { font-size: 1.3rem; }
@@ -1305,10 +1380,51 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
     Generated automatically from the test results by <code>scripts/build-summary.js</code>. Sources: Admin PRD, Unified app PRD, the backend’s API document (/v3/api-docs), Investment and Loan product specifications, KYC specification, QA Strategy.
   </footer>
 </main>
+<button class="to-top" type="button" aria-label="Back to top"><span aria-hidden="true">↑</span> Top</button>
 <script>
   (function () {
     document.documentElement.classList.add('js');
-    var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.tabs [role="tab"]'));
+    var current = {}; // area id -> selected sub-tab id
+    function setHash(id) {
+      var h = '#' + id + (current[id] && current[id] !== 'overview' ? '/' + current[id] : '');
+      if (location.hash !== h) history.replaceState(null, '', h);
+    }
+    // Sub-tabs (Overview, Problems, Passed, Not run …) inside one area.
+    function showSub(area, sub, focus) {
+      var btns = Array.prototype.slice.call(document.querySelectorAll('.subtab[data-panel="' + area + '"]'));
+      if (!btns.some(function (b) { return b.getAttribute('data-sub') === sub; })) sub = 'overview';
+      btns.forEach(function (b) {
+        var on = b.getAttribute('data-sub') === sub;
+        b.setAttribute('aria-selected', on);
+        b.tabIndex = on ? 0 : -1;
+        document.getElementById(b.getAttribute('aria-controls')).classList.toggle('on', on);
+        if (on && focus) b.focus();
+        if (on) { var bar = b.parentNode; var x = b.offsetLeft - (bar.clientWidth - b.offsetWidth) / 2; if (bar.scrollWidth > bar.clientWidth) bar.scrollLeft = Math.max(0, x); }
+      });
+      current[area] = sub;
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.subtabs'), function (bar) {
+      var btns = Array.prototype.slice.call(bar.querySelectorAll('.subtab'));
+      btns.forEach(function (b, i) {
+        var area = b.getAttribute('data-panel');
+        b.addEventListener('click', function () {
+          showSub(area, b.getAttribute('data-sub'), false);
+          setHash(area);
+          // Keep the sub-tab row in view after switching from far down the page.
+          var top = bar.getBoundingClientRect().top - document.querySelector('.tabs').offsetHeight - 16;
+          if (top < 0) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' });
+        });
+        b.addEventListener('keydown', function (e) {
+          var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+          var j = e.key === 'Home' ? 0 : e.key === 'End' ? btns.length - 1 : d ? (i + d + btns.length) % btns.length : -1;
+          if (j < 0) return;
+          e.preventDefault();
+          showSub(area, btns[j].getAttribute('data-sub'), true);
+          setHash(area);
+        });
+      });
+    });
     function show(id, focus) {
       tabs.forEach(function (t) {
         var on = t.id === 'tab-' + id;
@@ -1317,7 +1433,7 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
         document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
         if (on && focus) t.focus();
       });
-      if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
+      setHash(id);
       var bar = document.querySelector('.tabs');
       var panel = document.getElementById('panel-' + id);
       if (focus !== undefined && panel.getBoundingClientRect().top < bar.offsetHeight) {
@@ -1358,6 +1474,16 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
         Array.prototype.forEach.call(panel.querySelectorAll('.sec'), function (sec) {
           sec.hidden = terms.length > 0 && !sec.querySelector('tbody tr:not([hidden]), article.finding:not([hidden]), ul.clean > li:not([hidden])');
         });
+        // Search every kind of result at once; open the "Passed" groups that matched.
+        panel.classList.toggle('searching', terms.length > 0);
+        Array.prototype.forEach.call(panel.querySelectorAll('.subpanel'), function (sp) {
+          sp.classList.toggle('empty', terms.length > 0 && !sp.querySelector('.sec:not([hidden])'));
+        });
+        Array.prototype.forEach.call(panel.querySelectorAll('details.passed-group'), function (g) {
+          var any = g.querySelector('li:not([hidden])');
+          g.hidden = terms.length > 0 && !any;
+          g.open = terms.length > 0 && !!any;
+        });
         count.textContent = !terms.length ? '' : shown ? shown + (shown > 1 ? ' matches' : ' match') + ' for “' + raw + '”' : 'No matches for “' + raw + '”';
       }
       input.addEventListener('input', run);
@@ -1366,12 +1492,37 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
     document.addEventListener('keydown', function (e) {
       var tag = (document.activeElement && document.activeElement.tagName) || '';
       if (e.key !== '/' || /^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
-      var box = document.querySelector('[role="tabpanel"]:not([hidden]) .search input');
+      var box = document.querySelector('section[role="tabpanel"]:not([hidden]) .search input');
       if (box) { e.preventDefault(); box.focus(); }
     });
 
-    var start = (location.hash || '').slice(1);
-    show(document.getElementById('tab-' + start) ? start : 'admin');
+    // Back to top: appears once the page has scrolled a screen or so.
+    var up = document.querySelector('.to-top');
+    var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function onScroll() { up.classList.toggle('show', window.scrollY > Math.max(600, window.innerHeight)); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    up.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+      var sel = document.querySelector('.tabs [aria-selected="true"]');
+      if (sel) sel.focus({ preventScroll: true });
+    });
+    onScroll();
+
+    // #api, #mobile/problems, #admin/passed …
+    function fromHash() {
+      var parts = (location.hash || '').slice(1).split('/');
+      var area = document.getElementById('tab-' + parts[0]) ? parts[0] : 'admin';
+      if (parts[1]) showSub(area, parts[1], false);
+      show(area);
+      if (parts[1]) {
+        // Bring the sub-tab row up under the sticky area switch (from a count tile or a shared link).
+        var bar = document.querySelector('#panel-' + area + ' .subtabs');
+        var top = bar.getBoundingClientRect().top - document.querySelector('.tabs').offsetHeight - 16;
+        if (Math.abs(top) > 4) window.scrollTo({ top: window.scrollY + top, behavior: still ? 'auto' : 'smooth' });
+      }
+    }
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
   })();
 </script>
 </body>

@@ -26,6 +26,10 @@
    "description": "These endpoints let administrators freeze and unfreeze a customer's wallet or whole account. Every change is proposed by one administrator and takes effect only once a different administrator holding Compliance's customer.status.approve right approves it"
   },
   {
+   "name": "Address Verification Endpoints",
+   "description": "These endpoints manages address verification on Rosabon"
+  },
+  {
    "name": "Bank Account Endpoints",
    "description": "These endpoints manages bank account on Rosabon"
   },
@@ -182,6 +186,10 @@
    "description": "Endpoints for querying, inspecting, and exporting the global append-only system audit trail"
   },
   {
+   "name": "User Account Beneficiary Endpoints",
+   "description": "These endpoints manages user account beneficiaries on Rosabon"
+  },
+  {
    "name": "User Endpoints",
    "description": "These endpoints manages users on Rosabon"
   },
@@ -192,6 +200,10 @@
   {
    "name": "Wallet History Endpoints",
    "description": "These endpoints manages wallet histories on Rosabon"
+  },
+  {
+   "name": "Wema Endpoints",
+   "description": "These endpoints manages wema integration on Rosabon"
   },
   {
    "name": "lead-api-resource",
@@ -1296,6 +1308,196 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/AccountRestrictionRequestResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/address-verifications/complete-phase-one": {
+   "post": {
+    "tags": [
+     "Address Verification Endpoints"
+    ],
+    "summary": "Complete phase one verification",
+    "description": "This endpoint completes user phase one address verification",
+    "operationId": "completeFirstPhaseVerificationUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ResidentialAddressRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/address-verifications/register-location": {
+   "post": {
+    "tags": [
+     "Address Verification Endpoints"
+    ],
+    "summary": "Register user location",
+    "description": "This endpoint registers a user location",
+    "operationId": "registerCurrentLocationUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LogUserCurrentLocationRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
         }
        }
       }
@@ -21927,6 +22129,36 @@
       }
      },
      {
+      "name": "route",
+      "in": "query",
+      "description": "route",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "outcome",
+      "in": "query",
+      "description": "outcome",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "requestId",
+      "in": "query",
+      "description": "requestId",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
       "name": "order",
       "in": "query",
       "description": "order",
@@ -21966,6 +22198,54 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/CustomPageResponse«SystemAuditTrailEntryResponse»"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/audit-logs/coverage": {
+   "get": {
+    "tags": [
+     "System-Wide Audit Log Endpoints"
+    ],
+    "summary": "Audit coverage",
+    "description": "Read off the running application's routes: every write endpoint, and every read recorded as access, with the label that names it on the trail (METHOD, CLASS or NONE), its class and module. Every staff write is recorded either way; an unlabelled one is named after its method and classed [U]. gapsOnly=true lists just the staff endpoints with no label. audience is a guide (route under /admin, or a role check naming no customer role), not the rule the filter applies",
+    "operationId": "retrieveCoverageUsingGET",
+    "parameters": [
+     {
+      "name": "gapsOnly",
+      "in": "query",
+      "description": "gapsOnly",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Report"
         }
        }
       }
@@ -22258,6 +22538,36 @@
       }
      },
      {
+      "name": "route",
+      "in": "query",
+      "description": "route",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "outcome",
+      "in": "query",
+      "description": "outcome",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "requestId",
+      "in": "query",
+      "description": "requestId",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
       "name": "order",
       "in": "query",
       "description": "order",
@@ -22279,6 +22589,81 @@
         }
        }
       }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/audit-logs/fallback": {
+   "get": {
+    "tags": [
+     "System-Wide Audit Log Endpoints"
+    ],
+    "summary": "Entries waiting in the fallback file",
+    "description": "When an entry cannot be saved, the action still goes ahead and the entry is kept in a file on the server. This counts what is waiting there",
+    "operationId": "retrieveFallbackStatusUsingGET",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AuditFallbackReport"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/audit-logs/fallback/replay": {
+   "post": {
+    "tags": [
+     "System-Wide Audit Log Endpoints"
+    ],
+    "summary": "Replay the fallback file",
+    "description": "Writes every waiting entry to the audit log with the time it first failed at, flagged as written late. An entry that still cannot be saved stays in its file; a file left empty moves to replayed/ and is never offered again, so running this twice writes nothing twice",
+    "operationId": "replayFallbackUsingPOST",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AuditFallbackReport"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
      },
      "401": {
       "description": "Unauthorized"
@@ -22415,6 +22800,415 @@
      },
      "404": {
       "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/user-account-beneficiaries": {
+   "get": {
+    "tags": [
+     "User Account Beneficiary Endpoints"
+    ],
+    "summary": "Get user account beneficiaries",
+    "description": "This endpoint retrieves user account beneficiaries",
+    "operationId": "retrieveUserBeneficiariesUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "pageNo",
+      "in": "query",
+      "description": "pageNo",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "description": "pageSize",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomPageResponse«UserAccountBeneficiaryResponse»"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "User Account Beneficiary Endpoints"
+    ],
+    "summary": "Add user account beneficiary",
+    "description": "This endpoint creates a new user account beneficiary on Rosabon",
+    "operationId": "createBeneficiaryUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateAccountBeneficiaryRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserAccountBeneficiaryResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/user-account-beneficiaries/search": {
+   "post": {
+    "tags": [
+     "User Account Beneficiary Endpoints"
+    ],
+    "summary": "Search user account beneficiaries",
+    "description": "This endpoint searches through user account beneficiaries",
+    "operationId": "searchUserBeneficiariesUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "pageNo",
+      "in": "query",
+      "description": "pageNo",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "description": "pageSize",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TextRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomPageResponse«UserAccountBeneficiaryResponse»"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/user-account-beneficiaries/{id}": {
+   "delete": {
+    "tags": [
+     "User Account Beneficiary Endpoints"
+    ],
+    "summary": "Delete user account beneficiary",
+    "description": "This endpoint deletes a user account beneficiary",
+    "operationId": "deleteBeneficiaryUsingDELETE",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "204": {
+      "description": "No Content"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
      }
     },
     "security": [
@@ -23499,6 +24293,89 @@
     ]
    }
   },
+  "/api/v3/users/generate-account-number": {
+   "get": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Generate user account number",
+    "description": "This endpoint generates an account number for a user",
+    "operationId": "generateAccountNumberUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserProfileResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/users/initiate-email-verification": {
    "patch": {
     "tags": [
@@ -24197,8 +25074,18 @@
     ],
     "summary": "Get pending address verification",
     "description": "This endpoint retrieves residential addresses pending verification",
-    "operationId": "retrieveAddressesPendingVerificationUsingGET",
+    "operationId": "retrieveResidentialAddressesUsingGET",
     "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "description": "status",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
      {
       "name": "pageNo",
       "in": "query",
@@ -24518,58 +25405,6 @@
      },
      "404": {
       "description": "Residential address not found"
-     },
-     "500": {
-      "description": "Internal server error"
-     }
-    },
-    "security": [
-     {
-      "Authorization": []
-     }
-    ]
-   },
-   "post": {
-    "tags": [
-     "User Endpoints"
-    ],
-    "summary": "Capture residential address",
-    "description": "Records the user's residential address during onboarding. Street, city and state are required; country defaults to Nigeria when omitted; landmark and postal code are optional. Email is extracted from the JWT token (email-only token from check-email). Re-submitting updates the existing address.",
-    "operationId": "captureResidentialAddressUsingPOST",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/ResidentialAddressRequest"
-       }
-      }
-     }
-    },
-    "responses": {
-     "200": {
-      "description": "Residential address saved successfully",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ResidentialAddressResponse"
-        }
-       }
-      }
-     },
-     "201": {
-      "description": "Created"
-     },
-     "400": {
-      "description": "Missing/invalid fields or email verification not completed"
-     },
-     "401": {
-      "description": "Unauthorized"
-     },
-     "403": {
-      "description": "Forbidden"
-     },
-     "404": {
-      "description": "Not Found"
      },
      "500": {
       "description": "Internal server error"
@@ -25319,164 +26154,6 @@
         }
        }
       }
-     },
-     "401": {
-      "description": "Unauthorized"
-     },
-     "403": {
-      "description": "Forbidden"
-     },
-     "404": {
-      "description": "Not Found"
-     }
-    },
-    "security": [
-     {
-      "Authorization": []
-     }
-    ]
-   }
-  },
-  "/api/v3/users/{locationId}/request-physical-verification": {
-   "put": {
-    "tags": [
-     "User Endpoints"
-    ],
-    "summary": "Request physical residential address verification",
-    "description": "This endpoint requests physical residential address verification",
-    "operationId": "requestPhysicalVerificationUsingPUT",
-    "parameters": [
-     {
-      "name": "authenticated",
-      "in": "query",
-      "required": false,
-      "style": "form",
-      "schema": {
-       "type": "boolean"
-      }
-     },
-     {
-      "name": "authorities[0].authority",
-      "in": "query",
-      "required": false,
-      "style": "form",
-      "schema": {
-       "type": "string"
-      }
-     },
-     {
-      "name": "credentials",
-      "in": "query",
-      "required": false,
-      "style": "form",
-      "schema": {
-       "type": "object"
-      }
-     },
-     {
-      "name": "details",
-      "in": "query",
-      "required": false,
-      "style": "form",
-      "schema": {
-       "type": "object"
-      }
-     },
-     {
-      "name": "principal",
-      "in": "query",
-      "required": false,
-      "style": "form",
-      "schema": {
-       "type": "object"
-      }
-     },
-     {
-      "name": "locationId",
-      "in": "path",
-      "description": "locationId",
-      "required": true,
-      "style": "simple",
-      "schema": {
-       "type": "string"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "OK",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/PhysicalVerificationResponse"
-        }
-       }
-      }
-     },
-     "201": {
-      "description": "Created"
-     },
-     "401": {
-      "description": "Unauthorized"
-     },
-     "403": {
-      "description": "Forbidden"
-     },
-     "404": {
-      "description": "Not Found"
-     }
-    },
-    "security": [
-     {
-      "Authorization": []
-     }
-    ]
-   }
-  },
-  "/api/v3/users/{userId}/validate-residential-address/{verificationId}": {
-   "put": {
-    "tags": [
-     "User Endpoints"
-    ],
-    "summary": "Validate physical residential address verification",
-    "description": "This endpoint requests physical residential address verification",
-    "operationId": "validateAddressVerificationUsingPUT",
-    "parameters": [
-     {
-      "name": "userId",
-      "in": "path",
-      "description": "userId",
-      "required": true,
-      "style": "simple",
-      "schema": {
-       "type": "integer",
-       "format": "int64"
-      }
-     },
-     {
-      "name": "verificationId",
-      "in": "path",
-      "description": "verificationId",
-      "required": true,
-      "style": "simple",
-      "schema": {
-       "type": "string"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "OK",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/OperationalResponse"
-        }
-       }
-      }
-     },
-     "201": {
-      "description": "Created"
      },
      "401": {
       "description": "Unauthorized"
@@ -27262,6 +27939,475 @@
      }
     ]
    }
+  },
+  "/api/v3/wema": {
+   "post": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Account lookup",
+    "description": "This endpoint handles account lookup",
+    "operationId": "retrieveAccountInformationUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WemaAccountLookUpRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WemaAccountLookUpResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/bills": {
+   "get": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Get all bills",
+    "description": "This endpoint retrieves all bills",
+    "operationId": "retrieveAllBillsUsingGET",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CategoryViewModelListEnvelopeResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/bills/check-transaction-status": {
+   "post": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Check bill transaction status",
+    "description": "This endpoint checks a bill payment transaction status",
+    "operationId": "checkTransactionStatusUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CheckBillTransactionStatusRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CheckTransactionStatusResponseEnvelopeResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/bills/pay-via-client": {
+   "post": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Pay bill via client account",
+    "description": "This endpoint pays a bill via client account",
+    "operationId": "payBillViaClientAccountUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PayBillClientRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GlobalResponseEnvelopeResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/bills/pay-via-pool": {
+   "post": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Pay bill via single pool",
+    "description": "This endpoint pays a bill via single pool",
+    "operationId": "payBillViaSinglePoolUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PayBillPoolRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GlobalResponseEnvelopeResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/bills/validate-customer": {
+   "post": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Validate bill customer",
+    "description": "This endpoint validates a customer",
+    "operationId": "validateCustomerUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ValidationRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ValidationResponseEnvelopeResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/check-transaction-status": {
+   "get": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Check transaction status",
+    "description": "This endpoint checks transaction status",
+    "operationId": "queryTransactionStatusUsingGET",
+    "parameters": [
+     {
+      "name": "sessionId",
+      "in": "query",
+      "description": "sessionId",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WemaFundsTransferResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/funds-transfer": {
+   "post": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Perform funds transfer",
+    "description": "This endpoint performs fund transfer",
+    "operationId": "performFundsTransferUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WemaFundsTransferRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WemaFundsTransferResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/name-enquiry": {
+   "post": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Perform name enquiry",
+    "description": "This endpoint performs name enquiry",
+    "operationId": "performNameEnquiryUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WemaNameEnquiryRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WemaNameEnquiryResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wema/{accountNumber}/balance": {
+   "get": {
+    "tags": [
+     "Wema Endpoints"
+    ],
+    "summary": "Get account balance",
+    "description": "This endpoint retrieves account balance",
+    "operationId": "retrieveBalanceUsingGET",
+    "parameters": [
+     {
+      "name": "accountNumber",
+      "in": "path",
+      "description": "accountNumber",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "number",
+         "format": "double"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
   }
  },
  "components": {
@@ -28274,6 +29420,30 @@
      }
     }
    },
+   "AuditFallbackReport": {
+    "title": "AuditFallbackReport",
+    "type": "object",
+    "properties": {
+     "files": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "pending": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "replayed": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "unreadable": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
    "AuditLogMetricsResponse": {
     "title": "AuditLogMetricsResponse",
     "type": "object",
@@ -28731,6 +29901,45 @@
      }
     }
    },
+   "BillerViewModelResponse": {
+    "title": "BillerViewModelResponse",
+    "type": "object",
+    "properties": {
+     "charge": {
+      "type": "number",
+      "format": "double"
+     },
+     "flow": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "identifier": {
+      "type": "string"
+     },
+     "isAquired": {
+      "type": "boolean"
+     },
+     "name": {
+      "type": "string"
+     },
+     "packages": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/PackageViewModelResponse"
+      }
+     },
+     "requiredValidation": {
+      "type": "boolean"
+     },
+     "shortCode": {
+      "type": "string"
+     }
+    }
+   },
    "BranchDto": {
     "title": "BranchDto",
     "type": "object",
@@ -28899,6 +30108,49 @@
      }
     }
    },
+   "CategoryViewModelListEnvelopeResponse": {
+    "title": "CategoryViewModelListEnvelopeResponse",
+    "type": "object",
+    "properties": {
+     "errorMessage": {
+      "type": "string"
+     },
+     "errorMessages": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "hasError": {
+      "type": "boolean"
+     },
+     "result": {
+      "$ref": "#/components/schemas/CategoryViewModelResponse"
+     },
+     "timeGenerated": {
+      "type": "string"
+     }
+    }
+   },
+   "CategoryViewModelResponse": {
+    "title": "CategoryViewModelResponse",
+    "type": "object",
+    "properties": {
+     "billers": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/BillerViewModelResponse"
+      }
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "name": {
+      "type": "string"
+     }
+    }
+   },
    "CertificateOfIncoImageDto": {
     "title": "CertificateOfIncoImageDto",
     "type": "object",
@@ -28988,6 +30240,15 @@
       "type": "string"
      },
      "label": {
+      "type": "string"
+     }
+    }
+   },
+   "CheckBillTransactionStatusRequest": {
+    "title": "CheckBillTransactionStatusRequest",
+    "type": "object",
+    "properties": {
+     "transactionReference": {
       "type": "string"
      }
     }
@@ -29093,6 +30354,43 @@
        "DAYS",
        "MONTHS"
       ]
+     }
+    }
+   },
+   "CheckTransactionStatusResponse": {
+    "title": "CheckTransactionStatusResponse",
+    "type": "object",
+    "properties": {
+     "transactionReference": {
+      "type": "string"
+     },
+     "transactionStatus": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
+   "CheckTransactionStatusResponseEnvelopeResponse": {
+    "title": "CheckTransactionStatusResponseEnvelopeResponse",
+    "type": "object",
+    "properties": {
+     "errorMessage": {
+      "type": "string"
+     },
+     "errorMessages": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "hasError": {
+      "type": "boolean"
+     },
+     "result": {
+      "$ref": "#/components/schemas/CheckTransactionStatusResponse"
+     },
+     "timeGenerated": {
+      "type": "string"
      }
     }
    },
@@ -29508,6 +30806,34 @@
       "format": "int64"
      },
      "name": {
+      "type": "string"
+     }
+    }
+   },
+   "CreateAccountBeneficiaryRequest": {
+    "title": "CreateAccountBeneficiaryRequest",
+    "required": [
+     "accountName",
+     "accountNumber",
+     "bank",
+     "bankCode"
+    ],
+    "type": "object",
+    "properties": {
+     "accountName": {
+      "pattern": "^\\d{10}$",
+      "type": "string"
+     },
+     "accountNumber": {
+      "type": "string"
+     },
+     "bank": {
+      "type": "string"
+     },
+     "bankCode": {
+      "type": "string"
+     },
+     "currency": {
       "type": "string"
      }
     }
@@ -31419,6 +32745,36 @@
      }
     }
    },
+   "CustomPageResponse«UserAccountBeneficiaryResponse»": {
+    "title": "CustomPageResponse«UserAccountBeneficiaryResponse»",
+    "type": "object",
+    "properties": {
+     "content": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/UserAccountBeneficiaryResponse"
+      }
+     },
+     "hasNext": {
+      "type": "boolean"
+     },
+     "hasPrevious": {
+      "type": "boolean"
+     },
+     "size": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalElements": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "totalPages": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
    "CustomPageResponse«UserBankAccountResponse»": {
     "title": "CustomPageResponse«UserBankAccountResponse»",
     "type": "object",
@@ -31862,6 +33218,39 @@
      }
     }
    },
+   "Endpoint": {
+    "title": "Endpoint",
+    "type": "object",
+    "properties": {
+     "action": {
+      "type": "string"
+     },
+     "actionClass": {
+      "type": "string"
+     },
+     "audience": {
+      "type": "string"
+     },
+     "flagged": {
+      "type": "boolean"
+     },
+     "handler": {
+      "type": "string"
+     },
+     "labelledOn": {
+      "type": "string"
+     },
+     "methods": {
+      "type": "string"
+     },
+     "module": {
+      "type": "string"
+     },
+     "route": {
+      "type": "string"
+     }
+    }
+   },
    "ExtendFundingWindowRequest": {
     "title": "ExtendFundingWindowRequest",
     "required": [
@@ -32065,6 +33454,57 @@
      "workflowId": {
       "type": "integer",
       "format": "int64"
+     }
+    }
+   },
+   "GlobalResponse": {
+    "title": "GlobalResponse",
+    "type": "object",
+    "properties": {
+     "message": {
+      "type": "string"
+     },
+     "narration": {
+      "type": "string"
+     },
+     "orinalTxnTransactionDate": {
+      "type": "string"
+     },
+     "platformTransactionReference": {
+      "type": "string"
+     },
+     "status": {
+      "type": "string"
+     },
+     "transactionReference": {
+      "type": "string"
+     },
+     "transactionStan": {
+      "type": "string"
+     }
+    }
+   },
+   "GlobalResponseEnvelopeResponse": {
+    "title": "GlobalResponseEnvelopeResponse",
+    "type": "object",
+    "properties": {
+     "errorMessage": {
+      "type": "string"
+     },
+     "errorMessages": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "hasError": {
+      "type": "boolean"
+     },
+     "result": {
+      "$ref": "#/components/schemas/GlobalResponse"
+     },
+     "timeGenerated": {
+      "type": "string"
      }
     }
    },
@@ -37116,6 +38556,24 @@
      }
     }
    },
+   "LogUserCurrentLocationRequest": {
+    "title": "LogUserCurrentLocationRequest",
+    "required": [
+     "latitude",
+     "longitude"
+    ],
+    "type": "object",
+    "properties": {
+     "latitude": {
+      "type": "number",
+      "format": "double"
+     },
+     "longitude": {
+      "type": "number",
+      "format": "double"
+     }
+    }
+   },
    "LoginRequest": {
     "title": "LoginRequest",
     "type": "object",
@@ -37736,6 +39194,38 @@
      }
     }
    },
+   "PackageViewModelResponse": {
+    "title": "PackageViewModelResponse",
+    "type": "object",
+    "properties": {
+     "amount": {
+      "type": "number",
+      "format": "double"
+     },
+     "billerId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "isAmountEditable": {
+      "type": "boolean"
+     },
+     "maxAmount": {
+      "type": "number",
+      "format": "double"
+     },
+     "minAmount": {
+      "type": "number",
+      "format": "double"
+     },
+     "name": {
+      "type": "string"
+     }
+    }
+   },
    "PaginatedListDto«WalletTransactionHistoryDto»": {
     "title": "PaginatedListDto«WalletTransactionHistoryDto»",
     "type": "object",
@@ -38166,6 +39656,87 @@
      }
     }
    },
+   "PayBillClientRequest": {
+    "title": "PayBillClientRequest",
+    "type": "object",
+    "properties": {
+     "amount": {
+      "type": "number",
+      "format": "double"
+     },
+     "charge": {
+      "type": "number",
+      "format": "double"
+     },
+     "clientId": {
+      "type": "string"
+     },
+     "customerAccount": {
+      "type": "string"
+     },
+     "customerEmail": {
+      "type": "string"
+     },
+     "customerIdentifier": {
+      "type": "string"
+     },
+     "customerName": {
+      "type": "string"
+     },
+     "customerPhoneNumber": {
+      "type": "string"
+     },
+     "packageId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "securityInfo": {
+      "type": "string"
+     },
+     "transactionReference": {
+      "type": "string"
+     }
+    }
+   },
+   "PayBillPoolRequest": {
+    "title": "PayBillPoolRequest",
+    "type": "object",
+    "properties": {
+     "amount": {
+      "type": "number",
+      "format": "double"
+     },
+     "charge": {
+      "type": "number",
+      "format": "double"
+     },
+     "cif": {
+      "type": "string"
+     },
+     "customerEmail": {
+      "type": "string"
+     },
+     "customerIdentifier": {
+      "type": "string"
+     },
+     "customerName": {
+      "type": "string"
+     },
+     "customerPhoneNumber": {
+      "type": "string"
+     },
+     "packageId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "securityInfo": {
+      "type": "string"
+     },
+     "transactionReference": {
+      "type": "string"
+     }
+    }
+   },
    "PayLoanRequest": {
     "title": "PayLoanRequest",
     "type": "object",
@@ -38287,15 +39858,6 @@
       ]
      },
      "relationshipTypeDisplayName": {
-      "type": "string"
-     }
-    }
-   },
-   "PhysicalVerificationResponse": {
-    "title": "PhysicalVerificationResponse",
-    "type": "object",
-    "properties": {
-     "report_id": {
       "type": "string"
      }
     }
@@ -38815,6 +40377,21 @@
      }
     }
    },
+   "Report": {
+    "title": "Report",
+    "type": "object",
+    "properties": {
+     "endpoints": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Endpoint"
+      }
+     },
+     "summary": {
+      "type": "object"
+     }
+    }
+   },
    "ResetPassCodeRequest": {
     "title": "ResetPassCodeRequest",
     "type": "object",
@@ -38840,7 +40417,9 @@
     "title": "ResidentialAddressRequest",
     "required": [
      "city",
-     "stateId",
+     "latitude",
+     "longitude",
+     "state",
      "street"
     ],
     "type": "object",
@@ -38848,19 +40427,25 @@
      "city": {
       "type": "string"
      },
-     "countryId": {
-      "type": "integer",
-      "format": "int64"
+     "country": {
+      "type": "string"
      },
      "landmark": {
       "type": "string"
      },
+     "latitude": {
+      "type": "number",
+      "format": "double"
+     },
+     "longitude": {
+      "type": "number",
+      "format": "double"
+     },
      "postalCode": {
       "type": "string"
      },
-     "stateId": {
-      "type": "integer",
-      "format": "int64"
+     "state": {
+      "type": "string"
      },
      "street": {
       "type": "string"
@@ -38871,12 +40456,19 @@
     "title": "ResidentialAddressResponse",
     "type": "object",
     "properties": {
+     "addressVerificationStatus": {
+      "type": "string",
+      "enum": [
+       "FAILED_AT_FINAL_STAGE",
+       "FAILED_AT_STAGE_ONE",
+       "NOT_STARTED",
+       "ONGOING",
+       "SUSPICIOUS",
+       "VERIFIED"
+      ]
+     },
      "city": {
       "type": "string"
-     },
-     "countryId": {
-      "type": "integer",
-      "format": "int64"
      },
      "countryName": {
       "type": "string"
@@ -38886,9 +40478,6 @@
      },
      "ipAddress": {
       "type": "string"
-     },
-     "isVerified": {
-      "type": "boolean"
      },
      "landmark": {
       "type": "string"
@@ -38902,10 +40491,6 @@
      "processedAt": {
       "type": "string",
       "format": "date-time"
-     },
-     "stateId": {
-      "type": "integer",
-      "format": "int64"
      },
      "stateName": {
       "type": "string"
@@ -39642,6 +41227,10 @@
      "customerName": {
       "type": "string"
      },
+     "durationMs": {
+      "type": "integer",
+      "format": "int64"
+     },
      "evidenceFilename": {
       "type": "string"
      },
@@ -39660,6 +41249,9 @@
      "fromStatus": {
       "type": "string"
      },
+     "httpMethod": {
+      "type": "string"
+     },
      "id": {
       "type": "integer",
       "format": "int64"
@@ -39674,6 +41266,16 @@
       "type": "string"
      },
      "recordSource": {
+      "type": "string"
+     },
+     "requestId": {
+      "type": "string"
+     },
+     "responseStatus": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "route": {
       "type": "string"
      },
      "secondApprovalNote": {
@@ -40185,8 +41787,7 @@
       "type": "string"
      },
      "country": {
-      "type": "integer",
-      "format": "int64"
+      "type": "string"
      },
      "landmark": {
       "type": "string"
@@ -40195,8 +41796,7 @@
       "type": "string"
      },
      "state": {
-      "type": "integer",
-      "format": "int64"
+      "type": "string"
      },
      "street": {
       "type": "string"
@@ -40214,6 +41814,39 @@
       "type": "string"
      },
      "accountOfficerUserId": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
+   "UserAccountBeneficiaryResponse": {
+    "title": "UserAccountBeneficiaryResponse",
+    "type": "object",
+    "properties": {
+     "accountName": {
+      "type": "string"
+     },
+     "accountNumber": {
+      "type": "string"
+     },
+     "bank": {
+      "type": "string"
+     },
+     "bankCode": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "currency": {
+      "type": "string"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userId": {
       "type": "integer",
       "format": "int64"
      }
@@ -40458,6 +42091,9 @@
     "title": "UserProfileResponse",
     "type": "object",
     "properties": {
+     "accountNumber": {
+      "type": "string"
+     },
      "accountOfficerEmail": {
       "type": "string"
      },
@@ -40809,6 +42445,68 @@
      }
     }
    },
+   "ValidationRequest": {
+    "title": "ValidationRequest",
+    "type": "object",
+    "properties": {
+     "channelId": {
+      "type": "string"
+     },
+     "identifier": {
+      "type": "string"
+     },
+     "packageId": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
+   "ValidationResponse": {
+    "title": "ValidationResponse",
+    "type": "object",
+    "properties": {
+     "creditLimit": {
+      "type": "number",
+      "format": "double"
+     },
+     "customerName": {
+      "type": "string"
+     },
+     "isValidated": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "validationInfo": {
+      "type": "string"
+     }
+    }
+   },
+   "ValidationResponseEnvelopeResponse": {
+    "title": "ValidationResponseEnvelopeResponse",
+    "type": "object",
+    "properties": {
+     "errorMessage": {
+      "type": "string"
+     },
+     "errorMessages": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "hasError": {
+      "type": "boolean"
+     },
+     "result": {
+      "$ref": "#/components/schemas/ValidationResponse"
+     },
+     "timeGenerated": {
+      "type": "string"
+     }
+    }
+   },
    "VariantResponse": {
     "title": "VariantResponse",
     "type": "object",
@@ -40992,6 +42690,108 @@
      },
      "wemaInflow": {
       "type": "boolean"
+     }
+    }
+   },
+   "WemaAccountLookUpRequest": {
+    "title": "WemaAccountLookUpRequest",
+    "type": "object",
+    "properties": {
+     "accountnumber": {
+      "type": "string"
+     }
+    }
+   },
+   "WemaAccountLookUpResponse": {
+    "title": "WemaAccountLookUpResponse",
+    "type": "object",
+    "properties": {
+     "accountname": {
+      "type": "string"
+     },
+     "amount": {
+      "type": "string"
+     },
+     "bvn": {
+      "type": "string"
+     },
+     "nin": {
+      "type": "string"
+     },
+     "status": {
+      "type": "string"
+     },
+     "status_desc": {
+      "type": "string"
+     }
+    }
+   },
+   "WemaFundsTransferRequest": {
+    "title": "WemaFundsTransferRequest",
+    "type": "object",
+    "properties": {
+     "myAccountName": {
+      "type": "string"
+     },
+     "myAmount": {
+      "type": "string"
+     },
+     "myDestinationAccountNumber": {
+      "type": "string"
+     },
+     "myDestinationBankCode": {
+      "type": "string"
+     },
+     "myNarration": {
+      "type": "string"
+     },
+     "myOriginatorName": {
+      "type": "string"
+     },
+     "myPaymentReference": {
+      "type": "string"
+     },
+     "sourceAccountNo": {
+      "type": "string"
+     }
+    }
+   },
+   "WemaFundsTransferResponse": {
+    "title": "WemaFundsTransferResponse",
+    "type": "object",
+    "properties": {
+     "PaymentReference": {
+      "type": "string"
+     },
+     "SessionId": {
+      "type": "string"
+     },
+     "code": {
+      "type": "string"
+     },
+     "message": {
+      "type": "string"
+     }
+    }
+   },
+   "WemaNameEnquiryRequest": {
+    "title": "WemaNameEnquiryRequest",
+    "type": "object",
+    "properties": {
+     "myDestinationAccountNumber": {
+      "type": "string"
+     },
+     "myDestinationBankCode": {
+      "type": "string"
+     }
+    }
+   },
+   "WemaNameEnquiryResponse": {
+    "title": "WemaNameEnquiryResponse",
+    "type": "object",
+    "properties": {
+     "fullName": {
+      "type": "string"
      }
     }
    }

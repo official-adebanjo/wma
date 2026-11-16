@@ -202,6 +202,9 @@ function buildUrl(op: Operation, tokens: Tokens): { url: string; concrete: strin
   return { url: `${base()}${concrete}${query.size ? `?${query}` : ''}`, concrete };
 }
 
+// 16 Nov: "generates an account number for a user" — a GET with a side effect.
+const CHANGES_DATA = new Set(['/api/v3/users/generate-account-number']);
+
 // List endpoints first: their answers supply the IDs the others need.
 const gets = operations(spec)
   .filter((o) => o.method === 'get')
@@ -217,6 +220,13 @@ test.describe('API › read-only endpoints (dev)', () => {
       const problems: string[] = [];
       const evidence: Record<string, string> = {};
       const meta = { method: op.method.toUpperCase(), path: op.path, tag: op.tag, summary: op.summary };
+
+      // GETs that change data despite the method: never call them.
+      if (CHANGES_DATA.has(op.path)) {
+        record({ ...meta, outcome: 'not-run', checks, problems, reason: 'documented as changing data although it is a GET' });
+        test.skip(true, 'Changes data although it is a GET');
+        return;
+      }
 
       const built = buildUrl(op, tokens);
       if ('missing' in built) {
