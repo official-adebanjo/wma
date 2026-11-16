@@ -12,3 +12,6 @@ apps/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+# App builds are 150-370 MB; GitHub rejects files over 100 MB
+*.apk
+*.aab
