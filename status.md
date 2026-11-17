@@ -1,16 +1,10 @@
 # Dev system status
 
-Last check: **17 Nov, 00:00** (Lagos time) · 77 checked · 🟢 all up · 42 not checked (no monitor customer account set)
+Last check: **17 Nov, 02:38** (Lagos time) · 77 checked · 🟢 all up · 42 not checked (no monitor customer account set)
 
 Checks run every 15 minutes, Monday to Friday, 6am–7pm. Something counts as down after 2 failed checks in a row. The browser check opens the main admin pages after each new portal version and otherwise about once an hour; a page counts as broken when it fails twice in the same check.
 
-Admin portal version: `index-CBmwQ25T.js index-PGXXf3wZ.css`, first seen 17 Nov, 00:00 · last browser check: 17 Nov, 00:00
-
-## Slow (over 5 s)
-
-- List system alerts (GET /api/v3/investment-management/system-alerts): 14.3 s
-- Get loan collections (GET /api/v3/loan-repayments/collections): 10.7 s
-- Can this account close? (GET /api/v3/account-controls/customers/{id}/closure-check): 6.0 s
+Admin portal version: `index-CBmwQ25T.js index-PGXXf3wZ.css`, first seen 17 Nov, 00:00 · last browser check: 17 Nov, 02:38
 
 ## Recent changes
 
