@@ -112,8 +112,10 @@ describe('Journeys › Borrowing', () => {
     it(title('Active loan: next payment countdown is within a month', Tag.high, Tag.spec('LoanSpec§4.2')), async function () {
       await openTab('borrow');
       if ((await borrowState()) !== 'active') this.skip(); // only while a monthly loan is being repaid
+      // Single-repayment loans (Payday) show "TOTAL REPAYABLE" and no monthly countdown (18 Nov build).
+      if (await driver.$('//android.widget.TextView[@text="TOTAL REPAYABLE"]').isDisplayed().catch(() => false)) this.skip();
       const text = await byId('loan.dashboard.nextDue').getText(); // "Next payment due in 90 days"
-      const outstanding = parseNaira(await driver.$('//android.widget.TextView[@text="TOTAL OUTSTANDING"]/following-sibling::android.widget.TextView[1]').getText());
+      const outstanding = parseNaira(await driver.$('//android.widget.TextView[@text="TOTAL OUTSTANDING" or @text="TOTAL REPAYABLE"]/following-sibling::android.widget.TextView[1]').getText());
       await expect(outstanding.gt(0)).toBe(true);
       await expect(Number(text.match(/(\d+)/)![1])).toBeLessThanOrEqual(31); // monthly repayments
     });

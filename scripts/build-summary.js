@@ -380,6 +380,33 @@ const MOBILE_FINDINGS = [
 /** Problems seen during the mobile run that no automated check covers yet (from the app’s own error log). */
 const MOBILE_EXTRA_FINDINGS = [
   {
+    title: 'An overdue Payday loan is not marked overdue',
+    severity: 'High',
+    owner: 'Engineering (loans back end and mobile app)',
+    impact: 'Customers aren’t told a Payday loan is late, and any late-payment rules (penalty, reminders, credit score) may never start for these loans.',
+    saw: '18 November: the Tier 3 test account’s Payday loan (₦200,000 + ₦16,000 interest) was due on 12 November. Six days later the back end still has it as “ACTIVE”, and the app’s Borrow tab shows “TOTAL REPAYABLE ₦216,000.00 · Payment Due · Due Date 12 November 2026” with no overdue warning. A Public Sector loan due on 15 November on another account was marked “Overdue” with an overdue banner within 3 days.',
+    expected: 'A loan past its due date (after any grace period) should be marked overdue in the same way for every product, and the app should say so. If Payday loans have a grace period, the app should show when it ends.',
+    area: 'Borrowing (tried by hand)',
+  },
+  {
+    title: 'Borrow shows wrong amounts for a moment after sign-in',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'A customer may see a lower amount owed than they really owe and plan their payment on it.',
+    saw: '18 November, overdue Public Sector loan (₦3,000,000, 12 months, 4% a month, reducing balance): straight after signing in, Borrow showed “TOTAL OUTSTANDING ₦3,120,000.00” and “Overdue ₦260,000”. About a minute later it changed to ₦3,780,000.00 and ₦370,000, which match the back end’s schedule (₦780,000 interest; first instalment ₦370,000). The first figures treat 4% as a yearly rate. Seen once; reopening Borrow afterwards always showed the correct figures.',
+    expected: 'Show a loading state until the real figures arrive, never amounts worked out another way.',
+    area: 'Borrowing (tried by hand)',
+  },
+  {
+    title: 'A waived penalty is not explained to the customer',
+    severity: 'Low',
+    owner: 'Engineering (mobile app) and Product',
+    impact: 'The customer can’t tell whether a penalty was charged or waived, and the repayment sheet labels the instalment as the loan amount.',
+    saw: '18 November, overdue loan whose penalty was waived in admin: Borrow and the Pay Now sheet show only the instalment (₦370,000). Nothing mentions a penalty or that it was waived, and the sheet calls the ₦370,000 instalment “Loan Amount”.',
+    expected: 'Show a “Penalty waived” note (or a ₦0 penalty line) on overdue loans, and label the sheet’s figure “Amount due”.',
+    area: 'Borrowing (tried by hand)',
+  },
+  {
     title: 'Investments cannot be paid for in the app',
     severity: 'Critical',
     owner: 'Engineering (mobile app and investments)',
@@ -503,9 +530,11 @@ const MOBILE_EXTRA_FINDINGS = [
 
 /** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
 const MOBILE_JOURNEYS = {
-  when: '2–11 November, 30 October, 3, 4 and 9 November builds',
+  when: '2–18 November, 30 October, 3, 4, 9 and 18 November builds',
   intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
+    ['18 Nov (18 November build): overdue loan with its penalty waived in admin', 'ok', 'Test account with an overdue Public Sector loan (₦3,000,000, 12 months, due 15 November) whose penalty was waived in admin. Back end: the loan’s penalty rate is 0 and it stays “Overdue” (correct — it is still unpaid). App: Borrow shows ₦3,780,000 outstanding, “Your Repayment is Overdue (3 days) ₦370,000”, and Pay Now opens a sheet asking for ₦370,000 — exactly the back end’s schedule with no penalty added. Nothing was paid. Two smaller problems: wrong figures for a moment after sign-in, and no mention of the waiver (see “Problems found”).'],
+    ['18 Nov (18 November build): Payday loan past its due date (Tier 3)', 'bad', 'Due 12 November, still “ACTIVE” with no overdue warning six days later (see “Problems found”).'],
     ['11 Nov (9 November build): sign up as a new customer with the Smile ID selfie', 'bad', 'A new account was started with a real phone number, BVN and email, with the tester’s face on the laptop webcam. Steps 1–3 worked: SMS code, email, a 6-digit passcode, and the BVN, which matched NIBSS and showed the customer’s name, date of birth and gender to confirm. The Smile ID selfie screen opened and took the selfie, but every submission was refused with “Your selfie failed to process — Unauthorized”, so sign-up stopped at step 3 of 6. Steps 4–6 could not be reached. The fallback selfie upload was never offered. See “Problems found”.'],
     ['4 Nov (4 November build): invest in RWIN, REAP and RTN from the wallet (Tier 2)', 'bad', 'Created an RWIN goal (#85: ₦100,000 target, 90 days, 3 × ₦32,587.54 + ₦2,237.38 interest at 14%, maturity 2 February 2027), a REAP goal (#86: ₦50,000 target, 30 days, ₦48,796.80 + ₦1,203.21 interest at 30%, maturity 4 December 2026) and an RTN note (#87: ₦100,000, 90 days, upfront, ₦4,931.51 interest at 20%, maturity 2 February 2027). Every figure matches the product rules. None could be paid for: “Add ₦…” does nothing, and the wallet stayed at ₦9,900,707.51. Also seen: the REAP amount shown as “₦48,796.8”; the “Earn Up to 20% P.A.” REAP card is back on Grow (REAP itself shows 30%); RTN for 90 days gives 20% while its card says 25% (the rate table has two overlapping rows for 0–120 days). Payouts, withdrawals and early exits could not be tried, as no plan could be paid for. Checked again on 6 November: still nothing taken. The scheduled payment run moved the RWIN and REAP goals’ next payment from 4 November to 5 December without collecting anything or counting a missed payment, and the two RTN notes are still open, marked “Underfunded”, a day after their payment deadline passed. See “Problems found”.'],
     ['4 Nov (4 November build): check a Public Sector loan offer (#194)', 'ok', 'Application #194 (₦300,000, 9 months, 4% a month on a reducing balance) was approved and waiting for the customer. The offer screen showed ₦60,000 interest and ₦360,000 to repay, which matches the reducing-balance schedule. The ₦1,086,004.29 interest shown on the #191 offer is no longer seen. The offer was left for the team to accept or decline.'],
@@ -532,6 +561,7 @@ const MOBILE_JOURNEYS = {
 const MOBILE_CHANGES = {
   since: '3 November',
   items: [
+    ['18 November: new build re-run, and penalty waiver checked', 'Tested the 18 November build (version 1.1.55, code 95). It is again built for ARM phones only and closes at launch on the test emulator; it was run from a copy re-packed so the emulator can load its libraries (app code unchanged), which makes it slow there — timings from this run are not reliable. Home’s “TOTAL BALANCE” is now “WALLET BALANCE”, and Payday loans have a new Borrow layout (“TOTAL REPAYABLE”); the checks were updated for both. Fixed: Send Money no longer shows recipients the customer never added. Penalty waiver: on a test account whose overdue Public Sector loan had its penalty waived in admin, the app shows ₦3,780,000 outstanding and ₦370,000 overdue, and Pay Now asks for ₦370,000 — the back end’s own figures with no penalty added, so the waiver holds. New problems: see “An overdue Payday loan is not marked overdue” and “Borrow shows wrong amounts for a moment after sign-in”. Not checked this time: the loan product list and the Personal loan quote, because the Tier 3 test account now has an active Payday loan, so Borrow shows that loan instead.'],
     ['16 November: not re-run', 'No new build that runs on the test emulator: the 11 November build was made for ARM phones only (no x86_64), so it closes at launch on the emulator; a build with x86_64 has been requested. It also keeps version 1.1.55 (code 92). From about 14:00 the dev API stopped answering requests from the test office’s network (connections open, but no reply comes; outside locations got normal answers). A re-run at 14:38 was blocked again after about 7 minutes. The results below are therefore still those of 10 November; the team has been asked to allow the test network.'],
     ['11 November: Smile ID sign-up tried (9 November build)', 'A new customer sign-up was tried by hand with a real phone number, BVN and the tester’s face. The Smile ID check now starts (the “settings file missing” error is gone) and the camera, selfie and smile prompts work. But Smile ID refuses the app’s credentials (“Unauthorized”), so no selfie can be submitted and sign-up can’t be finished. Also found: an unfinished sign-up leaves an account that can’t sign in, and the selfie screen never times out. See “Problems found”.'],
     ['Re-run on 10 November (9 November build)', 'The 9 November build was installed and every check was run again. The results are the same as on 6 November: 23 passed, the same 10 problems, nothing newly broken or fixed. The build again keeps the same version number (1.1.55, code 92), so the test tools treated it as already installed until it was removed and installed by hand. This build adds the Smile ID selfie check during sign-up (using the two new onboarding liveness endpoints), a BVN prompt when the server asks for one, and a fallback to the old selfie upload if the check cannot start. That sign-up check was tried by hand on 11 November (see above).'],
@@ -542,7 +572,7 @@ const MOBILE_CHANGES = {
     ['Phone sign-in re-checked', 'A number written 080… does work, but takes 20 seconds or more; the automated check used to give up after 15 seconds, which is why it was reported as not working. A number written +234… did not work.'],
     ['Fixed: loan offer interest', 'The Public Sector offer (#194) shows ₦60,000 interest and ₦360,000 to repay on ₦300,000 over 9 months, matching the reducing-balance schedule. The #191 offer had shown ₦1,086,004.29 interest. The offer screen also now shows the tenor in months and a repayment date.'],
     ['Still seen: VAT taken from the payout', '#191 (₦300,000) was paid out as ₦277,500, and #193 (₦250,000) as ₦231,250: 7.5% VAT is still deducted at payout although no fee is charged. See “Problems found”.'],
-    ['Still not fixed', 'Send Money still shows recipients the customer never added. Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.'],
+    ['Still not fixed', 'Card funding and Log out still do nothing, and next of kin still can’t be saved (“City cannot be empty”). The Tier 3 account still shows 2/3 identity steps. RWIN goals still offer tenors not in the rate table, and topping up from an empty wallet still doesn’t say why it can’t be paid.'],
   ],
 }
 

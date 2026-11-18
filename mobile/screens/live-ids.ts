@@ -45,10 +45,10 @@ export const LIVE_IDS: Record<string, string> = {
 
   // Home tab (= wallet home): greeting, TOTAL BALANCE card, Home/Loans/Invest switcher, quick actions,
   // "Complete your profile" progress, Recent Activity
-  'wallet.home.screen': 'text:TOTAL BALANCE',
+  'wallet.home.screen': 'android=new UiSelector().textMatches("^(TOTAL|WALLET) BALANCE$")', // "WALLET BALANCE" from the 18 Nov build
   'wallet.home.greeting': '//android.widget.TextView[starts-with(@text,"Good ")]',
   'wallet.home.customerName': '(//android.widget.TextView[starts-with(@text,"Good ")]/../following-sibling::*/android.widget.TextView)[1]',
-  'wallet.home.balance': '(//android.widget.TextView[@text="TOTAL BALANCE"]/following-sibling::*//android.widget.TextView[starts-with(@text,"₦")])[1]',
+  'wallet.home.balance': '(//android.widget.TextView[@text="TOTAL BALANCE" or @text="WALLET BALANCE"]/following-sibling::*//android.widget.TextView[starts-with(@text,"₦")])[1]',
   'wallet.home.earned': '//android.widget.TextView[contains(@text,"earned from investments")]',
   'wallet.home.segment.home': '//*[@content-desc="Home" and (not(@resource-id) or @resource-id="")]',
   'wallet.home.segment.loans': '//*[@content-desc="Loans" and (not(@resource-id) or @resource-id="")]',
@@ -146,7 +146,7 @@ export const LIVE_IDS: Record<string, string> = {
   'loan.state.underReview': 'text:Your loan application on review',
   'loan.state.offer': 'text:OFFER READY',
   'loan.state.disbursing': 'text:Your disbursement is in progress',
-  'loan.dashboard.outstanding': 'text:TOTAL OUTSTANDING',
+  'loan.dashboard.outstanding': 'android=new UiSelector().textMatches("^TOTAL (OUTSTANDING|REPAYABLE)$")', // single-repayment loans (Payday) show TOTAL REPAYABLE from the 18 Nov build
   'loan.dashboard.nextDue': 'android=new UiSelector().textStartsWith("Next payment due in")',
 
   // Settings and Profile (Personal Info. / Next of Kin / Employment Info. tabs)
