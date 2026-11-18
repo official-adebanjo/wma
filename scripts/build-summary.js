@@ -952,6 +952,8 @@ const apiAreaName = (tag) => (tag === 'lead-api-resource' ? 'Leads' : tag.replac
 
 /** What the latest backend update changed, written up after each re-run (shown above the live comparison). */
 const API_UPDATES = [
+  ['18 November: 11 endpoints added; beneficiary rule fixed', 'New: discovery banners (add, list, update, publish, unpublish, mark as pending, delete — a new “DISCOVERY_BANNER” approval type comes with them), “completed KYC tiers” for a customer, “upgrade user tier”, and “all wallet histories”. The two new read-only endpoints (completed tiers, all wallet histories) work. “Upgrade user tier” and the banner endpoints change data, so the read-only checks don’t call them; testing “upgrade tier” needs a spare customer account, because it permanently moves a customer up a tier. Saved beneficiaries: the 10-digit rule moved from the account name to the account number, so real names can now be saved and an account number like “abc” is refused. Results (run 08:41, no slow or timed-out answers): 133 worked, 17 problems (was 18). “Verify loan product with corridor” now answers successfully (possibly because of a data change). No other earlier problem is fixed.'],
+  ['17 November: re-run; no API change', 'The API document was identical to 16 November’s, so the announced changes (beneficiaries, account creation and tier assignment, “human metrics”) were not yet on dev. Saved beneficiaries were tried by hand: saving a recipient with a real name was refused (“Account name must contain exactly 10 digits”), any text was accepted as the account number, and there was no way to update a saved recipient. No endpoint called “human metrics” exists on dev. Seven endpoints were slow during this run (5–19 s) but answered in about 0.2 s straight after, so that was a passing slowdown.'],
   ['16 November: 20 endpoints added, 3 removed', 'New: Wema bank services (account lookup, balance, name enquiry, transfers, transaction status, and bill payments), saved account beneficiaries, a new address verification (register location, complete phase one), audit-log coverage and fallback replay, and “generate user account number”. Removed: the old residential address, physical verification and validate-address endpoints. Results (run at 13:34, before the network problem below): none of the 16 earlier problems is fixed; two of the new read-only endpoints fail — Wema bills (server error 500) and Wema account balance (400 “Vendor not found”). “Generate user account number” is a GET that creates an account number: the check called it once as the test customer, and it is now left out of the checks (a GET should never change data).'],
   ['16 November: NIN verification tried again', 'A malformed NIN is now refused properly (400 “Your NIN is invalid”; it used to be a server error). A valid-looking NIN (from the tester) waits about 60 seconds and ends in a 504 Gateway Time-out, twice: the call to the NIN provider seems never to return. Not yet working.'],
   ['16 November: dev API stopped answering the test network', 'From about 14:00 the dev API accepted connections from the test office but sent no reply, on and off, while outside locations got normal answers. This looks like rate limiting or a temporary block of that address on the dev server; the team has been asked to check and allow it.'],
@@ -1084,6 +1086,15 @@ function readApi() {
     saw: `${wrongCode.length} endpoint${wrongCode.length > 1 ? 's' : ''}: ${named(wrongCode)}.`,
     sawPublic: `${wrongCode.length} endpoint${wrongCode.length > 1 ? 's' : ''}. ${offPublic}`,
     expected: 'Refuse unsigned requests with 401 and wrong-role requests with 403.',
+  });
+
+  // Tried by hand on 18 November (beneficiary save / list / search / delete round trip, cleaned up after).
+  findings.push({
+    area: 'API', owner: 'Engineering (backend)', severity: 'Medium',
+    title: 'Saved beneficiaries accept any bank and currency, and can’t be edited',
+    impact: 'Customers can save recipients that can never be paid (a bank that doesn’t exist, a made-up currency), and must delete and re-add a recipient to correct a typo.',
+    saw: 'Signed in as a test customer: POST /api/v3/user-account-beneficiaries saved a recipient with bank code “999” and bank name “Not A Bank”, and another with currency “XYZ” (both 201). There is no endpoint to change a saved recipient: PUT and PATCH on /api/v3/user-account-beneficiaries/{id} answer 405. What works: a recipient with a real-style name and a 10-digit account number saves; “abc” or a 5-digit number is refused; the same recipient can’t be saved twice; another customer can’t see, search or delete it; delete works, and deleting again gives 404. The test recipients were deleted afterwards.',
+    expected: 'Only accept bank codes from the supported bank list (ideally with an account-name check), only supported currencies (NGN), and offer an update endpoint as announced.',
   });
 
   // ---- Documentation gaps (not failures)

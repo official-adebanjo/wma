@@ -46,6 +46,10 @@
    "description": "These endpoints manages country and state on Rosabon"
   },
   {
+   "name": "Discovery Banner Endpoints",
+   "description": "These endpoints manages discovery banners on Rosabon"
+  },
+  {
    "name": "Document Config Endpoints",
    "description": "These endpoints manages document config on Rosabon"
   },
@@ -2108,6 +2112,470 @@
      },
      "404": {
       "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/discovery-banners": {
+   "post": {
+    "tags": [
+     "Discovery Banner Endpoints"
+    ],
+    "summary": "Add discovery banner",
+    "description": "This endpoint creates a new discovery banner on Rosabon",
+    "operationId": "createDiscoveryBannerUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateDiscoveryBannerRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DiscoveryBannerResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/discovery-banners/filter": {
+   "post": {
+    "tags": [
+     "Discovery Banner Endpoints"
+    ],
+    "summary": "Get discovery banners",
+    "description": "This endpoint retrieves discovery banners",
+    "operationId": "retrieveDiscoveryBannersUsingPOST",
+    "parameters": [
+     {
+      "name": "pageNo",
+      "in": "query",
+      "description": "pageNo",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "description": "pageSize",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FilterDiscoveryBannerRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomPageResponse«DiscoveryBannerResponse»"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/discovery-banners/user": {
+   "post": {
+    "tags": [
+     "Discovery Banner Endpoints"
+    ],
+    "summary": "Get user discovery banners",
+    "description": "This endpoint retrieves user discovery banners",
+    "operationId": "retrieveCustomerDiscoveryBannersUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/DiscoveryBannerResponse"
+         }
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/discovery-banners/{id}": {
+   "put": {
+    "tags": [
+     "Discovery Banner Endpoints"
+    ],
+    "summary": "Update discovery banner",
+    "description": "This endpoint edits a particular discovery banner",
+    "operationId": "updateDiscoveryBannerUsingPUT",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateDiscoveryBannerRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DiscoveryBannerResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   },
+   "delete": {
+    "tags": [
+     "Discovery Banner Endpoints"
+    ],
+    "summary": "Delete discovery banner",
+    "description": "This endpoint deletes a discovery banner",
+    "operationId": "deleteDiscoveryBannerUsingDELETE",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "204": {
+      "description": "No Content"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/discovery-banners/{id}/mark-as-pending": {
+   "patch": {
+    "tags": [
+     "Discovery Banner Endpoints"
+    ],
+    "summary": "Update discovery banner as pending",
+    "description": "This endpoint marks a particular discovery banner as pending",
+    "operationId": "updateDiscoveryBannerAsPendingUsingPATCH",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "204": {
+      "description": "No Content"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/discovery-banners/{id}/publish": {
+   "patch": {
+    "tags": [
+     "Discovery Banner Endpoints"
+    ],
+    "summary": "Publish discovery banner",
+    "description": "This endpoint publishes a discovery banner",
+    "operationId": "publishDiscoveryBannerUsingPATCH",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "204": {
+      "description": "No Content"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/discovery-banners/{id}/unpublish": {
+   "patch": {
+    "tags": [
+     "Discovery Banner Endpoints"
+    ],
+    "summary": "Unpublish discovery banner",
+    "description": "This endpoint unpublishes a discovery banner",
+    "operationId": "unpublishDiscoveryBannerUsingPATCH",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OperationalResponse"
+        }
+       }
+      }
+     },
+     "204": {
+      "description": "No Content"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
      }
     },
     "security": [
@@ -24057,6 +24525,92 @@
     ]
    }
   },
+  "/api/v3/users/completed-user-tier": {
+   "get": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Get user completed kyc",
+    "description": "This endpoint retrieves user completed kyc",
+    "operationId": "retrieveUserKycCompletedUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/users/create-passcode": {
    "post": {
     "tags": [
@@ -25878,6 +26432,92 @@
      },
      "403": {
       "description": "Forbidden"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/users/upgrade-tier": {
+   "post": {
+    "tags": [
+     "User Endpoints"
+    ],
+    "summary": "Upgrade user tier",
+    "description": "Moves the user up one KYC tier if the next tier's requirements are met, and returns the profile",
+    "operationId": "upgradeTierUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserProfileResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
      }
     },
     "security": [
@@ -27727,7 +28367,7 @@
     ],
     "summary": "Get wallet histories",
     "description": "This endpoint retrieves wallet histories",
-    "operationId": "retrieveWalletHistoriesUsingGET_1",
+    "operationId": "retrieveWalletHistoriesUsingGET_2",
     "parameters": [
      {
       "name": "authenticated",
@@ -27774,6 +28414,88 @@
        "type": "object"
       }
      },
+     {
+      "name": "startDate",
+      "in": "query",
+      "description": "startDate",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string",
+       "format": "date"
+      }
+     },
+     {
+      "name": "endDate",
+      "in": "query",
+      "description": "endDate",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string",
+       "format": "date"
+      }
+     },
+     {
+      "name": "pageNo",
+      "in": "query",
+      "description": "pageNo",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "description": "pageSize",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginatedListDto«WalletTransactionHistoryDto»"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/wallet-histories/all": {
+   "get": {
+    "tags": [
+     "Wallet History Endpoints"
+    ],
+    "summary": "Get all wallet histories",
+    "description": "This endpoint retrieves all wallet histories",
+    "operationId": "retrieveWalletHistoriesUsingGET_1",
+    "parameters": [
      {
       "name": "startDate",
       "in": "query",
@@ -30821,10 +31543,10 @@
     "type": "object",
     "properties": {
      "accountName": {
-      "pattern": "^\\d{10}$",
       "type": "string"
      },
      "accountNumber": {
+      "pattern": "^\\d{10}$",
       "type": "string"
      },
      "bank": {
@@ -30835,6 +31557,78 @@
      },
      "currency": {
       "type": "string"
+     }
+    }
+   },
+   "CreateDiscoveryBannerRequest": {
+    "title": "CreateDiscoveryBannerRequest",
+    "required": [
+     "endDate",
+     "name",
+     "priorityNumber",
+     "startDate",
+     "userId"
+    ],
+    "type": "object",
+    "properties": {
+     "backgroundColor": {
+      "type": "string"
+     },
+     "content": {
+      "type": "string"
+     },
+     "ctaRoute": {
+      "type": "string"
+     },
+     "ctaText": {
+      "type": "string"
+     },
+     "discoveryBannerType": {
+      "type": "string"
+     },
+     "endDate": {
+      "type": "string",
+      "format": "date"
+     },
+     "headline": {
+      "type": "string"
+     },
+     "icon": {
+      "type": "string"
+     },
+     "imageUrl": {
+      "type": "string"
+     },
+     "isDraft": {
+      "type": "boolean"
+     },
+     "name": {
+      "type": "string"
+     },
+     "priorityNumber": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productType": {
+      "type": "string"
+     },
+     "segment": {
+      "type": "string"
+     },
+     "startDate": {
+      "type": "string",
+      "format": "date"
+     },
+     "subText": {
+      "type": "string"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
      }
     }
    },
@@ -31823,6 +32617,36 @@
       "type": "array",
       "items": {
        "$ref": "#/components/schemas/CorridorResponse"
+      }
+     },
+     "hasNext": {
+      "type": "boolean"
+     },
+     "hasPrevious": {
+      "type": "boolean"
+     },
+     "size": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalElements": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "totalPages": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
+   "CustomPageResponse«DiscoveryBannerResponse»": {
+    "title": "CustomPageResponse«DiscoveryBannerResponse»",
+    "type": "object",
+    "properties": {
+     "content": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/DiscoveryBannerResponse"
       }
      },
      "hasNext": {
@@ -32993,6 +33817,106 @@
      }
     }
    },
+   "DiscoveryBannerResponse": {
+    "title": "DiscoveryBannerResponse",
+    "type": "object",
+    "properties": {
+     "backgroundColor": {
+      "type": "string"
+     },
+     "content": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "createdBy": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "createdByName": {
+      "type": "string"
+     },
+     "ctaRoute": {
+      "type": "string"
+     },
+     "ctaText": {
+      "type": "string"
+     },
+     "discoveryBannerSegment": {
+      "type": "string",
+      "enum": [
+       "ACTIVE_CUSTOMERS",
+       "DORMANT_CUSTOMERS",
+       "KYC_INCOMPLETE",
+       "NEW_CUSTOMERS",
+       "OVERDUE_LOAN_CUSTOMERS",
+       "PRODUCT_CUSTOMERS"
+      ]
+     },
+     "discoveryBannerStatus": {
+      "type": "string",
+      "enum": [
+       "APPROVED",
+       "DECLINED",
+       "DRAFT",
+       "PENDING",
+       "PUBLISHED",
+       "UNPUBLISHED"
+      ]
+     },
+     "discoveryBannerType": {
+      "type": "string",
+      "enum": [
+       "CONTENT_ONLY",
+       "IMAGE"
+      ]
+     },
+     "endDate": {
+      "type": "string",
+      "format": "date"
+     },
+     "headline": {
+      "type": "string"
+     },
+     "icon": {
+      "type": "string"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "imageUrl": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "priorityNumber": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productType": {
+      "type": "string",
+      "enum": [
+       "INVESTMENT",
+       "LOAN"
+      ]
+     },
+     "startDate": {
+      "type": "string",
+      "format": "date"
+     },
+     "subText": {
+      "type": "string"
+     }
+    }
+   },
    "DocumentConfigRequest": {
     "title": "DocumentConfigRequest",
     "type": "object",
@@ -33299,6 +34223,26 @@
      }
     }
    },
+   "FilterDiscoveryBannerRequest": {
+    "title": "FilterDiscoveryBannerRequest",
+    "type": "object",
+    "properties": {
+     "discoveryBannerType": {
+      "type": "string"
+     },
+     "endDate": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "startDate": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "status": {
+      "type": "string"
+     }
+    }
+   },
    "GenderDto": {
     "title": "GenderDto",
     "type": "object",
@@ -33339,6 +34283,7 @@
      "generalApprovalAction": {
       "type": "string",
       "enum": [
+       "DISCOVERY_BANNER",
        "INVESTMENT_AUTO_ROLLOVER",
        "INVESTMENT_FORCE_LIQUIDATE",
        "INVESTMENT_RESUME_INTEREST_ACCRUAL",
@@ -33423,6 +34368,7 @@
      "generalApprovalAction": {
       "type": "string",
       "enum": [
+       "DISCOVERY_BANNER",
        "INVESTMENT_AUTO_ROLLOVER",
        "INVESTMENT_FORCE_LIQUIDATE",
        "INVESTMENT_RESUME_INTEREST_ACCRUAL",
@@ -41637,6 +42583,64 @@
       "type": "string"
      },
      "phoneNumber": {
+      "type": "string"
+     }
+    }
+   },
+   "UpdateDiscoveryBannerRequest": {
+    "title": "UpdateDiscoveryBannerRequest",
+    "type": "object",
+    "properties": {
+     "backgroundColor": {
+      "type": "string"
+     },
+     "content": {
+      "type": "string"
+     },
+     "ctaRoute": {
+      "type": "string"
+     },
+     "ctaText": {
+      "type": "string"
+     },
+     "discoveryBannerType": {
+      "type": "string"
+     },
+     "endDate": {
+      "type": "string",
+      "format": "date"
+     },
+     "headline": {
+      "type": "string"
+     },
+     "icon": {
+      "type": "string"
+     },
+     "imageUrl": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "priorityNumber": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productType": {
+      "type": "string"
+     },
+     "segment": {
+      "type": "string"
+     },
+     "startDate": {
+      "type": "string",
+      "format": "date"
+     },
+     "subText": {
       "type": "string"
      }
     }
