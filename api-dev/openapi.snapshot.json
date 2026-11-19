@@ -16123,8 +16123,8 @@
     "tags": [
      "Loan Approval Workflow Endpoints"
     ],
-    "summary": "Get loan fees",
-    "description": "This endpoint retrieves loan fees",
+    "summary": "Get loan approval workflows",
+    "description": "This endpoint retrieves loan approval workflows",
     "operationId": "retrieveLoanApprovalWorkflowsUsingGET",
     "parameters": [
      {
@@ -16427,6 +16427,54 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/LoanCalculationResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/loan-calculations/overdue-loan": {
+   "post": {
+    "tags": [
+     "Loan Calculation Endpoints"
+    ],
+    "summary": "Calculate overdue loan amount",
+    "description": "This endpoint helps calculate overdue loan amount on Rosabon",
+    "operationId": "calculateOverdueLoanUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CalculateOverdueLoanRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LoanOverdueCalculationResponse"
         }
        }
       }
@@ -28994,6 +29042,53 @@
     "summary": "Perform funds transfer",
     "description": "This endpoint performs fund transfer",
     "operationId": "performFundsTransferUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
     "requestBody": {
      "content": {
       "application/json": {
@@ -30830,6 +30925,45 @@
      }
     }
    },
+   "CalculateOverdueLoanRequest": {
+    "title": "CalculateOverdueLoanRequest",
+    "type": "object",
+    "properties": {
+     "amount": {
+      "minimum": 0,
+      "exclusiveMinimum": false,
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "durationOfLoan": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "durationOverdue": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "interestRate": {
+      "minimum": 0.01,
+      "exclusiveMinimum": false,
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "loanCalculatorType": {
+      "type": "string"
+     },
+     "penaltyInterestRate": {
+      "minimum": 0,
+      "exclusiveMinimum": false,
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "position": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
    "CategoryViewModelListEnvelopeResponse": {
     "title": "CategoryViewModelListEnvelopeResponse",
     "type": "object",
@@ -31538,7 +31672,8 @@
      "accountName",
      "accountNumber",
      "bank",
-     "bankCode"
+     "bankCode",
+     "currency"
     ],
     "type": "object",
     "properties": {
@@ -39162,6 +39297,20 @@
      }
     }
    },
+   "LoanOverdueCalculationResponse": {
+    "title": "LoanOverdueCalculationResponse",
+    "type": "object",
+    "properties": {
+     "penaltyFee": {
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "repaymentAmount": {
+      "type": "number",
+      "format": "bigdecimal"
+     }
+    }
+   },
    "LoanPreEligibilityResponse": {
     "title": "LoanPreEligibilityResponse",
     "type": "object",
@@ -43756,6 +43905,9 @@
       "type": "string"
      },
      "sourceAccountNo": {
+      "type": "string"
+     },
+     "transactionPin": {
       "type": "string"
      }
     }
