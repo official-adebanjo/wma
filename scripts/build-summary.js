@@ -962,8 +962,8 @@ const API_NOTES = {
   'GET /api/v3/general-approval-workflows': 'general approval set-up and approvers',
   'GET /api/v3/referral-histories/admin': 'referral history for all customers',
 };
-/** Reference lists that are fine to be public: answering without sign-in is a documentation gap there, not a leak. */
-const PUBLIC_REFERENCE = /^\/api\/v3\/(country|state|lga)(\/|$)/;
+/** Public by design (leads, countries and states; confirmed 19 November): answering without sign-in is a documentation gap there, not a leak. */
+const PUBLIC_REFERENCE = /^\/api\/v3\/(leads|country|state|lga)(\/|$)/;
 /** Same rule as api-dev/spec.ts isAdminOnly. */
 const API_ADMIN_TAGS = ['Account Control Endpoints', 'General Approval Workflow Endpoints', 'Investment Management Endpoints', 'Investment Report Endpoints', 'Loan Report Endpoints', 'Loan Approval Workflow Endpoints', 'System-Wide Audit Log Endpoints', 'Portal Admin User Endpoints', 'Message Template Endpoints'];
 const apiAdminOnly = (op) => API_ADMIN_TAGS.includes(op.tag) || /\/admin(\/|-|$)/.test(op.path);
@@ -974,7 +974,6 @@ const API_DOC_NOTES = [
 const API_QUESTIONS = [
   'Where should NIN verification happen in the app? The ticket says during onboarding, but the app has no NIN step. Can the developers share the provider’s sandbox test NIN so the success path can be checked?',
   'Which roles may call each staff-only area? The API document does not say, so these checks treat Investment Management, the Investment and Loan reports, the approval workflows, the audit log, account controls and portal admin users as staff-only.',
-  'Should reference lists such as countries and states be public? They answer without sign-in although the document says sign-in is needed.',
   'Can the API document mark which parameters and request fields are required? Many are only enforced by the server.',
 ];
 const maskPII = (s) => String(s).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '<email>').replace(/(\+?234|0)[789][01]\d{8}/g, '<phone>');
@@ -1134,7 +1133,7 @@ function readApi() {
   const requiredButOptional = recs.filter((r) => r.problems.some((p) => /is required”/.test(p)));
   if (requiredButOptional.length) docGaps.push(['Parameters documented as optional but required', named(requiredButOptional, (r) => ` (${maskPII(r.problems.find((p) => /is required”/.test(p)).match(/“(.*)”/)[1])})`) + '.']);
   const publicRefs = recs.filter((r) => isReference(r) && r.checks.noAuth === 'fail');
-  if (publicRefs.length) docGaps.push(['Public lists documented as needing sign-in', `${named(publicRefs)} answer without sign-in (reasonable for reference lists), but the document says sign-in is required.`]);
+  if (publicRefs.length) docGaps.push(['Public endpoints documented as needing sign-in', `${named(publicRefs)} answer without sign-in, which is intended (confirmed 19 November), but the API document still says sign-in is required.`]);
   const loginSecured = ops.filter((o) => /\/login$/.test(o.path) && o.secured);
   if (loginSecured.length) docGaps.push(['Sign-in endpoints documented as needing a sign-in token', `${loginSecured.map((o) => `${o.method} ${o.path}`).join(' and ')} — tools generated from the document will try to send a token that doesn't exist yet.`]);
   const leaky = ops.filter((o) => o.params.some((p) => /^(principal|credentials|authorities|details|authenticated)/.test(p.name)));

@@ -203,6 +203,9 @@ function buildUrl(op: Operation, tokens: Tokens): { url: string; concrete: strin
 }
 
 // 16 Nov: "generates an account number for a user" — a GET with a side effect.
+// Public by design (confirmed by the product owner, 19 Nov): readable without signing in, so the
+// "refused without signing in" check doesn't apply to them.
+const PUBLIC_BY_DESIGN = /^/api/v3/(leads|country|state|lga)(/|$)/;
 const CHANGES_DATA = new Set(['/api/v3/users/generate-account-number']);
 
 // List endpoints first: their answers supply the IDs the others need.
@@ -259,7 +262,7 @@ test.describe('API › read-only endpoints (dev)', () => {
       }
 
       // 1. Refused without signing in.
-      if (op.secured) {
+      if (op.secured && !PUBLIC_BY_DESIGN.test(op.path)) {
         const anon = await call(built.url);
         checks.noAuth = refusal(anon.status, [401, 403]);
         if (checks.noAuth !== 'ok') evidence.noAuth = evidenceFor(op, 'no sign-in', anon);
