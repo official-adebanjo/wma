@@ -947,7 +947,7 @@ Expected: &quot;within 10 s&quot;</pre>
         </header>
         <p class="impact">Anyone who knows the address can read this data — no account needed. It includes personal data.</p>
         <dl>
-          <dt>What we saw</dt><dd>1 endpoint answered with data to a request with no sign-in. The endpoint list is in the internal report — kept off this public page on purpose.</dd>
+          <dt>What we saw</dt><dd>1 endpoint answered with data to a request with no sign-in: GET /api/v3/leads (sales leads: names, phone numbers, email and home addresses, net salary).</dd>
           <dt>What should happen</dt><dd>Every endpoint holding customer or business data should refuse requests that are not signed in (401).</dd>
         </dl>
         <p class="muted small">The evidence for this problem is kept in the internal report.</p>
@@ -960,7 +960,7 @@ Expected: &quot;within 10 s&quot;</pre>
         </header>
         <p class="impact">Any signed-in customer can read other customers’ records by changing the ID in the request.</p>
         <dl>
-          <dt>What we saw</dt><dd>Signed in as one test customer and asking for another test customer’s ID returned the other customer’s records on 1 endpoint. The endpoint list is in the internal report — kept off this public page on purpose.</dd>
+          <dt>What we saw</dt><dd>Signed in as the Tier 3 test customer and asking for the Tier 1 test customer’s ID returned Tier 1’s records: GET /api/v3/loan-applications/{userId}/user (loan applications).</dd>
           <dt>What should happen</dt><dd>A customer should only ever get their own records (403 or 404 for anyone else’s).</dd>
         </dl>
         <p class="muted small">The evidence for this problem is kept in the internal report.</p>
@@ -973,7 +973,7 @@ Expected: &quot;within 10 s&quot;</pre>
         </header>
         <p class="impact">Customers can see internal set-up meant for staff, such as who approves loans and the limits used.</p>
         <dl>
-          <dt>What we saw</dt><dd>A customer sign-in got data from 4 staff-only endpoints. The endpoint list is in the internal report — kept off this public page on purpose.</dd>
+          <dt>What we saw</dt><dd>A customer sign-in got data from 4 staff-only endpoints: GET /api/v3/general-approval-workflows (general approval set-up and approvers); GET /api/v3/loan-approval-workflows (loan approval set-up: approvers, amount limits, credit-score thresholds); GET /api/v3/message-templates; GET /api/v3/referral-histories/admin (referral history for all customers).</dd>
           <dt>What should happen</dt><dd>Staff-only areas should refuse customer sign-ins (403).</dd>
         </dl>
         <p class="muted small">The evidence for this problem is kept in the internal report.</p>
@@ -1189,7 +1189,7 @@ Answer: 200 in 477 ms
         </header>
         <p class="impact">The request is refused, but with “bad request” (400) instead of “not signed in” (401) or “not allowed” (403), so apps can’t tell the customer to sign in again.</p>
         <dl>
-          <dt>What we saw</dt><dd>3 endpoints. The endpoint list is in the internal report — kept off this public page on purpose.</dd>
+          <dt>What we saw</dt><dd>3 endpoints: GET /api/v3/users/attestation; GET /api/v3/users/pep-declaration; GET /api/v3/users/residential-address.</dd>
           <dt>What should happen</dt><dd>Refuse unsigned requests with 401 and wrong-role requests with 403.</dd>
         </dl>
         <p class="muted small">The evidence for this problem is kept in the internal report.</p>

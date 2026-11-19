@@ -1060,7 +1060,9 @@ function readApi() {
     'Some endpoints refuse with the wrong error code': ['noAuth', 'customerOnAdmin'],
   };
   const apiSnippet = (rs, checks) => rs.flatMap((r) => checks.map((c) => r.evidence?.[c]).filter(Boolean)).slice(0, 6).map(maskPII).join('\n\n────────\n\n');
-  const add = (rs, f) => { if (rs.length) findings.push({ area: 'API', owner: 'Engineering (backend)', snippet: apiSnippet(rs, CHECKS_FOR[f.title] || []), ...f }); };
+  // The public page names the exact endpoints too (asked for on 19 November); sawPublic stays set so the
+  // request/answer samples, which can hold customer data, are still kept off it.
+  const add = (rs, f) => { if (rs.length) findings.push({ area: 'API', owner: 'Engineering (backend)', snippet: apiSnippet(rs, CHECKS_FOR[f.title] || []), ...f, ...(f.sawPublic ? { sawPublic: f.saw } : {}) }); };
   const noAuth = failing('noAuth');
   add(noAuth, {
     title: 'Data is available without signing in', severity: 'High', owner: 'Engineering (backend) and Security',
