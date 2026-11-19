@@ -61,13 +61,14 @@ export const ROUTES = {
  */
 export const REMOVED_ON_3_NOV = [
   ROUTES.approvalQueue, ROUTES.requests, ROUTES.breakRequests, ROUTES.withdrawals, ROUTES.topUps, ROUTES.rollovers,
-  ROUTES.unlocks, ROUTES.autoRollover, ROUTES.statutoryTax, ROUTES.payroll, ROUTES.walletBoard, ROUTES.ledger,
-  ROUTES.banners, '#/coming-soon/support', '#/rewards/rules', '#/reports-and-analytics/dashboards', '#/classifications',
+  ROUTES.unlocks, ROUTES.autoRollover, ROUTES.statutoryTax, ROUTES.payroll, ROUTES.walletBoard,
+  '#/coming-soon/support', '#/rewards/rules', '#/reports-and-analytics/dashboards', '#/classifications',
   '#/vocabularies', '#/settings/admin-action-thresholds', '#/settings/communications-providers', '#/settings/metric-definitions',
 ] as readonly string[];
 
 /** In-page links removed in the same update (Customer Management sub-pages). */
-export const REMOVED_LINKS_ON_3_NOV = ['Review Queues', 'Auto Grants', 'Screening', 'Account Controls'] as readonly string[];
+// 19 November: Transaction Monitor, Discovery banners and Account Controls are back; the ledger tabs below still say "Coming soon".
+export const REMOVED_LINKS_ON_3_NOV = ['Review Queues', 'Auto Grants', 'Screening', 'Reversals & Adjustments', 'Cashback Ledger', 'Billers'] as readonly string[];
 
 const REMOVED_REASON = 'No longer in the portal: switched off ("Coming soon" or removed from the menu) in the 3 November update';
 

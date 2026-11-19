@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { ROUTES, btn, destructive, open, subNav } from './support';
+import { ROUTES, btn, destructive, open, subNav, REMOVED_LINKS_ON_3_NOV } from './support';
 
 /** Customer Management — current UI: Directory / Review Queues / Auto Grants / Screening / Account Controls sub-links; Customer 360 via "View". */
 const CUSTOMER = 'Ugo Anayo';
@@ -84,7 +84,7 @@ test.describe('Dev portal › Customer Management', () => {
 
   test('Auto Grants, Screening and Account Controls sub-pages load @smoke', async ({ page }) => {
     await open(page, ROUTES.customers);
-    for (const tab of ['Auto Grants', 'Screening', 'Account Controls', 'Directory']) {
+    for (const tab of ['Auto Grants', 'Screening', 'Account Controls', 'Directory'].filter((t) => !REMOVED_LINKS_ON_3_NOV.includes(t))) {
       await subNav(page, tab);
       await expect(page.getByRole('heading').nth(1)).toBeVisible();
     }

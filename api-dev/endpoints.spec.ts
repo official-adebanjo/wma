@@ -151,6 +151,13 @@ function cachedNear(opPath: string): unknown[] {
     .map((f) => JSON.parse(fs.readFileSync(path.join(CACHE_DIR, f), 'utf8')));
 }
 
+/** Parameter → [list it comes from, field name in that list]. */
+const ALIASES: Record<string, [string, string]> = {
+  fieldKey: ['/api/v3/field-classifications', 'key'],
+  tierName: ['/api/v3/kyc-tiers', 'name'],
+  stateId: ['/api/v3/state', 'id'], // answers of /state/{countryId}
+};
+
 /** A value for a path/query parameter, from the sign-in or from an earlier answer. */
 function valueFor(p: Param, concretePrefix: string, tokens: Tokens, opPath: string): string | undefined {
   const n = p.name;
@@ -163,6 +170,9 @@ function valueFor(p: Param, concretePrefix: string, tokens: Tokens, opPath: stri
   if (/^(endTime|endDate|to)$/.test(n)) return new Date().toISOString().slice(0, 19);
   if (n === 'email') return tokens.customer?.email;
   if (p.schema?.enum?.length) return String(p.schema.enum[0]);
+  // Lists that name the value differently from the parameter (added 19 Nov).
+  const alias = ALIASES[n];
+  if (alias) for (const body of [cached(alias[0]), ...cachedUnder(alias[0])]) { const v = findValue(body, alias[1]); if (v !== undefined) return v; }
   // The list one level up ("/loan-products" for "/loan-products/{id}") names the IDs it holds;
   // failing that, a list under it ("/investments/my" for "/investments/{id}"), or one named after
   // the parameter ("/country" for {countryId}).
@@ -208,10 +218,16 @@ function buildUrl(op: Operation, tokens: Tokens): { url: string; concrete: strin
 const PUBLIC_BY_DESIGN = /^\/api\/v3\/(leads|country|state|lga)(\/|$)/;
 const CHANGES_DATA = new Set(['/api/v3/users/generate-account-number']);
 
-// List endpoints first: their answers supply the IDs the others need.
+// List endpoints first: their answers supply the IDs the others need. A required look-up value in the query
+// (productKey, tierName, …) or an ID taken from another ID-based answer (LGAs need a state) runs a step later.
+const PAGING = /^(pageNo|pageSize|page|size|limit|startTime|startDate|from|endTime|endDate|to|email|userId|customerId)$/;
+const runOrder = (o: Operation) =>
+  o.params.filter((p) => p.in === 'path').length +
+  (o.params.some((p) => p.in === 'query' && p.required && !PAGING.test(p.name) && !p.schema?.enum?.length) ? 0.5 : 0) +
+  (/\/lga\/\{stateId\}$/.test(o.path) ? 1 : 0);
 const gets = operations(spec)
   .filter((o) => o.method === 'get')
-  .sort((a, b) => a.params.filter((p) => p.in === 'path').length - b.params.filter((p) => p.in === 'path').length || a.path.localeCompare(b.path));
+  .sort((a, b) => runOrder(a) - runOrder(b) || a.path.localeCompare(b.path));
 
 test.describe('API › read-only endpoints (dev)', () => {
   test.skip(!process.env.API_BASE_URL, 'API_BASE_URL required');
