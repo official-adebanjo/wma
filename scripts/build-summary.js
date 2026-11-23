@@ -903,10 +903,30 @@ function evidence(f, i, pub) {
         </details>`;
 }
 
-/** A collapsible table under a document-gap item: [[area, endpoint, detail], …]. */
+/**
+ * A collapsible list under a document-gap item: [[area, "METHOD /path", "field, field (list), …"], …].
+ * Grouped by area; each endpoint shows a method badge, a path that only breaks at "/", and its fields as tags.
+ * A filter box narrows the list (by area, path or field) without touching the page's own search.
+ */
 function gapTable(rows) {
-  const body = rows.map(([area, ep, detail]) => `<tr><td>${esc(area)}</td><td><code>${esc(ep)}</code></td><td>${esc(detail)}</td></tr>`).join('');
-  return `<details class="ref"><summary>Show all ${rows.length} <span class="muted">· endpoint and the fields its request body accepts</span></summary><div class="table-wrap"><table><thead><tr><th>Area</th><th>Endpoint</th><th>Fields in the request body (none marked required)</th></tr></thead><tbody>${body}</tbody></table></div></details>`;
+  const groups = new Map();
+  for (const r of rows) { if (!groups.has(r[0])) groups.set(r[0], []); groups.get(r[0]).push(r); }
+  const endpoint = (ep) => {
+    const [method, ...rest] = ep.split(' ');
+    const p = esc(rest.join(' ')).replace(/\//g, '/<wbr>');
+    return `<span class="gm gm-${esc(method.toLowerCase())}">${esc(method)}</span><code class="gp">${p}</code>`;
+  };
+  const tags = (detail) => detail.split(/,\s*/).filter(Boolean).map((f) => `<li>${esc(f)}</li>`).join('');
+  const groupHtml = [...groups].map(([area, rs]) => `<section class="gg"><h4>${esc(area)} <span class="gg-n">${rs.length}</span></h4><ul class="ge">${rs.map(([a, ep, d]) => {
+    const n = d.split(/,\s*/).filter(Boolean).length;
+    return `<li data-q="${esc(`${a} ${ep} ${d}`.toLowerCase())}"><div class="ge-ep">${endpoint(ep)}</div><div class="ge-f"><span class="ge-fl">${n} field${n === 1 ? '' : 's'}</span><ul class="ftags">${tags(d)}</ul></div></li>`;
+  }).join('')}</ul></section>`).join('');
+  return `<details class="ref gaps"><summary>Show all ${rows.length} <span class="muted">· grouped by area, with the fields each request body accepts (none marked required)</span></summary>
+    <div class="gaps-tools"><input type="search" class="gaps-filter" placeholder="Filter by area, endpoint or field" aria-label="Filter these ${rows.length} endpoints"><span class="gaps-count muted" aria-live="polite">${rows.length} endpoints in ${groups.size} areas</span></div>
+    ${groupHtml}
+    <p class="gaps-none muted" hidden>No endpoint matches the filter.</p>
+    <button type="button" class="gaps-close">Hide this list</button>
+  </details>`;
 }
 
 function genericFinding(t) {
@@ -1692,6 +1712,37 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .dot-idle { background: var(--s-low); opacity: .55; }
   .kicker { margin: 22px 0 8px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .table-wrap { overflow-x: auto; }
+  /* "Show all" list under a gap in the API document: grouped by area, path + field tags. */
+  details.gaps[open] > summary { margin-bottom: 4px; }
+  .gaps-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 10px 0 4px; }
+  .gaps-filter { flex: 1 1 260px; min-width: 0; padding: 9px 12px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .gaps-filter:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .gaps-count { font-size: .85rem; }
+  .gg { margin-top: 16px; }
+  .gg h4 { margin: 0 0 6px; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .gg-n { display: inline-block; min-width: 1.6em; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); text-align: center; letter-spacing: 0; }
+  ul.ge { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  details.gaps { line-height: 1.45; }
+  details.gaps ul.ge li, details.gaps ul.ftags li { margin: 0; } /* undo "ul.clean li" spacing from the note around it */
+  ul.ge > li { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 6px 20px; align-items: center; padding: 9px 14px; border-top: 1px solid var(--line); }
+  ul.ge > li:first-child { border-top: 0; }
+  .ge-ep { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .gm { flex: none; padding: 1px 7px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font: 700 .68rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .03em; }
+  .gm-post { color: var(--accent); border-color: var(--accent); }
+  code.gp { min-width: 0; padding: 0; background: none; font-size: .84rem; line-height: 1.5; overflow-wrap: anywhere; }
+  .ge-f { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .ge-fl { flex: none; font-size: .75rem; color: var(--muted); white-space: nowrap; }
+  ul.ftags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+  ul.ftags li { padding: 1px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font: .75rem/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+  .gaps-none { margin-top: 12px; }
+  .gaps-close { margin-top: 14px; padding: 8px 14px; font: inherit; font-size: .9rem; color: var(--accent); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+  .gaps-close:hover { border-color: var(--accent); }
+  .gaps-close:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 760px) {
+    ul.ge > li { grid-template-columns: minmax(0, 1fr); padding: 10px 12px; }
+    .ge-f { align-items: flex-start; }
+    .ge-fl { padding-top: 2px; }
+  }
   table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
   th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
   thead th { font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); background: var(--surface-2); }
@@ -2057,6 +2108,35 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
       t.addEventListener('keydown', function (e) {
         var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
         if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length].id.slice(4), true); }
+      });
+    });
+    // Filter inside a "Show all" list of API document gaps: every word must appear in the area, path or fields.
+    Array.prototype.forEach.call(document.querySelectorAll('details.gaps'), function (box) {
+      var input = box.querySelector('.gaps-filter');
+      var count = box.querySelector('.gaps-count');
+      var none = box.querySelector('.gaps-none');
+      var groups = box.querySelectorAll('.gg');
+      var total = box.querySelectorAll('ul.ge > li').length;
+      var label = count.textContent;
+      input.addEventListener('input', function () {
+        var terms = input.value.toLowerCase().split(' ').filter(Boolean);
+        var shown = 0, areas = 0;
+        Array.prototype.forEach.call(groups, function (g) {
+          var inGroup = 0;
+          Array.prototype.forEach.call(g.querySelectorAll('ul.ge > li'), function (li) {
+            var q = li.getAttribute('data-q');
+            var ok = terms.every(function (t) { return q.indexOf(t) !== -1; });
+            li.hidden = !ok; if (ok) inGroup++;
+          });
+          g.hidden = inGroup === 0; shown += inGroup; if (inGroup) areas++;
+        });
+        none.hidden = shown !== 0;
+        count.textContent = terms.length ? shown + ' of ' + total + ' endpoints' + (areas ? ' in ' + areas + ' area' + (areas === 1 ? '' : 's') : '') : label;
+      });
+      input.addEventListener('keydown', function (e) { if (e.key === 'Escape' && input.value) { input.value = ''; input.dispatchEvent(new Event('input')); e.stopPropagation(); } });
+      box.querySelector('.gaps-close').addEventListener('click', function () {
+        box.open = false;
+        var s = box.querySelector('summary'); s.scrollIntoView({ block: 'center' }); s.focus();
       });
     });
     // Search within a tab: every word must appear (any order). Rows in the API reference also match on
