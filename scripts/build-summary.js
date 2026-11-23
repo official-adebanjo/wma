@@ -725,7 +725,18 @@ const strip = (s) => (s || '').replace(/\x1b\[[0-9;]*m/g, '');
 const cleanTitle = (t) => t.replace(/\s@\S+/g, '').replace(/\bT(\d) customer\b/g, 'Tier $1 test account').trim();
 const count = (st, list) => list.filter((t) => t.status === st).length;
 const fmt = (d) => d.toLocaleString('en-GB', { timeZone: 'Africa/Lagos', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-const sevRank = (s) => (s === 'High' ? 0 : s === 'Low' ? 2 : 1);
+/** Problem priorities, most severe first. Anything unrecognised is treated as Medium. */
+const SEVS = ['Critical', 'High', 'Medium', 'Low'];
+const SEV_MEANING = {
+  Critical: 'blocks a core journey for every customer (for example no one can sign up or invest)',
+  High: 'affects customers’ money, security or a compliance requirement',
+  Medium: 'a feature is broken, wrong or misleading, but there is a way round it',
+  Low: 'minor or cosmetic; worth fixing when convenient',
+};
+const sevOf = (f) => (SEVS.includes(f.severity) ? f.severity : 'Medium');
+const sevKey = (f) => sevOf(f).toLowerCase();
+const sevRank = (s) => { const i = SEVS.indexOf(s); return i < 0 ? 2 : i; };
+const sevCounts = (list) => Object.fromEntries(SEVS.map((s) => [s, list.filter((f) => sevOf(f) === s).length]));
 
 fs.mkdirSync(path.join(outDir, 'screenshots'), { recursive: true });
 
@@ -782,6 +793,7 @@ function readAdmin() {
   return {
     id: 'admin',
     label: 'Admin portal',
+    runAt: new Date(results.stats.startTime),
     heading: 'Admin Portal Test Results',
     context: 'Chrome browser · dev environment',
     runText: `Automated check run on ${fmt(new Date(results.stats.startTime))} (WAT) · took about ${Math.round(results.stats.duration / 60000)} minutes`,
@@ -836,6 +848,7 @@ function readMobile() {
   return {
     id: 'mobile',
     label: 'Mobile app',
+    runAt: times[0],
     heading: 'Mobile App Test Results',
     context: mobileContext(rows),
     runText: `Automated check run on ${fmt(times[0])} (WAT) · took about ${mins} minutes`,
@@ -910,7 +923,7 @@ function panel(d, pub) {
   const extra = d.extraCount ? ` (including ${d.extraCount} ${d.extraNote || 'found by hand or in the app’s error log'})` : '';
   const verdict = n === 0
     ? { tone: 'good', head: 'Everything checked is working as expected', sub: `All ${checked} checks passed.` }
-    : { tone: 'warn', head: `${high >= 3 ? 'Not ready for release' : 'Mostly working'} — ${n} problem${n > 1 ? 's' : ''} need attention${extra}`, sub: high ? `${high} of them affect money or compliance and should be fixed before release.` : 'None of them affect money or compliance.' };
+    : { tone: high >= 3 ? 'bad' : 'warn', head: `${high >= 3 ? 'Not ready for release' : 'Mostly working'} — ${n} problem${n > 1 ? 's' : ''} need attention${extra}`, sub: high ? `${high} of them are Critical or High priority and should be fixed before release.` : 'None of them is Critical or High priority.' };
 
   const areaRows = Object.entries(d.areas).map(([file, a]) => {
     const list = tests.filter((t) => t.file === file);
@@ -922,12 +935,13 @@ function panel(d, pub) {
     return `<tr><td class="area"><strong>${esc(a.name)}</strong><div class="muted">${esc(a.what)}</div></td><td class="num" data-label="Checks run">${ran}</td><td class="num" data-label="Worked">${count('passed', list)}</td><td class="result">${badge}${nr ? `<div class="muted small">${nr} not run</div>` : ''}</td></tr>`;
   }).join('');
 
+  const sc = sevCounts(findings);
   const cards = findings.map((f, i) => `
-      <article class="card finding">
+      <article class="card finding s-${sevKey(f)}" data-sev="${sevKey(f)}">
         <header>
-          <span class="sev ${f.severity === 'Critical' ? 'crit' : f.severity === 'High' ? 'high' : f.severity === 'Low' ? 'low' : 'med'}">${esc(f.severity)} priority</span>
-          <h3>${i + 1}. ${esc(f.title)}</h3>
-          <p class="muted">Area: ${esc(f.area)} · Who should look at this: ${esc(f.owner)}</p>
+          <div class="finding-meta"><span class="sev s-${sevKey(f)}">${esc(sevOf(f))}</span><span class="chip">${esc(f.area)}</span><span class="finding-no muted">#${i + 1}</span></div>
+          <h3>${esc(f.title)}</h3>
+          <p class="muted small">Who should look at this: ${esc(f.owner)}</p>
         </header>
         <p class="impact">${esc(f.impact)}</p>
         <dl>
@@ -979,7 +993,14 @@ function panel(d, pub) {
     problems: `
     <div class="sec">
     <h2>Problems found</h2>
-    <p class="muted">These did not behave the way the product documents say they should. “High priority” means it affects customers’ money or a compliance requirement.</p>
+    <p class="muted">These did not behave the way the product documents say they should. Most severe first.</p>
+    ${n ? `<div class="sev-filter" role="group" aria-label="Show problems by priority" data-panel="${d.id}">
+      <span class="sev-filter-label">Priority</span>
+      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">${n}</span></button>
+      ${SEVS.map((s) => `<button type="button" class="fchip s-${s.toLowerCase()}" data-sev="${s.toLowerCase()}" aria-pressed="false" title="${esc(s)}: ${esc(SEV_MEANING[s])}"${sc[s] ? '' : ' disabled'}><i class="sev-dot" aria-hidden="true"></i>${s} <span class="count">${sc[s]}</span></button>`).join('\n      ')}
+    </div>
+    <p class="muted small sev-filter-status" aria-live="polite"></p>
+    <details class="ref sev-help"><summary>What the priorities mean</summary><dl class="sev-defs">${SEVS.map((s) => `<dt><span class="sev s-${s.toLowerCase()}">${s}</span></dt><dd>${esc(SEV_MEANING[s][0].toUpperCase() + SEV_MEANING[s].slice(1))}.</dd>`).join('')}</dl></details>` : ''}
     ${cards || '<p>No problems were found.</p>'}
     </div>`,
     passed: `
@@ -1021,7 +1042,6 @@ function panel(d, pub) {
     ${pub ? d.techPublic : d.techInternal}`,
   };
 
-  const pct = (x) => (total ? (x / total) * 100 : 0);
   return `
     <p class="muted small">${esc(d.context)}</p>
     <h2 class="panel-title">${esc(d.heading)}</h2>
@@ -1044,10 +1064,9 @@ function panel(d, pub) {
       <a class="stat bad" href="#${d.id}/problems"><div class="n">${failed}</div><div class="muted">checks with a problem <span class="go" aria-hidden="true">→</span></div></a>
       <a class="stat" href="#${d.id}/notrun"><div class="n">${notRun}</div><div class="muted">not run <span class="go" aria-hidden="true">→</span></div></a>
     </div>
-    <div class="bar" role="img" aria-label="${passed} passed, ${failed} problems, ${notRun} not run">
-      <span class="p" style="width:${pct(passed)}%"></span><span class="f" style="width:${pct(failed)}%"></span><span class="s" style="width:${pct(notRun)}%"></span>
-    </div>
-    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (${passRate}% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot" style="background:var(--muted)"></i>Not run</span></div>
+    ${resultBar(passed, failed, notRun)}
+    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (${passRate}% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot dot-idle"></i>Not run</span></div>
+    ${n ? `<h3 class="kicker">Problems by priority</h3>${sevTiles(d.id, sc)}` : ''}
 
     <div class="subtabs" role="tablist" aria-label="${esc(d.label)} results by kind">
       ${subs.map((s, i) => `<button class="subtab${s.tone ? ' t-' + s.tone : ''}" role="tab" id="sub-${d.id}-${s.id}" aria-controls="subpanel-${d.id}-${s.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-panel="${d.id}" data-sub="${s.id}">${esc(s.label)}${s.n !== undefined ? ` <span class="count">${s.n}</span>` : ''}</button>`).join('\n      ')}
@@ -1060,6 +1079,193 @@ function panel(d, pub) {
 
 function emptyPanel(label, how) {
   return `<h2 class="panel-title">${esc(label)} Test Results</h2><section class="card verdict"><h3>No results yet</h3><p class="muted">${esc(how)}</p></section>`;
+}
+
+/** Thin segmented bar: worked | problem | not run. Each part names itself on hover and to screen readers. */
+function resultBar(passed, failed, notRun) {
+  const total = passed + failed + notRun;
+  const part = (cls, x, what) => (x ? `<span class="${cls}" style="flex-grow:${x}" title="${x} ${what} (${Math.round((x / total) * 100)}%)"></span>` : '');
+  return `<div class="bar" role="img" aria-label="${passed} worked, ${failed} with a problem, ${notRun} not run">${part('p', passed, 'worked')}${part('f', failed, 'with a problem')}${part('s', notRun, 'not run')}</div>`;
+}
+
+/** Four priority tiles; with an area id, each opens that area's Problems tab filtered to the priority. */
+function sevTiles(areaId, sc) {
+  return `<div class="sev-tiles">${SEVS.map((s) => {
+    const k = s.toLowerCase();
+    const body = `<span class="sev-tile-n">${sc[s]}</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>${s}</span>`;
+    return sc[s] && areaId
+      ? `<a class="sev-tile s-${k}" href="#${areaId}/problems/${k}" title="${esc(SEV_MEANING[s])}">${body}</a>`
+      : `<span class="sev-tile s-${k} zero">${body}</span>`;
+  }).join('')}</div>`;
+}
+
+/* ================================================================== central dashboard */
+
+const MONTH_NO = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+/** The date an activity title starts with or names first ("23 November: …", "Re-run on 6 November", "5 Nov: …"). */
+function activityDate(title, year) {
+  const m = title.match(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b/);
+  return m ? new Date(Date.UTC(year, MONTH_NO[m[2].toLowerCase()], +m[1])) : null;
+}
+const stripDate = (t) => {
+  const s = t.replace(/^\d{1,2}\s+[A-Z][a-z]+\.?\s*(\([^)]*\))?\s*:\s*/, '');
+  return s[0].toUpperCase() + s.slice(1);
+};
+/** What kind of activity a change-log entry is, from its wording. */
+function activityKind(title) {
+  if (/not fixed|still seen|still not/i.test(title)) return ['Unresolved', 'bad'];
+  if (/\bfixed\b/i.test(title)) return ['Fixed', 'ok'];
+  if (/re-run|not re-run|re-checked|looked at again/i.test(title)) return ['Re-run', 'idle'];
+  if (/\bnew\b|added|set up|created|switched off|removed/i.test(title)) return ['Change', 'info'];
+  return ['Update', 'idle'];
+}
+const firstSentence = (s, max = 240) => {
+  const m = s.match(/^.*?[.!?](\s|$)/);
+  const one = (m ? m[0] : s).trim();
+  return one.length > max ? one.slice(0, max).replace(/\s+\S*$/, '') + '…' : one;
+};
+
+/** Every dated activity across the three areas: change logs (incl. API updates) and work done by hand. */
+function activities(areas, year) {
+  const out = [];
+  for (const d of areas) {
+    for (const [title, text] of (d.changes?.items || [])) {
+      const date = activityDate(title, year) || (d.id === 'api' && !API_UPDATES.some(([t]) => t === title) ? new Date(Date.UTC(d.runAt.getUTCFullYear(), d.runAt.getUTCMonth(), d.runAt.getUTCDate())) : null);
+      if (!date) continue;
+      const [kind, tone] = activityKind(title);
+      out.push({ date, d, title: stripDate(title), text, kind, tone });
+    }
+    for (const [title, tone, text] of (d.journeys?.items || [])) {
+      const date = activityDate(title, year);
+      if (!date) continue;
+      out.push({ date, d, title: stripDate(title), text, kind: d.id === 'admin' ? 'Checked by hand' : 'Tried by hand', tone: tone === 'ok' ? 'ok' : tone === 'bad' ? 'bad' : 'idle', result: tone === 'ok' ? 'Worked' : tone === 'bad' ? 'Problem' : 'Partly checked' });
+    }
+  }
+  const order = { admin: 0, mobile: 1, api: 2 };
+  return out.sort((a, b) => b.date - a.date || order[a.d.id] - order[b.d.id]);
+}
+
+function dashboard(areas, pub) {
+  if (!areas.length) return emptyPanel('Overview', 'Run any of the checks to fill this in.');
+  const all = areas.flatMap((d) => d.tests);
+  const passed = count('passed', all), failed = count('problem', all), notRun = count('not-run', all);
+  const ran = all.length - notRun;
+  const rate = ran ? Math.round((passed / ran) * 100) : 0;
+  const findings = areas.flatMap((d) => d.findings.map((f) => ({ ...f, src: d })));
+  const sc = sevCounts(findings);
+  const urgent = sc.Critical + sc.High;
+  const latest = new Date(Math.max(...areas.map((d) => +d.runAt)));
+  const notReady = sc.Critical > 0 || sc.High >= 3;
+  const verdict = !findings.length
+    ? { tone: 'good', head: 'Everything checked is working as expected', sub: `All ${ran} checks that ran passed across ${areas.length} area${areas.length > 1 ? 's' : ''}.` }
+    : {
+      tone: notReady ? 'bad' : 'warn',
+      head: `${notReady ? 'Not ready for release' : 'Mostly working'} — ${findings.length} open problem${findings.length > 1 ? 's' : ''}`,
+      sub: [sc.Critical && `${sc.Critical} Critical (a core journey is blocked)`, sc.High && `${sc.High} High (money, security or compliance)`, sc.Medium && `${sc.Medium} Medium`, sc.Low && `${sc.Low} Low`].filter(Boolean).join(' · '),
+    };
+
+  const kpis = [
+    ['Checks in total', all.length, '', `${areas.length} area${areas.length > 1 ? 's' : ''}: ${areas.map((d) => d.label).join(', ')}`],
+    ['Pass rate', `${rate}%`, rate >= 90 ? 'ok' : '', `${passed} of ${ran} checks that ran worked`],
+    ['Open problems', findings.length, findings.length ? 'bad' : 'ok', `from ${failed} failing check${failed === 1 ? '' : 's'}, plus problems found by hand`],
+    ['Critical & High', urgent, urgent ? 'bad' : 'ok', urgent ? 'fix before release' : 'nothing blocking release'],
+    ['Not run', notRun, '', 'switched-off pages, missing test data or held on purpose'],
+  ];
+
+  // Priority × area: where the problems are. Each count opens that area's problems at that priority.
+  const cell = (d, s) => {
+    const x = d.findings.filter((f) => sevOf(f) === s).length;
+    return x ? `<td class="num"><a class="mcell s-${s.toLowerCase()}" href="#${d.id}/problems/${s.toLowerCase()}" aria-label="${x} ${s} in ${esc(d.label)}">${x}</a></td>` : '<td class="num"><span class="muted" aria-label="none">–</span></td>';
+  };
+  const matrix = `<div class="table-wrap scroll"><table class="matrix">
+      <thead><tr><th>Area</th>${SEVS.map((s) => `<th class="num"><span class="th-sev"><i class="sev-dot s-${s.toLowerCase()}" aria-hidden="true"></i>${s}</span></th>`).join('')}<th class="num">Total</th></tr></thead>
+      <tbody>${areas.map((d) => `<tr><th scope="row"><a href="#${d.id}">${esc(d.label)}</a></th>${SEVS.map((s) => cell(d, s)).join('')}<td class="num"><a href="#${d.id}/problems"><strong>${d.findings.length}</strong></a></td></tr>`).join('')}</tbody>
+      <tfoot><tr><th scope="row">All areas</th>${SEVS.map((s) => `<td class="num"><strong>${sc[s] || '–'}</strong></td>`).join('')}<td class="num"><strong>${findings.length}</strong></td></tr></tfoot>
+    </table></div>`;
+
+  const areaCards = areas.map((d) => {
+    const t = d.tests;
+    const p = count('passed', t), f = count('problem', t), nr = count('not-run', t);
+    const r = t.length - nr ? Math.round((p / (t.length - nr)) * 100) : 0;
+    const asc = sevCounts(d.findings);
+    return `<a class="area-card" href="#${d.id}">
+        <div class="area-head"><span class="area-icon" aria-hidden="true">${tabs.find((x) => x.id === d.id).icon}</span><div><h3>${esc(d.label)}</h3><p class="muted small">${esc(d.context)}</p></div></div>
+        <p class="area-rate"><span class="big">${r}%</span> <span class="muted">of checks that ran worked</span></p>
+        ${resultBar(p, f, nr)}
+        <ul class="area-nums"><li><strong>${p}</strong> worked</li><li><strong>${f}</strong> failed</li><li><strong>${nr}</strong> not run</li></ul>
+        <p class="area-sev">${d.findings.length ? SEVS.filter((s) => asc[s]).map((s) => `<span class="sev s-${s.toLowerCase()}">${asc[s]} ${s}</span>`).join(' ') : '<span class="badge ok">No open problems</span>'}</p>
+        <p class="muted small">Last run ${esc(fmt(d.runAt))}</p>
+        <span class="go">Open ${esc(d.label)} results <span aria-hidden="true">→</span></span>
+      </a>`;
+  }).join('');
+
+  const top = findings.filter((f) => sevRank(sevOf(f)) <= 1).sort((a, b) => sevRank(sevOf(a)) - sevRank(sevOf(b)));
+  const attItem = (f) => `<li>
+        <span class="sev s-${sevKey(f)}">${esc(sevOf(f))}</span>
+        <div><a href="#${f.src.id}/problems/${sevKey(f)}">${esc(f.title)}</a><div class="muted small">${esc(f.src.label)} · ${esc(f.area)} · ${esc(f.owner)}</div></div>
+      </li>`;
+  const SHOW_TOP = 6;
+  const attention = top.length ? `<ol class="attention">${top.slice(0, SHOW_TOP).map(attItem).join('')}</ol>
+      ${top.length > SHOW_TOP ? `<details class="ref"><summary>Show all ${top.length} <span class="muted">· ${top.length - SHOW_TOP} more</span></summary><ol class="attention">${top.slice(SHOW_TOP).map(attItem).join('')}</ol></details>` : ''}` : '<p class="muted">No Critical or High problems are open.</p>';
+
+  const acts = activities(areas, latest.getUTCFullYear());
+  const dayKey = (dt) => dt.toISOString().slice(0, 10);
+  const days = [];
+  for (const a of acts) {
+    const last = days[days.length - 1];
+    if (last && last.key === dayKey(a.date)) last.items.push(a); else days.push({ key: dayKey(a.date), date: a.date, items: [a] });
+  }
+  const dayLabel = (dt) => dt.toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'long' });
+  const actItem = (a) => {
+    const lead = firstSentence(a.text);
+    const more = a.text.length > lead.length + 2;
+    return `<li class="act">
+          <div class="act-tags"><span class="src src-${a.d.id}">${esc(a.d.label)}</span><span class="badge ${a.tone}">${esc(a.kind)}</span>${a.result ? `<span class="badge ${a.tone}">${esc(a.result)}</span>` : ''}</div>
+          <p class="act-title"><strong>${esc(a.title)}</strong></p>
+          <p class="muted act-lead">${esc(lead)}</p>
+          ${more ? `<details class="act-more"><summary>Read more</summary><p>${esc(a.text)}</p></details>` : ''}
+        </li>`;
+  };
+  const dayBlock = (g) => `<li class="day"><h3 class="day-label"><time datetime="${g.key}">${esc(dayLabel(g.date))}</time> <span class="muted small">· ${g.items.length} ${g.items.length === 1 ? 'activity' : 'activities'}</span></h3><ul class="acts">${g.items.map(actItem).join('')}</ul></li>`;
+  const SHOW_DAYS = 4;
+  const older = days.slice(SHOW_DAYS);
+  const timeline = days.length ? `<ol class="timeline">${days.slice(0, SHOW_DAYS).map(dayBlock).join('')}</ol>
+    ${older.length ? `<details class="ref older"><summary>Show earlier activity <span class="muted">· ${older.reduce((x, g) => x + g.items.length, 0)} more, back to ${esc(dayLabel(older[older.length - 1].date))}</span></summary><ol class="timeline">${older.map(dayBlock).join('')}</ol></details>` : ''}` : '<p class="muted">No dated activity recorded yet.</p>';
+  const actCounts = ['Fixed', 'Unresolved', 'Change', 'Re-run'].map((k) => [k, acts.filter((a) => a.kind === k).length]).concat([['By hand', acts.filter((a) => /by hand/.test(a.kind)).length]]);
+
+  return `
+    <p class="muted small">All areas · dev environment · latest run ${esc(fmt(latest))} (WAT)</p>
+    <h2 class="panel-title">System overview</h2>
+    <p class="muted">Everything the automated and hand checks found across the admin portal, the mobile app and the API, and what has changed recently. Select any number to see the detail behind it.</p>
+
+    <section class="card verdict ${verdict.tone}">
+      <h3>${esc(verdict.head)}</h3>
+      <p>${esc(verdict.sub)}</p>
+    </section>
+
+    <div class="kpis">${kpis.map(([label, v, tone, sub]) => `<div class="kpi ${tone}"><div class="kpi-l">${esc(label)}</div><div class="kpi-v">${esc(v)}</div><div class="muted small">${esc(sub)}</div></div>`).join('')}</div>
+
+    <div class="dash-grid">
+      <section class="dash-col">
+        <h2>Open problems by priority</h2>
+        ${sevTiles(null, sc)}
+        <p class="muted small">By area — select a number to open those problems.</p>
+        ${matrix}
+      </section>
+      <section class="dash-col">
+        <h2>Fix first</h2>
+        <p class="muted small">Critical and High problems across every area, most severe first.</p>
+        ${attention}
+      </section>
+    </div>
+
+    <h2>Areas</h2>
+    <div class="area-cards">${areaCards}</div>
+
+    <h2>Recent activity</h2>
+    <p class="muted">New builds and re-runs, fixes, set-up changes and checks done by hand, newest first.</p>
+    <ul class="act-summary">${actCounts.filter(([, x]) => x).map(([k, x]) => `<li><strong>${x}</strong> ${esc(k === 'By hand' ? 'checked by hand' : k === 'Change' ? 'changes' : k === 'Re-run' ? 're-runs' : k.toLowerCase())}</li>`).join('')}</ul>
+    ${timeline}`;
 }
 
 /* ================================================================== API — vocabulary and results */
@@ -1324,6 +1530,7 @@ function readApi() {
   return {
     id: 'api',
     label: 'API',
+    runAt: times[0],
     heading: 'API Test Results',
     context: `${spec.info?.title} ${spec.info?.version} · ${ops.length} endpoints · dev environment`,
     runText: `Automated check run on ${fmt(times[0])} (WAT) · took about ${mins} minute${mins > 1 ? 's' : ''}`,
@@ -1344,11 +1551,19 @@ const admin = readAdmin();
 const mobile = readMobile();
 const api = readApi();
 const tabs = [
+  { id: 'dashboard', label: 'Overview', icon: '📊', dashboard: true },
   { id: 'admin', label: 'Admin portal', icon: '🖥', data: admin, empty: 'Run the admin portal checks (npm run test:admin:dev) to fill this in.' },
   { id: 'mobile', label: 'Mobile app', icon: '📱', data: mobile, empty: 'Run the mobile checks (npx wdio run mobile/config/wdio.android.conf.ts) to fill this in.' },
   { id: 'api', label: 'API', icon: '🔌', data: api, empty: 'Run the API checks (npm run test:api:dev) to fill this in.' },
 ];
-const pill = (d) => {
+const areaData = [admin, mobile, api].filter(Boolean);
+const emptyText = (id) => tabs.find((t) => t.id === id).empty;
+const pill = (d, t) => {
+  if (t && t.dashboard) {
+    const sc = sevCounts(areaData.flatMap((x) => x.findings));
+    const urgent = sc.Critical + sc.High;
+    return urgent ? `<span class="pill bad">${urgent} urgent</span>` : '<span class="pill ok">no urgent</span>';
+  }
   if (!d) return '<span class="pill idle">no run yet</span>';
   const n = d.findings.length;
   return n ? `<span class="pill bad">${n} problem${n > 1 ? 's' : ''}</span>` : '<span class="pill ok">all good</span>';
@@ -1369,52 +1584,83 @@ const render = (pub) => `<!doctype html>
 ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
 <style>
   :root {
-    --bg: #f6f7f9; --surface: #ffffff; --text: #1d2433; --muted: #5d6677; --line: #e3e6ec;
-    --accent: #1f3a6d; --good: #1d7a46; --good-bg: #e6f4ec; --warn: #9a5b00; --warn-bg: #fff4e0;
-    --bad: #b42318; --bad-bg: #fdecea; --med: #8a5a00; --med-bg: #fff4e0; --idle-bg: #eceef2;
+    --bg: #f3f5f8; --surface: #ffffff; --surface-2: #f8f9fb; --text: #18202e; --muted: #5b6474; --line: #e2e6ec;
+    --accent: #1f3a6d; --accent-2: #2d559a; --on-accent: #ffffff; --shadow: 0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+    --good: #1d7a46; --good-bg: #e6f4ec; --warn: #9a5b00; --warn-bg: #fff4e0;
+    --bad: #b42318; --bad-bg: #fdecea; --med: #8a5a00; --med-bg: #fff4e0; --idle-bg: #eceef2; --info: #1f5fae; --info-bg: #e7f0fb;
+    /* Priorities: stripe/dot colour, tinted background, readable ink */
+    --s-critical: #d03b3b; --s-critical-bg: #fbe4e4; --s-critical-ink: #9b1c1c;
+    --s-high: #ec835a; --s-high-bg: #fdede5; --s-high-ink: #9c3d0c;
+    --s-medium: #fab219; --s-medium-bg: #fff5dc; --s-medium-ink: #765000;
+    --s-low: #8a94a6; --s-low-bg: #eef0f4; --s-low-ink: #4a5363;
+    --mast-a: #1f3a6d; --mast-b: #2d559a;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #11151c; --surface: #1a2029; --text: #e7eaf0; --muted: #9aa4b5; --line: #2c3442;
-      --accent: #9db8ec; --good: #6fd29b; --good-bg: #173326; --warn: #ffc56b; --warn-bg: #3a2c12;
-      --bad: #ff8a80; --bad-bg: #3d1d1b; --med: #ffc56b; --med-bg: #3a2c12; --idle-bg: #252c38;
+      --bg: #0f131a; --surface: #181e27; --surface-2: #1d2430; --text: #e7eaf0; --muted: #9aa4b5; --line: #2a3240;
+      --accent: #9db8ec; --accent-2: #b9cdf3; --on-accent: #0f131a; --shadow: 0 1px 2px rgba(0,0,0,.4);
+      --good: #6fd29b; --good-bg: #173326; --warn: #ffc56b; --warn-bg: #3a2c12;
+      --bad: #ff8a80; --bad-bg: #3d1d1b; --med: #ffc56b; --med-bg: #3a2c12; --idle-bg: #252c38; --info: #8fbaf0; --info-bg: #1a2b42;
+      --s-critical: #ff6b6b; --s-critical-bg: #3d1d1d; --s-critical-ink: #ffa19b;
+      --s-high: #f08f62; --s-high-bg: #3b2418; --s-high-ink: #ffb894;
+      --s-medium: #fab219; --s-medium-bg: #3a2c12; --s-medium-ink: #ffd27a;
+      --s-low: #8a94a6; --s-low-bg: #252c38; --s-low-ink: #bcc4d1;
+      --mast-a: #16213a; --mast-b: #1d2f52;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #11151c; --surface: #1a2029; --text: #e7eaf0; --muted: #9aa4b5; --line: #2c3442;
-    --accent: #9db8ec; --good: #6fd29b; --good-bg: #173326; --warn: #ffc56b; --warn-bg: #3a2c12;
-    --bad: #ff8a80; --bad-bg: #3d1d1b; --med: #ffc56b; --med-bg: #3a2c12; --idle-bg: #252c38;
+    --bg: #0f131a; --surface: #181e27; --surface-2: #1d2430; --text: #e7eaf0; --muted: #9aa4b5; --line: #2a3240;
+    --accent: #9db8ec; --accent-2: #b9cdf3; --on-accent: #0f131a; --shadow: 0 1px 2px rgba(0,0,0,.4);
+    --good: #6fd29b; --good-bg: #173326; --warn: #ffc56b; --warn-bg: #3a2c12;
+    --bad: #ff8a80; --bad-bg: #3d1d1b; --med: #ffc56b; --med-bg: #3a2c12; --idle-bg: #252c38; --info: #8fbaf0; --info-bg: #1a2b42;
+    --s-critical: #ff6b6b; --s-critical-bg: #3d1d1d; --s-critical-ink: #ffa19b;
+    --s-high: #f08f62; --s-high-bg: #3b2418; --s-high-ink: #ffb894;
+    --s-medium: #fab219; --s-medium-bg: #3a2c12; --s-medium-ink: #ffd27a;
+    --s-low: #8a94a6; --s-low-bg: #252c38; --s-low-ink: #bcc4d1;
+    --mast-a: #16213a; --mast-b: #1d2f52;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 104px; }
-  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 4px; color: var(--accent); }
-  h2 { font-size: 1.3rem; margin: 40px 0 6px; }
-  h2.panel-title { margin-top: 4px; font-size: 1.5rem; }
-  h3 { font-size: 1.08rem; margin: 6px 0 2px; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  main { max-width: 1120px; margin: 0 auto; padding: 0 16px 104px; }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0; letter-spacing: -.01em; }
+  h2 { font-size: 1.25rem; margin: 40px 0 6px; letter-spacing: -.005em; }
+  h2.panel-title { margin-top: 2px; font-size: 1.55rem; }
+  h3 { font-size: 1.06rem; margin: 6px 0 2px; }
   p { margin: 6px 0; }
   .muted { color: var(--muted); }
   .small { font-size: .85rem; }
+  a { color: var(--accent); }
+  code { font-size: .9em; }
 
-  /* Admin | Mobile switch */
-  .tabs { display: flex; gap: 6px; padding: 6px; margin: 24px 0 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; position: sticky; top: 8px; z-index: 5; }
-  .tab { flex: 1; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; }
-  .tab:hover { background: var(--bg); color: var(--text); }
-  .tab[aria-selected="true"] { background: var(--accent); color: var(--surface); }
+  /* Masthead */
+  .masthead { background: linear-gradient(135deg, var(--mast-a), var(--mast-b)); color: #fff; padding: 28px 16px 64px; }
+  .masthead-in { max-width: 1120px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: .85rem; font-weight: 600; letter-spacing: .02em; opacity: .9; margin-bottom: 10px; }
+  .brand img { width: 26px; height: 26px; border-radius: 6px; background: #fff; padding: 2px; }
+  .masthead p { margin: 8px 0 0; max-width: 70ch; color: rgba(255,255,255,.82); }
+  .mast-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .mast-meta span { font-size: .8rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; }
+
+  /* Area switch */
+  .tabs { display: flex; gap: 4px; padding: 5px; margin: -40px 0 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; position: sticky; top: 8px; z-index: 5; box-shadow: 0 4px 18px rgba(16,24,40,.10); }
+  .tab { flex: 1; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 11px 12px; min-height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; }
+  .tab:hover { background: var(--surface-2); color: var(--text); }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
   .tab:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  .pill { font-size: .75rem; font-weight: 700; padding: 1px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill { font-size: .72rem; font-weight: 700; padding: 1px 9px; border-radius: 999px; white-space: nowrap; }
   .pill.bad { background: var(--bad-bg); color: var(--bad); } .pill.ok { background: var(--good-bg); color: var(--good); } .pill.idle { background: var(--idle-bg); color: var(--muted); }
   .tab[aria-selected="true"] .pill { background: var(--surface); }
   [role="tabpanel"][hidden] { display: none; }
   .nojs-divider { border: 0; border-top: 2px dashed var(--line); margin: 48px 0; }
   .js .nojs-divider { display: none; }
 
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 14px 0; }
-  .verdict { border-left: 6px solid var(--warn); background: var(--warn-bg); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin: 14px 0; box-shadow: var(--shadow); }
+  .verdict { border-left: 6px solid var(--warn); background: var(--warn-bg); box-shadow: none; }
   .verdict.good { border-left-color: var(--good); background: var(--good-bg); }
-  .verdict h3 { margin: 0 0 4px; font-size: 1.25rem; }
+  .verdict.bad { border-left-color: var(--bad); background: var(--bad-bg); }
+  .verdict h3 { margin: 0 0 4px; font-size: 1.2rem; }
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
-  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
   .stat .n { font-size: 2rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
   a.stat { display: block; color: inherit; text-decoration: none; }
   .js a.stat:hover { border-color: var(--accent); }
@@ -1422,43 +1668,145 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .stat .go { display: none; }
   .js .stat .go { display: inline; color: var(--accent); }
   .stat.ok .n { color: var(--good); } .stat.bad .n { color: var(--bad); }
-  .bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--line); margin-top: 16px; }
-  .bar span { display: block; }
-  .bar .p { background: var(--good); } .bar .f { background: var(--bad); } .bar .s { background: var(--muted); opacity: .45; }
-  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: .85rem; margin-top: 6px; }
+  /* Thin segmented bar, 2px surface gap between parts */
+  .bar { display: flex; gap: 2px; height: 8px; margin-top: 16px; }
+  .bar span { display: block; flex-basis: 0; border-radius: 999px; min-width: 4px; }
+  .bar .p { background: var(--good); } .bar .f { background: var(--bad); } .bar .s { background: var(--s-low); opacity: .55; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: .85rem; margin-top: 8px; }
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .dot-idle { background: var(--s-low); opacity: .55; }
+  .kicker { margin: 22px 0 8px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
   th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  thead th { font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); background: var(--surface-2); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  tr:last-child td { border-bottom: 0; }
-  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .85rem; font-weight: 600; white-space: nowrap; }
-  .badge.ok { background: var(--good-bg); color: var(--good); } .badge.bad { background: var(--bad-bg); color: var(--bad); } .badge.idle { background: var(--idle-bg); color: var(--muted); }
-  .sev { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .sev.crit { background: var(--bad); color: var(--surface); } .sev.high { background: var(--bad-bg); color: var(--bad); } .sev.med { background: var(--med-bg); color: var(--med); } .sev.low { background: var(--idle-bg); color: var(--muted); }
+  tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; white-space: nowrap; }
+  .badge.ok { background: var(--good-bg); color: var(--good); } .badge.bad { background: var(--bad-bg); color: var(--bad); } .badge.idle { background: var(--idle-bg); color: var(--muted); } .badge.info { background: var(--info-bg); color: var(--info); }
+
+  /* Priority labels: always a word, never colour alone */
+  .sev { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+  .sev::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .sev-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .s-critical { --s: var(--s-critical); --s-bg: var(--s-critical-bg); --s-ink: var(--s-critical-ink); }
+  .s-high { --s: var(--s-high); --s-bg: var(--s-high-bg); --s-ink: var(--s-high-ink); }
+  .s-medium { --s: var(--s-medium); --s-bg: var(--s-medium-bg); --s-ink: var(--s-medium-ink); }
+  .s-low { --s: var(--s-low); --s-bg: var(--s-low-bg); --s-ink: var(--s-low-ink); }
+  .sev.s-critical, .sev.s-high, .sev.s-medium, .sev.s-low { background: var(--s-bg); color: var(--s-ink); }
+  .sev.s-critical::before, .sev.s-high::before, .sev.s-medium::before, .sev.s-low::before { background: var(--s); }
+  .s-critical .sev-dot, .s-high .sev-dot, .s-medium .sev-dot, .s-low .sev-dot, .sev-dot.s-critical, .sev-dot.s-high, .sev-dot.s-medium, .sev-dot.s-low { background: var(--s); }
+
+  /* Problem cards */
+  .finding { border-left: 5px solid var(--s, var(--line)); }
+  .finding-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .finding-no { margin-left: auto; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .finding h3 { font-size: 1.1rem; margin-top: 10px; }
+  .chip { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; background: var(--idle-bg); color: var(--muted); }
+  .finding .impact { font-weight: 600; }
+  .finding.filtered-out { display: none; }
+
+  /* Priority filter */
+  .sev-filter { display: none; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 2px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; position: sticky; top: 84px; z-index: 4; box-shadow: var(--shadow); }
+  .js .sev-filter { display: flex; }
+  .sev-filter-label { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 4px; }
+  .fchip { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 6px 13px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; }
+  .fchip:hover:not([disabled]) { border-color: var(--s, var(--accent)); background: var(--s-bg, var(--surface-2)); }
+  .fchip[aria-pressed="true"] { background: var(--s-bg, var(--accent)); color: var(--s-ink, var(--on-accent)); border-color: var(--s, var(--accent)); box-shadow: inset 0 0 0 1px var(--s, var(--accent)); }
+  .fchip[aria-pressed="true"]::after { content: "✓"; font-weight: 700; }
+  .fchip.all[aria-pressed="true"]::after, .fchip[data-sev="all"][aria-pressed="true"]::after { content: none; }
+  .fchip[disabled] { opacity: .45; cursor: not-allowed; }
+  .fchip:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .fchip .count { font-size: .75rem; font-weight: 700; padding: 0 7px; border-radius: 999px; background: var(--idle-bg); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .sev-filter-status { min-height: 1.2em; }
+  .sev-defs { display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; align-items: center; margin: 4px 0 8px; }
+  .sev-defs dt, .sev-defs dd { margin: 0; }
+
+  /* Priority tiles */
+  .sev-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 6px 0 14px; }
+  .sev-tile { display: block; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--s); color: inherit; text-decoration: none; box-shadow: var(--shadow); }
+  a.sev-tile:hover { background: var(--s-bg); }
+  a.sev-tile:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .sev-tile.zero { opacity: .55; box-shadow: none; }
+  .sev-tile-n { display: block; font-size: 1.7rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .sev-tile-l { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; font-weight: 600; color: var(--muted); }
+
   .method { display: inline-block; min-width: 3.6em; font: 700 .72rem/1.6 ui-monospace, monospace; text-align: center; padding: 0 6px; border-radius: 6px; background: var(--idle-bg); color: var(--muted); }
   .method.m-get { background: var(--good-bg); color: var(--good); } .method.m-delete { background: var(--bad-bg); color: var(--bad); } .method.m-post, .method.m-put, .method.m-patch { background: var(--med-bg); color: var(--med); }
-  .finding .impact { font-weight: 600; }
   dl { margin: 10px 0 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
   details { margin-top: 8px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 0; min-height: 44px; }
-  pre.snippet { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: .85rem; line-height: 1.45; max-height: 420px; overflow: auto; margin: 6px 0 0; }
+  pre.snippet { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: .85rem; line-height: 1.45; max-height: 420px; overflow: auto; margin: 6px 0 0; }
   details.evidence video { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; background: #000; }
   details img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
   ul.clean { padding-left: 20px; } ul.clean li { margin: 10px 0; }
-  a { color: var(--accent); }
-  code { font-size: .9em; }
   .tech { display: inline-block; margin-top: 8px; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; font-weight: 600; }
+
+  /* Dashboard */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0 8px; }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+  .kpi-l { font-size: .85rem; font-weight: 600; color: var(--muted); }
+  .kpi-v { font-size: 2.1rem; font-weight: 700; line-height: 1.15; margin: 2px 0 4px; font-variant-numeric: tabular-nums; }
+  .kpi.bad .kpi-v { color: var(--bad); } .kpi.ok .kpi-v { color: var(--good); }
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .dash-col > h2 { margin-top: 32px; }
+  table.matrix th, table.matrix td { padding: 10px 12px; }
+  table.matrix tbody th, table.matrix tfoot th { font-weight: 600; }
+  table.matrix tfoot th, table.matrix tfoot td { background: var(--surface-2); border-bottom: 0; }
+  .th-sev { display: inline-flex; align-items: center; gap: 6px; }
+  .mcell { display: inline-block; min-width: 2.2em; padding: 1px 8px; border-radius: 999px; text-align: center; font-weight: 700; text-decoration: none; background: var(--s-bg); color: var(--s-ink); box-shadow: inset 0 0 0 1px var(--s); }
+  .mcell:hover { text-decoration: underline; }
+  ol.attention { list-style: none; padding: 0; margin: 10px 0 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  ol.attention li { display: grid; grid-template-columns: 6.5em 1fr; gap: 10px; align-items: start; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  ol.attention li:last-child { border-bottom: 0; }
+  ol.attention a { font-weight: 600; text-decoration: none; color: var(--text); }
+  ol.attention a:hover { color: var(--accent); text-decoration: underline; }
+  ol.attention .sev { justify-self: start; margin-top: 2px; }
+  .area-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; }
+  .area-card { display: flex; flex-direction: column; gap: 4px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; color: inherit; text-decoration: none; box-shadow: var(--shadow); transition: border-color .15s, transform .15s; }
+  .area-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .area-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .area-head { display: flex; gap: 12px; align-items: flex-start; }
+  .area-head h3 { margin: 0; font-size: 1.1rem; }
+  .area-head p { margin: 0; }
+  .area-icon { font-size: 1.4rem; line-height: 1; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); flex: none; }
+  .area-rate { margin: 10px 0 0; }
+  .area-rate .big { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .area-card .bar { margin-top: 6px; }
+  .area-nums { display: flex; gap: 16px; list-style: none; padding: 0; margin: 8px 0 0; font-size: .9rem; color: var(--muted); }
+  .area-nums strong { color: var(--text); font-variant-numeric: tabular-nums; }
+  .area-sev { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
+  .area-card .go { margin-top: auto; padding-top: 8px; color: var(--accent); font-weight: 600; }
+  ul.act-summary { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 10px 0 4px; }
+  ul.act-summary li { padding: 3px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: .88rem; color: var(--muted); }
+  ul.act-summary strong { color: var(--text); }
+  ol.timeline { list-style: none; padding: 0; margin: 10px 0 0; }
+  li.day { position: relative; padding: 0 0 6px 26px; }
+  li.day::before { content: ""; position: absolute; left: 7px; top: 12px; bottom: 0; width: 2px; background: var(--line); }
+  li.day::after { content: ""; position: absolute; left: 1px; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--accent); }
+  .day-label { margin: 0 0 8px; font-size: 1rem; }
+  ul.acts { list-style: none; padding: 0; margin: 0 0 18px; display: grid; gap: 10px; }
+  li.act { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .act-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .src { font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 9px; border-radius: 6px; background: var(--accent); color: var(--on-accent); }
+  .src-mobile { background: var(--accent-2); }
+  .src-api { background: var(--muted); color: var(--surface); }
+  .act-title { margin: 8px 0 2px; }
+  .act-lead { margin: 0; font-size: .93rem; }
+  .act-more { margin-top: 2px; }
+  .act-more summary { padding: 6px 0; min-height: 0; font-size: .9rem; }
+  .act-more p { font-size: .93rem; }
+  details.older > summary { padding-left: 2px; }
+
   /* Search within a tab (shown only when JavaScript runs) */
   .search { display: none; margin: 18px 0 4px; }
   .js .search { display: block; }
   .search label { display: block; font-weight: 600; margin-bottom: 6px; }
-  .search input { width: 100%; box-sizing: border-box; font: inherit; padding: 12px 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: inherit; }
+  .search input { width: 100%; box-sizing: border-box; font: inherit; padding: 12px 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: inherit; box-shadow: var(--shadow); }
   .search input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
   .search-count { margin: 6px 0 0; min-height: 1.2em; }
   .sec[hidden], .sec [hidden] { display: none !important; }
   /* Result kinds inside a tab: Overview | Problems | Passed | Not run | … */
-  .subtabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 28px 0 4px; padding: 0 0 0; border-bottom: 2px solid var(--line); }
+  .subtabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 28px 0 4px; padding: 0; border-bottom: 2px solid var(--line); }
   .subtab { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; min-height: 44px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; background: transparent; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px 8px 0 0; }
   .subtab:hover { color: var(--text); background: var(--surface); }
   .subtab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); background: var(--surface); }
@@ -1483,69 +1831,93 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .tick { color: var(--good); font-weight: 700; margin-right: 6px; }
 
   /* Back to top */
-  .to-top { position: fixed; right: 20px; bottom: 20px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--accent); color: var(--surface); font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s; }
+  .to-top { position: fixed; right: 20px; bottom: 20px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--accent); color: var(--on-accent); font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s; }
   .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
   .to-top:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { .to-top { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .to-top, .area-card { transition: none; } .area-card:hover { transform: none; } }
 
-  footer { margin-top: 48px; font-size: .85rem; color: var(--muted); }
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); font-size: .85rem; color: var(--muted); }
   dd, li, .finding h3 { overflow-wrap: anywhere; }
 
+  @media (max-width: 860px) {
+    .dash-grid { grid-template-columns: 1fr; gap: 0; }
+  }
   /* Phones and narrow windows */
   @media (max-width: 600px) {
     body { font-size: 15px; }
-    main { padding: 20px 16px 96px; }
+    main { padding: 0 16px 96px; }
+    .masthead { padding: 16px 16px 52px; }
+    .masthead p { font-size: .88rem; line-height: 1.45; }
+    .brand { margin-bottom: 6px; }
+    .mast-meta { margin-top: 10px; gap: 6px; }
+    .mast-meta span { font-size: .74rem; }
     /* Result kinds: one row that scrolls sideways instead of wrapping */
     .js .subtabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-left: -16px; margin-right: -16px; padding: 0 16px; }
     .js .subtabs::-webkit-scrollbar { display: none; }
     .subtab { flex: 0 0 auto; padding: 10px 12px; }
     .to-top { right: 16px; bottom: 16px; }
-    h1 { font-size: 1.55rem; }
-    h2 { font-size: 1.15rem; margin-top: 32px; }
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.12rem; margin-top: 32px; }
     h2.panel-title { font-size: 1.3rem; }
-    .verdict h3 { font-size: 1.08rem; }
+    .verdict h3 { font-size: 1.06rem; }
     .card { padding: 16px; }
     /* Compact sticky switch: label and count on one line, icon dropped */
-    .tabs { gap: 4px; padding: 4px; margin: 18px 0 16px; top: 4px; border-radius: 12px; }
-    .tab { padding: 9px 6px; gap: 4px 6px; font-size: .92rem; border-radius: 9px; min-height: 44px; }
+    .tabs { gap: 3px; padding: 4px; margin: -36px 0 16px; top: 4px; border-radius: 12px; }
+    .tab { padding: 8px 4px; gap: 2px 5px; font-size: .86rem; border-radius: 9px; min-height: 44px; }
     .tab > span[aria-hidden] { display: none; }
-    .pill { font-size: .7rem; padding: 1px 7px; }
+    .pill { font-size: .66rem; padding: 0 6px; }
     .stats { grid-template-columns: 1fr 1fr; gap: 8px; }
     .stat { padding: 12px; }
     .stat .n { font-size: 1.6rem; }
-    /* "What was checked": each row becomes a small card */
-    .table-wrap { overflow: visible; }
-    table, tbody, tr, td { display: block; width: 100%; }
-    table { background: transparent; border: 0; }
-    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-    tr { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 4px 16px;
+    .kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .kpi { padding: 12px; }
+    .kpi-v { font-size: 1.6rem; }
+    .sev-tiles { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .sev-filter { position: static; padding: 8px; gap: 6px; }
+    .sev-filter-label { width: 100%; }
+    .fchip { padding: 5px 10px; font-size: .85rem; }
+    ol.attention li { grid-template-columns: 1fr; gap: 4px; }
+    li.day { padding-left: 22px; }
+    /* Results tables: each row becomes a small card (the priority matrix stays a table) */
+    .table-wrap:not(.scroll) { overflow: visible; }
+    table:not(.matrix), table:not(.matrix) tbody, table:not(.matrix) tr, table:not(.matrix) td { display: block; width: 100%; }
+    table:not(.matrix) { background: transparent; border: 0; }
+    table:not(.matrix) thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    table:not(.matrix) tr { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 4px 16px;
          background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-    td { padding: 0; border: 0; }
-    td.area { grid-column: 1 / -1; margin-bottom: 6px; }
-    td.num { text-align: left; white-space: nowrap; }
-    td.num::before { content: attr(data-label) " "; color: var(--muted); font-size: .85rem; }
-    td.result { justify-self: end; text-align: right; }
+    table:not(.matrix) td { padding: 0; border: 0; }
+    table:not(.matrix) td.area { grid-column: 1 / -1; margin-bottom: 6px; }
+    table:not(.matrix) td.num { text-align: left; white-space: nowrap; }
+    table:not(.matrix) td.num::before { content: attr(data-label) " "; color: var(--muted); font-size: .85rem; }
+    table:not(.matrix) td.result { justify-self: end; text-align: right; }
+    table.matrix th, table.matrix td { padding: 9px 8px; font-size: .9rem; }
+    table.matrix thead th { font-size: .66rem; letter-spacing: .02em; }
+    .th-sev .sev-dot { display: none; }
     ul.clean { padding-left: 18px; }
   }
   @media (max-width: 340px) {
     .tab { flex-direction: column; }
-    tr { grid-template-columns: 1fr 1fr; }
-    td.result { grid-column: 1 / -1; justify-self: start; text-align: left; }
+    table:not(.matrix) tr { grid-template-columns: 1fr 1fr; }
+    table:not(.matrix) td.result { grid-column: 1 / -1; justify-self: start; text-align: left; }
   }
 </style>
 </head>
 <body>
+<header class="masthead">
+  <div class="masthead-in">
+    <div class="brand"><img src="favicon.svg" alt="" width="26" height="26"> Rosabon Unified · Quality dashboard</div>
+    <h1>Automated Test Results</h1>
+    <p>Start with the Overview for the whole picture, or open one part of the product. The admin portal is the staff website; the mobile app is what customers use; the API is the service both of them talk to.</p>
+    <div class="mast-meta"><span>Test environment (dev)</span>${areaData.length ? `<span>Latest run ${esc(fmt(new Date(Math.max(...areaData.map((d) => +d.runAt)))))} WAT</span>` : ''}${pub ? '' : '<span>Internal copy</span>'}</div>
+  </div>
+</header>
 <main>
-  <p class="muted small">Rosabon Unified · Test environment (dev)</p>
-  <h1>Automated Test Results</h1>
-  <p class="muted">Choose which part of the product to see. The admin portal is the staff website; the mobile app is what customers use; the API is the service both of them talk to.</p>
-
   <div class="tabs" role="tablist" aria-label="Which results to show">
-    ${tabs.map((t, i) => `<button class="tab" role="tab" id="tab-${t.id}" aria-controls="panel-${t.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><span aria-hidden="true">${t.icon}</span> ${esc(t.label)} ${pill(t.data)}</button>`).join('\n    ')}
+    ${tabs.map((t, i) => `<button class="tab" role="tab" id="tab-${t.id}" aria-controls="panel-${t.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><span aria-hidden="true">${t.icon}</span> ${esc(t.label)} ${pill(t.data, t)}</button>`).join('\n    ')}
   </div>
 
   ${tabs.map((t, i) => `${i ? '<hr class="nojs-divider">' : ''}<section role="tabpanel" id="panel-${t.id}" aria-labelledby="tab-${t.id}" tabindex="0">
-    ${t.data ? panel(t.data, pub) : emptyPanel(t.label, t.empty)}
+    ${t.dashboard ? dashboard(areaData, pub) : t.data ? panel(t.data, pub) : emptyPanel(t.label, t.empty)}
   </section>`).join('\n  ')}
 
   <footer>
@@ -1558,10 +1930,53 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
     document.documentElement.classList.add('js');
     var tabs = Array.prototype.slice.call(document.querySelectorAll('.tabs [role="tab"]'));
     var current = {}; // area id -> selected sub-tab id
+    var filters = {}; // area id -> priorities shown on Problems (empty = all)
+    var SEV_NAMES = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
     function setHash(id) {
-      var h = '#' + id + (current[id] && current[id] !== 'overview' ? '/' + current[id] : '');
+      var f = current[id] === 'problems' && filters[id] && filters[id].length ? '/' + filters[id].join('+') : '';
+      var h = '#' + id + (current[id] && current[id] !== 'overview' ? '/' + current[id] : '') + f;
       if (location.hash !== h) history.replaceState(null, '', h);
     }
+    // Priority filter on an area's Problems tab. Several priorities can be on at once; none (or "All") shows every problem.
+    function applyFilter(area) {
+      var bar = document.querySelector('.sev-filter[data-panel="' + area + '"]');
+      if (!bar) return;
+      var panel = document.getElementById('panel-' + area);
+      var sel = filters[area] || [];
+      Array.prototype.forEach.call(bar.querySelectorAll('.fchip'), function (b) {
+        var k = b.getAttribute('data-sev');
+        b.setAttribute('aria-pressed', k === 'all' ? sel.length === 0 : sel.indexOf(k) > -1);
+      });
+      var cards = panel.querySelectorAll('article.finding');
+      var shown = 0;
+      Array.prototype.forEach.call(cards, function (c) {
+        var off = sel.length > 0 && sel.indexOf(c.getAttribute('data-sev')) < 0;
+        c.classList.toggle('filtered-out', off);
+        if (!off) shown++;
+      });
+      var status = panel.querySelector('.sev-filter-status');
+      if (status) status.textContent = sel.length ? 'Showing ' + shown + ' of ' + cards.length + ' problems: ' + sel.map(function (k) { return SEV_NAMES[k]; }).join(', ') + ' priority.' : '';
+      var input = panel.querySelector('.search input');
+      if (input && input.value.trim()) input.dispatchEvent(new Event('input'));
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.sev-filter'), function (bar) {
+      var area = bar.getAttribute('data-panel');
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest('.fchip');
+        if (!b || b.disabled) return;
+        var k = b.getAttribute('data-sev');
+        var sel = (filters[area] || []).slice();
+        if (k === 'all') sel = [];
+        else if (sel.indexOf(k) > -1) sel.splice(sel.indexOf(k), 1);
+        else sel.push(k);
+        var available = bar.querySelectorAll('.fchip:not([data-sev="all"]):not([disabled])').length;
+        if (sel.length >= available) sel = [];
+        sel.sort(function (a, b2) { return Object.keys(SEV_NAMES).indexOf(a) - Object.keys(SEV_NAMES).indexOf(b2); });
+        filters[area] = sel;
+        applyFilter(area);
+        setHash(area);
+      });
+    });
     // Sub-tabs (Overview, Problems, Passed, Not run …) inside one area.
     function showSub(area, sub, focus) {
       var btns = Array.prototype.slice.call(document.querySelectorAll('.subtab[data-panel="' + area + '"]'));
@@ -1636,7 +2051,7 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
         items.forEach(function (it) {
           var hit = terms.every(function (t) { return it.text.indexOf(t) > -1; });
           it.el.hidden = !hit;
-          if (hit && terms.length) shown++;
+          if (hit && terms.length && !it.el.classList.contains('filtered-out')) shown++;
         });
         Array.prototype.forEach.call(panel.querySelectorAll('details.ref'), function (d) {
           var any = d.querySelector('tbody tr:not([hidden])');
@@ -1644,7 +2059,7 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
           d.open = terms.length > 0 && !!any;
         });
         Array.prototype.forEach.call(panel.querySelectorAll('.sec'), function (sec) {
-          sec.hidden = terms.length > 0 && !sec.querySelector('tbody tr:not([hidden]), article.finding:not([hidden]), ul.clean > li:not([hidden])');
+          sec.hidden = terms.length > 0 && !sec.querySelector('tbody tr:not([hidden]), article.finding:not([hidden]):not(.filtered-out), ul.clean > li:not([hidden])');
         });
         // Search every kind of result at once; open the "Passed" groups that matched.
         panel.classList.toggle('searching', terms.length > 0);
@@ -1680,11 +2095,15 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
     });
     onScroll();
 
-    // #api, #mobile/problems, #admin/passed …
+    // #dashboard, #api, #mobile/problems, #mobile/problems/critical+high, #admin/passed …
     function fromHash() {
       var parts = (location.hash || '').slice(1).split('/');
-      var area = document.getElementById('tab-' + parts[0]) ? parts[0] : 'admin';
+      var area = document.getElementById('tab-' + parts[0]) ? parts[0] : 'dashboard';
       if (parts[1]) showSub(area, parts[1], false);
+      if (parts[1] === 'problems') {
+        filters[area] = (parts[2] || '').split('+').filter(function (k) { return SEV_NAMES[k]; });
+        applyFilter(area);
+      }
       show(area);
       if (parts[1]) {
         // Bring the sub-tab row up under the sticky area switch (from a count tile or a shared link).
@@ -1693,7 +2112,15 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
         if (Math.abs(top) > 4) window.scrollTo({ top: window.scrollY + top, behavior: still ? 'auto' : 'smooth' });
       }
     }
-    window.addEventListener('hashchange', fromHash);
+    window.addEventListener('hashchange', function () {
+      fromHash();
+      // A link to a whole area (e.g. an Overview card) opens it at its top, not where the page was scrolled to.
+      if (!(location.hash || '').split('/')[1]) {
+        var p = document.querySelector('section[role="tabpanel"]:not([hidden])');
+        var top = p.getBoundingClientRect().top - document.querySelector('.tabs').offsetHeight - 16;
+        if (top < 0) window.scrollTo({ top: window.scrollY + top, behavior: still ? 'auto' : 'smooth' });
+      }
+    });
     fromHash();
   })();
 </script>
@@ -1722,10 +2149,10 @@ function publishBlockers() {
   if (!admin) blockers.push('no admin results were produced');
   else if (!count('passed', admin.tests)) blockers.push('no admin check passed: sign-in or setup likely failed (check DEV_ADMIN_URL, DEV_ADMIN_EMAIL, DEV_ADMIN_PASSWORD)');
   const current = fs.existsSync(sitePage) ? fs.readFileSync(sitePage, 'utf8') : '';
-  if (!mobile && current.includes('id="panel-mobile"') && !current.includes(tabs[1].empty)) {
+  if (!mobile && current.includes('id="panel-mobile"') && !current.includes(emptyText('mobile'))) {
     blockers.push('no mobile results were produced and the published page already has some (check MOBILE_APK_URL)');
   }
-  if (!api && current.includes('id="panel-api"') && !current.includes(tabs[2].empty)) {
+  if (!api && current.includes('id="panel-api"') && !current.includes(emptyText('api'))) {
     blockers.push('no API results were produced and the published page already has some (check API_BASE_URL and the CUSTOMER_T3_* / DEV_ADMIN_* secrets)');
   }
   return blockers;
