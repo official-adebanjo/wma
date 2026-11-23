@@ -25,7 +25,7 @@ export const LIVE_IDS: Record<string, string> = {
   'auth.login.submit': '~Login',
   'auth.login.forgotPassword': 'rid:login-forgot-password',
   // Phone route: "Enter your passcode" — 6-digit field that auto-submits on the 6th digit; button reads "Continue"
-  'auth.login.pin.screen': 'rid:passcode-screen',
+  'auth.login.pin.screen': 'text:Enter your passcode', // the passcode-screen testID is gone in the 23 Nov build
   'auth.login.pin.input': 'rid:otp-input',
   'auth.login.pin.submit': '~Continue',
   'auth.login.forgotPin': '~Forgot Passcode?',

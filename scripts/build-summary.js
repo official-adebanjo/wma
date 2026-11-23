@@ -134,6 +134,42 @@ const QUESTIONS = [
 /** Problems found by hand in the admin portal (no automated check covers them yet). */
 const ADMIN_EXTRA_FINDINGS = [
   {
+    title: '“Mark as paid” closes a loan that was never paid out',
+    severity: 'High',
+    owner: 'Engineering (loans back end) and Finance',
+    impact: 'A loan can be recorded as repaid although no money was lent or repaid, which corrupts the loan book and the customer’s history.',
+    saw: '23 November, while closing loans on retired products: loan #95 (Personal-loan-v2, approved but never disbursed) could not be declined (“Loan can no longer be declined”) or force closed (“Only active loans can be force closed”), but PATCH /api/v3/loan-applications/95/mark-as-paid succeeded and it is now “REPAID”.',
+    expected: 'Only allow “mark as paid” on a disbursed loan; give approved-but-unpaid loans a proper cancel action.',
+    area: 'Loan Management (checked by hand)',
+  },
+  {
+    title: 'Nano and Payday interest is not worked out by the number of days',
+    severity: 'High',
+    owner: 'Engineering (loans calculation)',
+    impact: 'A 7-day loan costs as much as a 30-day loan, against the loan specification; customers repaying early are overcharged.',
+    saw: '23 November, loan calculator (POST /api/v3/loan-calculations, “Daily direct”): ₦20,000 at 0.3 costs ₦60 for 7 days and ₦60 for 30 days; the rate is charged once for the whole loan. The loan specification says interest = principal × daily rate × days (₦20,000 for 7 days at 0.30% a day = ₦420; for 30 days = ₦1,800). The portal field is “Flat interest rate (30-day term)”. Nano and Payday were set to 9% per 30-day term (= 0.30% a day) and left at a 30-day tenor only, so no one is overcharged for now.',
+    expected: 'Charge daily-rate loans for the days chosen (or used, for early settlement), then offer the 1–30 day (Nano) and 7–30 day (Payday) tenors from the specification.',
+    area: 'Loan products (checked by hand)',
+  },
+  {
+    title: 'The new investment product form drops the withholding-tax setting',
+    severity: 'Medium',
+    owner: 'Engineering (admin portal)',
+    impact: 'Products are created with WHT off, so interest would be paid without the 10% tax the specifications require.',
+    saw: '23 November: Adebanjo RWIN, REAP and RTN were created in the portal and saved with whtApplicable = false; the form removes the field before sending it. It was then switched on through the API, which accepts it.',
+    expected: 'Show and send the WHT setting (on by default for these products).',
+    area: 'Product Management (checked by hand)',
+  },
+  {
+    title: 'RWIN set up as the specification describes is refused by the back end',
+    severity: 'Medium',
+    owner: 'Product and Engineering (treasury back end)',
+    impact: 'RWIN cannot have both optional autosave and a separate tranche per top-up, as the RWIN specification describes.',
+    saw: '23 November: creating Adebanjo RWIN with recurring contributions and tranche top-ups was refused: “A product funded by contributions credits top-ups to the plan; it cannot book them as tranches.” With recurring contributions on, the app could not book it at all (see the app problem “The app says nothing when a booking is refused”). It is now set as a lump-sum product with tranche top-ups.',
+    expected: 'Decide which rule is right and align the specification, the back end and the app.',
+    area: 'Product Management (checked by hand)',
+  },
+  {
     title: 'Notifications sent by the system are not recorded anywhere staff can see',
     severity: 'Medium',
     owner: 'Engineering (backend and admin portal) and Customer Support',
@@ -178,6 +214,7 @@ const ADMIN_JOURNEYS = {
 const ADMIN_CHANGES = {
   since: '30 October',
   items: [
+    ['23 November: new products set up, and one product kept per type', 'Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M, ₦5M–20M and ₦20M+, upfront or at-maturity interest), with rate cards for the 24-month REAP and 180–365-day RTN tenors. Tier access set as asked: REAP for Tiers 1–3, RWIN and RTN for Tiers 2–3 (both now also require Tier 2). Then only one product per type was kept: the old RWIN, REAP and RTN and two drafts holding plans are “Retiring” (closed to new plans; existing plans run to maturity), the other drafts and the “-v2” loan products are retired, and 11 open loans on retired loan products were closed (10 marked as paid or declined, and #95 — see “Problems found”). The Adebanjo loans were checked against the loan specification: Nano and Payday set to 9% per 30-day term (0.30% a day), Payday capped at ₦500,000 and removed from Tier 1 (specification: Tier 2); Personal (up to ₦30M, 3–24 months) and Public Sector (terms per employer) already matched. Retiring the loan products answered with “504 Gateway Time-out” and the dev API then stopped answering for about 20 minutes (the changes had been saved); the dev API was also down at other times today.'],
     ['19 November: “not run” checks looked at again', 'Every switched-off page was opened in the new portal version. Three are back and their checks now run and pass: Discovery banners (the “Open” button is now “Edit”; the editor offers Save as draft or Send for approval, and “Preview on device” is gone), the Transaction Monitor under Transactions & Ledger (rebuilt: a date range, page size and Refresh, with date, transaction ID, type, category, description, amount and balance after; the old Type, Category, Status, Channel and Provider filters, search box, Export CSV and clickable customer names are gone), and the Account Controls link under Customer Management. Still switched off: the investment request pages, Payroll reconciliation, the Wallet Management live board, the ledger tabs (Reversals & Adjustments, Cashback Ledger, Billers), Support & Tickets, Rewards rules, Dashboards and the five settings pages; Review Queues, Auto Grants and Screening are still gone. Only these checks were re-run; the full admin re-run waits for the go-ahead after the deployment.'],
     ['16 November: not re-run', 'The portal itself has not changed since 9 November. From about 14:00 the dev API stopped answering requests from the test office’s network (connections open, but no reply comes; outside locations got normal answers). A re-run at 14:38 was blocked again after about 7 minutes. The results below are therefore still those of 10 November; the team has been asked to allow the test network.'],
     ['Re-run on 10 November', 'No new portal version since 9 November afternoon. Same results: the same 4 problems, nothing newly broken or fixed.'],
@@ -381,6 +418,78 @@ const MOBILE_FINDINGS = [
 /** Problems seen during the mobile run that no automated check covers yet (from the app’s own error log). */
 const MOBILE_EXTRA_FINDINGS = [
   {
+    title: 'New investment plans cannot be paid for in the app',
+    severity: 'High',
+    owner: 'Engineering (mobile app)',
+    impact: 'A customer can book REAP, RWIN or RTN, but the plan stays unpaid at ₦0 and never starts earning; there is no way in the app to put money into it.',
+    saw: '23 November, with the new Adebanjo REAP, RWIN and RTN products: every booking (Tier 1, 2 and 3 test accounts) ended as “PENDING_FUNDING” with ₦0 in the back end, and the wallet was not charged, although the Tier 2 wallet held about ₦9.96M. On the plan, “Top up” → “Add ₦50,000” does nothing: no PIN prompt, no request to the server, no message. The back end itself works: the same plans were paid from the wallet through the API with the transaction PIN (POST /api/v3/investments/{id}/funding), and went ACTIVE with the right amounts.',
+    expected: 'Booking (or “Top up”) should ask for the transaction PIN and take the amount from the wallet, as the RWIN and RTN specifications describe, and say clearly if the wallet is short.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'Booking success screens show ₦0.00 and missing details',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'Right after booking, customers are told their investment of ₦0.00 is “active and earning interest”, which is wrong and alarming.',
+    saw: '23 November: RTN and RWIN end on “Investment confirmed! Your ₦0.00 Adebanjo RTN is now active and earning interest.” For RWIN the first attempt also showed “0% p.a.” and no tenor or maturity date. REAP’s screen was correct (“Your first debit of ₦3,263.86 will be automatically processed on 23 November 2026”).',
+    expected: 'Show the booked amount, rate, tenor and maturity, and say “waiting for payment” until the plan is funded.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'RTN quotes two different rates for the same placement',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app and treasury rates)',
+    impact: 'The customer cannot tell what rate they will earn.',
+    saw: '23 November, ₦1,000,000 for 90 days paid at maturity: the projection screen says “Interest earned (20% p.a.)” (+₦44,383.56), and the next screen, the summary, says “25% p.a.”, which is also what the plan was booked at. Two rate cards cover 90 days (20% for any payout, 25% for monthly back-end interest); the app picks a different one on each screen.',
+    expected: 'One rate per amount, tenor and timing, the same on every screen; and the rate cards should not overlap.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'Product pages show rates for tenors the product does not offer',
+    severity: 'Medium',
+    owner: 'Engineering (treasury rates) and Product',
+    impact: 'Customers are shown rates they cannot get; REAP is advertised at a rate none of its tenors pays.',
+    saw: '23 November: Adebanjo REAP is advertised as “30% p.a.” on Grow and on its page, and its rate table lists 1-month (30%) and 2-month (18% and 12%) rates, but it only offers 3, 6, 12 and 24 months (14% to 18%). Adebanjo RWIN only offers a 90-day cycle but lists 180, 270 and 360-day rates and a 30% “small” rate. The rate cards seem to come from the older product of the same type.',
+    expected: 'The headline rate and rate table should come only from the rates of tenors the product offers.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'RWIN booking misses the 30-day holding confirmation, and auto-rollover starts off',
+    severity: 'Low',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers are not told up front that RWIN money cannot be withdrawn for 30 days; plans do not roll over unless the customer turns it on.',
+    saw: '23 November: the RWIN booking has no “I understand the 30-day minimum holding period” checkbox (required by the RWIN specification, step 6), and the plans were saved with auto-rollover off, while the specification says it is on by default.',
+    expected: 'Add the required acknowledgement and default auto-rollover to on for RWIN.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'The app says nothing when a booking is refused',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app)',
+    impact: 'Customers tap “Create Goal” and nothing happens, with no reason.',
+    saw: '23 November: while Adebanjo RWIN accepted recurring contributions, the server refused each booking with “A monthly contribution is required for this product” (the RWIN flow never asks for one). The app showed no message; the reason was only in the app log.',
+    expected: 'Show the server’s message, and collect every value the product needs.',
+    area: 'Investing (tried by hand)',
+  },
+  {
+    title: 'Customers get no notification for investments or product retirement',
+    severity: 'High',
+    owner: 'Engineering (back end notifications)',
+    impact: 'Customers are not told when a plan starts, is paid into, or when a product they hold is closed, although the specifications and the admin portal promise it.',
+    saw: '23 November: the Tier 2 account had three plans activated (₦1.05M taken from its wallet) and holds a plan on a product that was retired the same day; its inbox is empty, in the app and in the back end (GET /api/v3/notifications/inbox). The Tier 3 account had two plans activated and holds retired-product plans; its inbox only has older loan messages. The retire dialog says “Every holder is notified in the app, by push and by email”.',
+    expected: 'Send and store the notifications the specifications list (plan created, contribution, top-up, maturity, retirement), in the app and by push or email.',
+    area: 'Notifications (checked by hand)',
+  },
+  {
+    title: 'Notifications show raw amounts and dates',
+    severity: 'Medium',
+    owner: 'Engineering (back end notification templates)',
+    impact: 'Messages look broken and are hard to read; one reads as if a wallet were called “211”.',
+    saw: '23 November, Tier 3 inbox (same text in the back end): “We have received your payment of NGN216000”; “NGN200000.00 credited to your wallet 211. Repayment due on 2026-12-18T07:39:59.910”; “You qualify for NGN200000.00”. In the list, “Loan Disbursed” and “Agreement Executed” are cut off with “…”, hiding the due date and where the documents are.',
+    expected: 'Write amounts as ₦216,000.00, dates as 18 December 2026, keep the loan reference apart from “your wallet”, and let the important part of a message fit.',
+    area: 'Notifications (checked by hand)',
+  },
+  {
     title: 'An overdue Payday loan is not marked overdue',
     severity: 'High',
     owner: 'Engineering (loans back end and mobile app)',
@@ -531,9 +640,11 @@ const MOBILE_EXTRA_FINDINGS = [
 
 /** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
 const MOBILE_JOURNEYS = {
-  when: '2–18 November, 30 October, 3, 4, 9 and 18 November builds',
+  when: '2–23 November, 30 October, 3, 4, 9, 18 and 23 November builds',
   intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
+    ['23 Nov (23 November build): book Adebanjo REAP, RWIN and RTN as Tier 1, 2 and 3', 'bad', 'Tier 1: REAP goal booked (₦10,000 target, 3 months, 14%); RWIN and RTN correctly blocked (“This investment isn’t available on your current tier”). Tier 2: all three booked (REAP ₦10,000 target; RWIN ₦50,000 for 90 days at 14%; RTN ₦1,000,000 for 90 days at 25%). Tier 3: all three booked. None could be paid for in the app (see “Problems found”); paid through the API instead with the transaction PIN: Tier 2’s three plans and Tier 3’s REAP and RWIN went ACTIVE (Tier 2’s wallet went down by exactly ₦1,053,263.86). Tier 3’s RTN was refused for lack of funds (₦968k left) and Tier 1 has no PIN or money, so those two stay unpaid. Projections were right once RWIN was set as a lump-sum product (₦1,553.43 on ₦50,000 for 90 days at 14%, net of 10% WHT).'],
+    ['23 Nov (23 November build): notifications after the bookings', 'bad', 'No notification for any booking, payment or product retirement; older loan messages show raw amounts and dates (see “Problems found”).'],
     ['18 Nov (18 November build): overdue loan with its penalty waived in admin', 'ok', 'Test account with an overdue Public Sector loan (₦3,000,000, 12 months, due 15 November) whose penalty was waived in admin. Back end: the loan’s penalty rate is 0 and it stays “Overdue” (correct — it is still unpaid). App: Borrow shows ₦3,780,000 outstanding, “Your Repayment is Overdue (3 days) ₦370,000”, and Pay Now opens a sheet asking for ₦370,000 — exactly the back end’s schedule with no penalty added. Nothing was paid. Two smaller problems: wrong figures for a moment after sign-in, and no mention of the waiver (see “Problems found”).'],
     ['18 Nov (18 November build): Payday loan past its due date (Tier 3)', 'bad', 'Due 12 November, still “ACTIVE” with no overdue warning six days later (see “Problems found”).'],
     ['11 Nov (9 November build): sign up as a new customer with the Smile ID selfie', 'bad', 'A new account was started with a real phone number, BVN and email, with the tester’s face on the laptop webcam. Steps 1–3 worked: SMS code, email, a 6-digit passcode, and the BVN, which matched NIBSS and showed the customer’s name, date of birth and gender to confirm. The Smile ID selfie screen opened and took the selfie, but every submission was refused with “Your selfie failed to process — Unauthorized”, so sign-up stopped at step 3 of 6. Steps 4–6 could not be reached. The fallback selfie upload was never offered. See “Problems found”.'],
@@ -562,6 +673,7 @@ const MOBILE_JOURNEYS = {
 const MOBILE_CHANGES = {
   since: '3 November',
   items: [
+    ['23 November: new build (code 97) re-run, and the new products booked', 'Tested the 23 November build (version 1.1.55, code 97). It is the first build made for the test emulator\'s processor (x86_64), so it installed as it is and runs at normal speed. The version name still has not changed. Results: 24 passed, 8 problems, 23 not run. The sign-in, profile and borrowing checks were run a second time because the dev API was unstable during the first run (it stopped answering several times today); a check counts as passed if it passed on either try. Fixed or no longer seen: employment details and home address save correctly again (they failed only while the API was down). The build removed the hidden label the checks used to recognise the passcode screen; the check now uses the screen title, and a 080… number reaches the passcode screen (under 3 seconds by hand, but 53 seconds during the slow-API run). Still not fixed: +234… numbers are refused (“Please enter a valid email or phone number”), next of kin (“City cannot be empty”), card funding, Log out, Tier 3 shows 2/3 identity steps, RWIN tenors outside the rate table (old RWIN product), and top-up does nothing. The Personal loan quote check could not read an interest rate on the quote screen (the text has no “%” figure); not yet confirmed by hand. The Borrow tab now lists only the four Adebanjo loans, and Grow only the three Adebanjo investments, after the admin clean-up. The new Adebanjo REAP, RWIN and RTN were booked by hand with the Tier 1, 2 and 3 accounts, and the in-app notifications were checked (see “Problems found”).'],
     ['18 November: new build re-run, and penalty waiver checked', 'Tested the 18 November build (version 1.1.55, code 95). It is again built for ARM phones only and closes at launch on the test emulator; it was run from a copy re-packed so the emulator can load its libraries (app code unchanged), which makes it slow there — timings from this run are not reliable. Home’s “TOTAL BALANCE” is now “WALLET BALANCE”, and Payday loans have a new Borrow layout (“TOTAL REPAYABLE”); the checks were updated for both. Fixed: Send Money no longer shows recipients the customer never added. Penalty waiver: on a test account whose overdue Public Sector loan had its penalty waived in admin, the app shows ₦3,780,000 outstanding and ₦370,000 overdue, and Pay Now asks for ₦370,000 — the back end’s own figures with no penalty added, so the waiver holds. New problems: see “An overdue Payday loan is not marked overdue” and “Borrow shows wrong amounts for a moment after sign-in”. Not checked this time: the loan product list and the Personal loan quote, because the Tier 3 test account now has an active Payday loan, so Borrow shows that loan instead.'],
     ['16 November: not re-run', 'No new build that runs on the test emulator: the 11 November build was made for ARM phones only (no x86_64), so it closes at launch on the emulator; a build with x86_64 has been requested. It also keeps version 1.1.55 (code 92). From about 14:00 the dev API stopped answering requests from the test office’s network (connections open, but no reply comes; outside locations got normal answers). A re-run at 14:38 was blocked again after about 7 minutes. The results below are therefore still those of 10 November; the team has been asked to allow the test network.'],
     ['11 November: Smile ID sign-up tried (9 November build)', 'A new customer sign-up was tried by hand with a real phone number, BVN and the tester’s face. The Smile ID check now starts (the “settings file missing” error is gone) and the camera, selfie and smile prompts work. But Smile ID refuses the app’s credentials (“Unauthorized”), so no selfie can be submitted and sign-up can’t be finished. Also found: an unfinished sign-up leaves an account that can’t sign in, and the selfie screen never times out. See “Problems found”.'],
@@ -982,6 +1094,7 @@ const apiAreaName = (tag) => (tag === 'lead-api-resource' ? 'Leads' : tag.replac
 
 /** What the latest backend update changed, written up after each re-run (shown above the live comparison). */
 const API_UPDATES = [
+  ['23 November: NIN, investment funding and loan calculator', 'NIN verification now reaches the identity provider, but refuses the owner’s own NIN (see “Problems found”). Investment funding works through the API (POST /api/v3/investments/{id}/funding) when the transaction PIN is sent; without it the answer is “Your transaction PIN is required”, and a customer who has no PIN gets “Set up a transaction PIN before funding an investment”. The loan calculator matches the specification’s worked examples for monthly loans (₦6M over 6 months at 2% a month: ₦6,720,000 flat, ₦6,420,000 reducing balance) but not for daily loans (see the admin problem about Nano and Payday). New in the API document: POST /api/v3/loan-calculations/overdue-loan. Re-run on 23 November (the 19 November results were lost when the test sign-in was refreshed): 26 endpoints added since 19 November — plan break requests (customer request; staff list, approve, decline), credit-bureau reports and credit checks for loans, customer upload of documents requested for a loan, sanctions and PEP screening (queue, clear, confirm, escalate, enhanced due diligence), and simulation endpoints for test transfers into a wallet. New problem: GET /api/v3/loan-applications/{id}/credit-reports fails with a server error (500); the new break-request answers send dates in a different format from the API document. Nothing reported earlier is fixed.'],
   ['19 November: “not run” checks looked at again', 'Four checks that used to be skipped now run, and all four work: LGAs for a state, KYC tier by name, one field classification, and the auto-rollover default preview. They were skipped because the check couldn’t find a value to call them with (the lists name it differently, or answered later in the run); the check now finds it. Still not run, because dev has no records to try them with: account-control requests, rollover, unlock and withdrawal requests, auto-rollover and statutory-rate propagations, a customer’s referral history by code (no referral code on the test customers), media details and media by URL, and Wema transaction status. “Generate user account number” stays out on purpose (a GET that creates data).'],
   ['19 November: 6 problems fixed; both server errors remain', 'Re-run after the team reported the fixes (run 11:28, no slow or timed-out answers). Fixed: a customer is now refused (403) by general approval workflows, loan approval workflows, message templates and the staff referral history; a customer can no longer read another customer’s loans (loan-applications/{userId}/user answers 403); residential address now answers 401 without sign-in (it was 400). Saved beneficiaries now refuse any currency other than NGN. Still not fixed: server error 500 on /api/v3/users/pending-address-verification (for staff too) and /api/v3/wema/bills; Wema account balance still answers 400 “Vendor not found”; attestation and PEP declaration still answer 400 instead of 401 without sign-in; a made-up bank code is still accepted for a beneficiary, and there is still no way to edit one (405); the response-format mismatches are unchanged. New in the API document: POST /api/v3/loan-calculations/overdue-loan (changes nothing, but not part of the read-only checks).'],
   ['18 November: 11 endpoints added; beneficiary rule fixed', 'New: discovery banners (add, list, update, publish, unpublish, mark as pending, delete — a new “DISCOVERY_BANNER” approval type comes with them), “completed KYC tiers” for a customer, “upgrade user tier”, and “all wallet histories”. The two new read-only endpoints (completed tiers, all wallet histories) work. “Upgrade user tier” and the banner endpoints change data, so the read-only checks don’t call them; testing “upgrade tier” needs a spare customer account, because it permanently moves a customer up a tier. Saved beneficiaries: the 10-digit rule moved from the account name to the account number, so real names can now be saved and an account number like “abc” is refused. Results (run 08:41, no slow or timed-out answers): 133 worked, 17 problems (was 18). “Verify loan product with corridor” now answers successfully (possibly because of a data change). No other earlier problem is fixed.'],
@@ -1129,6 +1242,15 @@ function readApi() {
     impact: 'Customers can save recipients that can never be paid (a bank that doesn’t exist), and must delete and re-add a recipient to correct a typo.',
     saw: 'Signed in as a test customer: POST /api/v3/user-account-beneficiaries saved a recipient with bank code “999” and bank name “Not A Bank” (201; still so on 19 November). Currency is fixed: since 19 November anything other than NGN is refused (“Currency can only be NGN”). There is no endpoint to change a saved recipient: PUT and PATCH on /api/v3/user-account-beneficiaries/{id} answer 405. What works: a recipient with a real-style name and a 10-digit account number saves; “abc” or a 5-digit number is refused; the same recipient can’t be saved twice; another customer can’t see, search or delete it; delete works, and deleting again gives 404. The test recipients were deleted afterwards.',
     expected: 'Only accept bank codes from the supported bank list (ideally with an account-name check), and offer an update endpoint as announced.',
+  });
+
+  findings.push({
+    area: 'API', owner: 'Engineering (backend)',
+    title: 'NIN verification refuses the NIN owner’s own account',
+    severity: 'High',
+    impact: 'Customers cannot complete NIN verification, so they cannot reach the tiers that need it.',
+    saw: '23 November: PATCH /api/v3/users/verify-nin now reaches the identity provider (earlier attempts on 9 and 16 November ended in a server error or a 504; today the first call still waited 60 s and ended in 504). With a NIN that belongs to someone else it answers “First name does not match NIN details” (correct). With the NIN of the test account’s own holder, given by the tester, it gives the same answer in under a second. The account’s names are stored in capitals with no extra spaces, so the comparison may be case-sensitive or use a different name order than the NIN record.',
+    expected: 'Match names ignoring case, extra spaces and order (first, middle and last), and tell the customer which name did not match.',
   });
 
   // ---- Documentation gaps (not failures)

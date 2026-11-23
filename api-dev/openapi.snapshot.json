@@ -158,6 +158,10 @@
    "description": "These endpoints manages message templates on Rosabon"
   },
   {
+   "name": "Money simulation (test environments only)",
+   "description": "Money Simulation Api Resource"
+  },
+  {
    "name": "Mono Endpoints",
    "description": "Bank account linking, bank-statement assessment and direct-debit mandates for loans through Mono"
   },
@@ -184,6 +188,10 @@
   {
    "name": "Referral Reward Endpoints",
    "description": "These endpoints manages referral rewards on Rosabon"
+  },
+  {
+   "name": "Screening Review Endpoints",
+   "description": "The PEP and sanctions review queue. A screening reviewer (customer.screening.propose) escalates hits and clears weak sanctions matches; Compliance (customer.screening.approve) takes every other decision. Viewing needs customer.screening.view. Hit details never reach a customer"
   },
   {
    "name": "System-Wide Audit Log Endpoints",
@@ -4515,15 +4523,166 @@
     ]
    }
   },
-  "/api/v3/investments/{id}/break-requests/{userId}": {
+  "/api/v3/investments/{id}/break-requests": {
    "post": {
     "tags": [
      "Investment Endpoints"
     ],
     "summary": "Request to break a plan",
-    "description": "This endpoint asks to break a live plan before maturity, with a reason, optional evidence and an optional waiver (hardship) claim. Only for products whose withdrawal rules route early exits through review (REAP always; RTN above its auto-release threshold) — a product that allows direct withdrawal is told to use the withdrawal endpoint, one that blocks early exit is refused with the rule named. The plan is held UNDER_REVIEW (no contributions, top-ups or adjustments; interest keeps accruing) until an administrator decides, or it matures. One pending request per plan",
+    "description": "The signed-in customer asks to break their own live plan before maturity, with a reason, their transaction PIN, optional evidence and an optional waiver (hardship) claim. Only for products whose withdrawal rules route early exits through review (REAP always; RTN above its auto-release threshold). The plan is held UNDER_REVIEW (no contributions, top-ups or adjustments; interest keeps accruing) and the decision goes to the INVESTMENT_REVERSE_BOOKING approval workflow: approval pays out to the wallet under the break rule, rejection releases the plan. Refused when no such workflow is set up. One pending request per plan",
     "operationId": "submitBreakRequestUsingPOST",
     "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InvestmentBreakRequestSubmitRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InvestmentBreakRequestResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/investments/{id}/break-requests/{userId}": {
+   "post": {
+    "tags": [
+     "Investment Endpoints"
+    ],
+    "summary": "Break a plan on a customer's behalf",
+    "description": "An administrator raises a break on customer userId's plan, with a reason. Goes through the same review as a customer's request: the plan is held UNDER_REVIEW and the INVESTMENT_REVERSE_BOOKING approval workflow decides it",
+    "operationId": "submitBreakRequestForCustomerUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
      {
       "name": "id",
       "in": "path",
@@ -4562,7 +4721,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/OperationalResponse"
+         "$ref": "#/components/schemas/InvestmentBreakRequestResponse"
         }
        }
       }
@@ -7165,6 +7324,337 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/AutoRolloverPropagationResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/investment-management/break-requests": {
+   "get": {
+    "tags": [
+     "Investment Management Endpoints"
+    ],
+    "summary": "List break requests",
+    "description": "This endpoint lists customers' requests to break a plan early, newest first, optionally filtered by status (PENDING, APPROVED, DECLINED, AUTO_CLOSED)",
+    "operationId": "retrieveBreakRequestsUsingGET",
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "description": "status",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "pageNo",
+      "in": "query",
+      "description": "pageNo",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "description": "pageSize",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomPageResponse«InvestmentBreakRequestResponse»"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/investment-management/break-requests/{id}": {
+   "get": {
+    "tags": [
+     "Investment Management Endpoints"
+    ],
+    "summary": "Get break request",
+    "description": "This endpoint retrieves one break request with the customer's reason and the figures they were quoted",
+    "operationId": "retrieveBreakRequestUsingGET",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InvestmentBreakRequestResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/investment-management/break-requests/{id}/approve": {
+   "post": {
+    "tags": [
+     "Investment Management Endpoints"
+    ],
+    "summary": "Approve break request",
+    "description": "Approves the request through its INVESTMENT_REVERSE_BOOKING approval workflow, as the signed-in administrator: refused unless they may approve at the current level. On the final level the plan is settled early to the customer's wallet under the product's break rule and closed (Broken). Takes a note and evidence. With applyWaiver=true the forfeiture is not applied; that needs a complianceReference where the product requires Compliance sign-off",
+    "operationId": "approveBreakRequestUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InvestmentBreakRequestDecisionRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InvestmentBreakRequestResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/investment-management/break-requests/{id}/decline": {
+   "post": {
+    "tags": [
+     "Investment Management Endpoints"
+    ],
+    "summary": "Decline break request",
+    "description": "Declines the request through its approval workflow with a reason, which the customer is told. The plan goes back to ACTIVE. Refused for an administrator who is not an approver on the workflow",
+    "operationId": "declineBreakRequestUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InvestmentBreakRequestDecisionRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InvestmentBreakRequestResponse"
         }
        }
       }
@@ -14684,6 +15174,105 @@
     ]
    }
   },
+  "/api/v3/loan-applications/credit-reports/{reportId}/pdf": {
+   "get": {
+    "tags": [
+     "Loan Application Endpoints"
+    ],
+    "summary": "Download a bureau's report PDF",
+    "description": "The credit bureau's own report document, where it supplied one",
+    "operationId": "downloadCreditReportPdfUsingGET",
+    "parameters": [
+     {
+      "name": "reportId",
+      "in": "path",
+      "description": "reportId",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/pdf": {
+        "schema": {
+         "type": "string",
+         "format": "byte"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/loan-applications/credit-reports/{reportId}/raw": {
+   "get": {
+    "tags": [
+     "Loan Application Endpoints"
+    ],
+    "summary": "Get a bureau's raw response",
+    "description": "The bureau's full response, for what the summary leaves out",
+    "operationId": "rawCreditReportUsingGET",
+    "parameters": [
+     {
+      "name": "reportId",
+      "in": "path",
+      "description": "reportId",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/loan-applications/my": {
    "get": {
     "tags": [
@@ -15489,6 +16078,160 @@
     ]
    }
   },
+  "/api/v3/loan-applications/{id}/credit-reports": {
+   "get": {
+    "tags": [
+     "Loan Application Endpoints"
+    ],
+    "summary": "Get credit reports for a loan",
+    "description": "Each credit bureau's latest report on the loan's customer, and whether one can be pulled",
+    "operationId": "retrieveCreditReportsUsingGET",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LoanCreditReportsResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "Loan Application Endpoints"
+    ],
+    "summary": "Pull credit reports for a loan",
+    "description": "Pulls the customer's report from Credit Registry and First Central for a loan under review. Only the loan's approvers may. Each pull is billed and recorded on the customer's credit file, so a report under the reuse window is reused unless fresh=true",
+    "operationId": "pullCreditReportsUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     },
+     {
+      "name": "fresh",
+      "in": "query",
+      "description": "fresh",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LoanCreditReportsResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/loan-applications/{id}/decline-offer": {
    "patch": {
     "tags": [
@@ -15819,6 +16562,207 @@
      },
      "403": {
       "description": "Forbidden"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/loan-applications/{id}/requested-documents": {
+   "get": {
+    "tags": [
+     "Loan Application Endpoints"
+    ],
+    "summary": "Get my requested documents",
+    "description": "The documents an admin asked for on the customer's own loan application, and what has been uploaded for them",
+    "operationId": "retrieveRequestedDocumentsUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/RequestedDocumentResponse"
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "Loan Application Endpoints"
+    ],
+    "summary": "Submit my requested documents",
+    "description": "Uploads the documents an admin asked for and marks the request as answered",
+    "operationId": "submitRequestedDocumentsUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SubmitRequestedDocumentsRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LoanApplicationResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
      }
     },
     "security": [
@@ -17403,6 +18347,182 @@
     ]
    }
   },
+  "/api/v3/loan-products/credit-check": {
+   "get": {
+    "tags": [
+     "Loan Product Catalogue Endpoints"
+    ],
+    "summary": "Credit check status",
+    "description": "Whether the customer has re-entered their BVN and agreed to a credit bureau check, as loans that need approval require",
+    "operationId": "creditCheckStatusUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CreditCheckStatusResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "Loan Product Catalogue Endpoints"
+    ],
+    "summary": "Give BVN and consent for a credit check",
+    "description": "The customer re-enters their BVN, which must match the BVN they verified, and agrees to a credit bureau check. The BVN is stored encrypted",
+    "operationId": "giveCreditCheckConsentUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreditCheckConsentRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CreditCheckStatusResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
   "/api/v3/loan-products/my": {
    "get": {
     "tags": [
@@ -17513,8 +18633,8 @@
     "tags": [
      "Loan Product Catalogue Endpoints"
     ],
-    "summary": "Update bvn in metadata",
-    "description": "This endpoint updates bvn in metadata",
+    "summary": "Update bvn in metadata (deprecated)",
+    "description": "Deprecated: use POST /credit-check, which takes the BVN in the body and records consent",
     "operationId": "updateBvnForLoanApplicationUsingPATCH",
     "parameters": [
      {
@@ -17594,6 +18714,7 @@
       "description": "Forbidden"
      }
     },
+    "deprecated": true,
     "security": [
      {
       "Authorization": []
@@ -19376,6 +20497,250 @@
      },
      "403": {
       "description": "Forbidden"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/simulation/transfers": {
+   "get": {
+    "tags": [
+     "Money simulation (test environments only)"
+    ],
+    "summary": "My simulated transfers",
+    "description": "The latest 50, newest first",
+    "operationId": "transfersUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/SimulatedPayout"
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/simulation/transfers/{reference}/settle": {
+   "post": {
+    "tags": [
+     "Money simulation (test environments only)"
+    ],
+    "summary": "Settle a processing transfer",
+    "description": "outcome=SUCCESSFUL delivers it; outcome=FAILED refunds the wallet",
+    "operationId": "settleUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "reference",
+      "in": "path",
+      "description": "reference",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "outcome",
+      "in": "query",
+      "description": "outcome",
+      "required": true,
+      "style": "form",
+      "schema": {
+       "type": "string",
+       "enum": [
+        "FAILED",
+        "SUCCESSFUL"
+       ]
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimulatedPayout"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/simulation/wallet-inflows": {
+   "post": {
+    "tags": [
+     "Money simulation (test environments only)"
+    ],
+    "summary": "Simulate a bank transfer into a virtual account",
+    "description": "Credits the wallet through the Wema VAS webhook, as a real inflow would",
+    "operationId": "receiveInflowUsingPOST",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InflowRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
      }
     },
     "security": [
@@ -22480,6 +23845,1074 @@
      },
      "403": {
       "description": "Forbidden"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/customers/{id}": {
+   "get": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "A customer's screening history",
+    "description": "Every screening run and hit on the customer, newest first, and their PEP declaration: the Customer 360 Screening tab. {id} is the customer's user id. Viewing is recorded on the audit trail",
+    "operationId": "customerUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomerScreeningResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/hits": {
+   "get": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "The screening queue",
+    "description": "Soonest SLA first. Filter by state (repeatable: PENDING_REVIEW, ESCALATED, PEP_EDD, CLEARED, CONFIRMED_SANCTIONS, PEP_APPROVED, PEP_DECLINED), category (SANCTIONS, PEP, OTHER), customer (userId) and overdueOnly",
+    "operationId": "listHitsUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "state",
+      "in": "query",
+      "description": "state",
+      "required": false,
+      "style": "form",
+      "explode": true,
+      "schema": {
+       "type": "string",
+       "enum": [
+        "CLEARED",
+        "CONFIRMED_SANCTIONS",
+        "ESCALATED",
+        "PENDING_REVIEW",
+        "PEP_APPROVED",
+        "PEP_DECLINED",
+        "PEP_EDD"
+       ]
+      }
+     },
+     {
+      "name": "category",
+      "in": "query",
+      "description": "category",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string",
+       "enum": [
+        "OTHER",
+        "PEP",
+        "SANCTIONS"
+       ]
+      }
+     },
+     {
+      "name": "userId",
+      "in": "query",
+      "description": "userId",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     },
+     {
+      "name": "overdueOnly",
+      "in": "query",
+      "description": "overdueOnly",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "pageNo",
+      "in": "query",
+      "description": "pageNo",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "description": "pageSize",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomPageResponse«ScreeningHitResponse»"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/hits/{id}": {
+   "get": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "A screening hit",
+    "description": "The matched list entry, the screening run, the customer's PEP declaration, the hit's history, and which decisions the caller may take. Viewing is recorded on the audit trail",
+    "operationId": "hitUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScreeningHitDetailResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/hits/{id}/approve-pep": {
+   "post": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "Approve the PEP relationship",
+    "description": "Senior management's decision after enhanced due diligence. Requires customer.screening.approve",
+    "operationId": "approvePepUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScreeningHitDecisionRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScreeningHitDetailResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/hits/{id}/clear": {
+   "post": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "Clear a hit as a false positive",
+    "description": "The match is remembered and not raised again until the list entry or the customer's details change. A reviewer may clear a scored sanctions or other match below the strong threshold that is waiting for review; anything else needs Compliance. Lifts the screening freeze once no match on the customer is outstanding",
+    "operationId": "clearUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScreeningHitDecisionRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScreeningHitDetailResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/hits/{id}/confirm": {
+   "post": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "Confirm a sanctions match",
+    "description": "A true match. Keeps the screening wallet freeze in place; propose a full freeze or closure through Account Controls. Not for PEP hits. Requires customer.screening.approve",
+    "operationId": "confirmUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScreeningHitDecisionRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScreeningHitDetailResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/hits/{id}/decline-pep": {
+   "post": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "Decline the PEP relationship",
+    "description": "Senior management's decision after enhanced due diligence. Exiting the customer is a separate Account Controls closure. Requires customer.screening.approve",
+    "operationId": "declinePepUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScreeningHitDecisionRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScreeningHitDetailResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/hits/{id}/escalate": {
+   "post": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "Escalate a hit to Compliance",
+    "description": "From review only. Requires customer.screening.propose",
+    "operationId": "escalateUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScreeningHitDecisionRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScreeningHitDetailResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/hits/{id}/start-edd": {
+   "post": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "Open enhanced due diligence on a PEP hit",
+    "description": "PEP hits only. Requires customer.screening.approve",
+    "operationId": "startEddUsingPOST",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "description": "id",
+      "required": true,
+      "style": "simple",
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScreeningHitDecisionRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScreeningHitDetailResponse"
+        }
+       }
+      }
+     },
+     "201": {
+      "description": "Created"
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
+     }
+    },
+    "security": [
+     {
+      "Authorization": []
+     }
+    ]
+   }
+  },
+  "/api/v3/screening/metrics": {
+   "get": {
+    "tags": [
+     "Screening Review Endpoints"
+    ],
+    "summary": "Screening queue counts",
+    "description": "Hits waiting for a reviewer, escalated to Compliance, under enhanced due diligence, and past their SLA",
+    "operationId": "metricsUsingGET",
+    "parameters": [
+     {
+      "name": "authenticated",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "boolean"
+      }
+     },
+     {
+      "name": "authorities[0].authority",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "credentials",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "details",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     },
+     {
+      "name": "principal",
+      "in": "query",
+      "required": false,
+      "style": "form",
+      "schema": {
+       "type": "object"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScreeningMetricsResponse"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized"
+     },
+     "403": {
+      "description": "Forbidden"
+     },
+     "404": {
+      "description": "Not Found"
      }
     },
     "security": [
@@ -29364,6 +31797,7 @@
        "PROVIDER_BLOCK",
        "REGULATORY_DIRECTIVE",
        "SANCTIONS_OR_PEP_MATCH",
+       "SCREENING_PENDING",
        "SUSPECTED_FRAUD"
       ]
      }
@@ -29508,6 +31942,7 @@
        "PROVIDER_BLOCK",
        "REGULATORY_DIRECTIVE",
        "SANCTIONS_OR_PEP_MATCH",
+       "SCREENING_PENDING",
        "SUSPECTED_FRAUD"
       ]
      },
@@ -29606,6 +32041,7 @@
        "PROVIDER_BLOCK",
        "REGULATORY_DIRECTIVE",
        "SANCTIONS_OR_PEP_MATCH",
+       "SCREENING_PENDING",
        "SUSPECTED_FRAUD"
       ]
      },
@@ -29744,6 +32180,7 @@
        "PROVIDER_BLOCK",
        "REGULATORY_DIRECTIVE",
        "SANCTIONS_OR_PEP_MATCH",
+       "SCREENING_PENDING",
        "SUSPECTED_FRAUD"
       ]
      },
@@ -30061,6 +32498,21 @@
      },
      "useraccount": {
       "$ref": "#/components/schemas/UseraccountDto"
+     }
+    }
+   },
+   "AllowedAction": {
+    "title": "AllowedAction",
+    "type": "object",
+    "properties": {
+     "action": {
+      "type": "string"
+     },
+     "permitted": {
+      "type": "boolean"
+     },
+     "requiredRight": {
+      "type": "string"
      }
     }
    },
@@ -30404,6 +32856,7 @@
        "PAYOUT",
        "PRODUCT_CONFIG",
        "ROLLOVER",
+       "SCREENING",
        "TAX",
        "UNLOCK",
        "WITHDRAWAL"
@@ -32553,6 +35006,95 @@
      }
     }
    },
+   "CreditBureauReportResponse": {
+    "title": "CreditBureauReportResponse",
+    "type": "object",
+    "properties": {
+     "bureau": {
+      "type": "string",
+      "enum": [
+       "CREDIT_REGISTRY",
+       "FIRST_CENTRAL"
+      ]
+     },
+     "bureauName": {
+      "type": "string"
+     },
+     "bureauReference": {
+      "type": "string"
+     },
+     "errorMessage": {
+      "type": "string"
+     },
+     "hasPdf": {
+      "type": "boolean"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "loanApplicationId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "requestedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "requestedBy": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "requestedByName": {
+      "type": "string"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "FAILED",
+       "NO_MATCH",
+       "SUCCESS"
+      ]
+     },
+     "summary": {
+      "$ref": "#/components/schemas/CreditReportSummary"
+     },
+     "testData": {
+      "type": "boolean"
+     }
+    }
+   },
+   "CreditCheckConsentRequest": {
+    "title": "CreditCheckConsentRequest",
+    "required": [
+     "bvn"
+    ],
+    "type": "object",
+    "properties": {
+     "bvn": {
+      "pattern": "^\\d{11}$",
+      "type": "string"
+     },
+     "consent": {
+      "type": "boolean"
+     }
+    }
+   },
+   "CreditCheckStatusResponse": {
+    "title": "CreditCheckStatusResponse",
+    "type": "object",
+    "properties": {
+     "bvnOnFile": {
+      "type": "boolean"
+     },
+     "consentGiven": {
+      "type": "boolean"
+     },
+     "ready": {
+      "type": "boolean"
+     }
+    }
+   },
    "CreditEmploymentDetailDto": {
     "title": "CreditEmploymentDetailDto",
     "type": "object",
@@ -32621,6 +35163,70 @@
      },
      "sector": {
       "type": "string"
+     }
+    }
+   },
+   "CreditReportSummary": {
+    "title": "CreditReportSummary",
+    "type": "object",
+    "properties": {
+     "closedAccounts": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "delinquentAccounts": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "derogatoryAccounts": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "enquiriesLast12Months": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "enquiriesLast3Months": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "facilities": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Facility"
+      }
+     },
+     "mappingVerified": {
+      "type": "boolean"
+     },
+     "matchedName": {
+      "type": "string"
+     },
+     "openAccounts": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "score": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "scoreBand": {
+      "type": "string"
+     },
+     "scoreNote": {
+      "type": "string"
+     },
+     "totalAccounts": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalMonthlyInstalment": {
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "totalOutstanding": {
+      "type": "number",
+      "format": "bigdecimal"
      }
     }
    },
@@ -32902,6 +35508,36 @@
       "type": "array",
       "items": {
        "$ref": "#/components/schemas/GeneralPendingActionResponse"
+      }
+     },
+     "hasNext": {
+      "type": "boolean"
+     },
+     "hasPrevious": {
+      "type": "boolean"
+     },
+     "size": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalElements": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "totalPages": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
+   "CustomPageResponse«InvestmentBreakRequestResponse»": {
+    "title": "CustomPageResponse«InvestmentBreakRequestResponse»",
+    "type": "object",
+    "properties": {
+     "content": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/InvestmentBreakRequestResponse"
       }
      },
      "hasNext": {
@@ -33644,6 +36280,36 @@
      }
     }
    },
+   "CustomPageResponse«ScreeningHitResponse»": {
+    "title": "CustomPageResponse«ScreeningHitResponse»",
+    "type": "object",
+    "properties": {
+     "content": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/ScreeningHitResponse"
+      }
+     },
+     "hasNext": {
+      "type": "boolean"
+     },
+     "hasPrevious": {
+      "type": "boolean"
+     },
+     "size": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalElements": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "totalPages": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
    "CustomPageResponse«StatutoryRatePropagationResponse»": {
     "title": "CustomPageResponse«StatutoryRatePropagationResponse»",
     "type": "object",
@@ -33851,6 +36517,41 @@
       "type": "array",
       "items": {
        "$ref": "#/components/schemas/AccountRestrictionResponse"
+      }
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
+   "CustomerScreeningResponse": {
+    "title": "CustomerScreeningResponse",
+    "type": "object",
+    "properties": {
+     "customerId": {
+      "type": "string"
+     },
+     "customerName": {
+      "type": "string"
+     },
+     "hits": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/ScreeningHitResponse"
+      }
+     },
+     "openHits": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "pepDeclaration": {
+      "$ref": "#/components/schemas/PepDeclarationResponse"
+     },
+     "requests": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/ScreeningRequestSummaryResponse"
       }
      },
      "userId": {
@@ -34323,6 +37024,51 @@
       "format": "int32"
      },
      "reason": {
+      "type": "string"
+     }
+    }
+   },
+   "Facility": {
+    "title": "Facility",
+    "type": "object",
+    "properties": {
+     "balance": {
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "category": {
+      "type": "string"
+     },
+     "creditLimit": {
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "currency": {
+      "type": "string"
+     },
+     "delinquency": {
+      "type": "string"
+     },
+     "instalment": {
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "lastPaymentOn": {
+      "type": "string"
+     },
+     "lender": {
+      "type": "string"
+     },
+     "openedOn": {
+      "type": "string"
+     },
+     "paymentProfile": {
+      "type": "string"
+     },
+     "productType": {
+      "type": "string"
+     },
+     "status": {
       "type": "string"
      }
     }
@@ -34852,6 +37598,25 @@
      }
     }
    },
+   "InflowRequest": {
+    "title": "InflowRequest",
+    "required": [
+     "accountNumber"
+    ],
+    "type": "object",
+    "properties": {
+     "accountNumber": {
+      "type": "string"
+     },
+     "amount": {
+      "type": "number",
+      "format": "double"
+     },
+     "senderName": {
+      "type": "string"
+     }
+    }
+   },
    "InitializeCardResponse": {
     "title": "InitializeCardResponse",
     "type": "object",
@@ -35019,6 +37784,150 @@
      "cardId": {
       "type": "integer",
       "format": "int64"
+     }
+    }
+   },
+   "InvestmentBreakRequestDecisionRequest": {
+    "title": "InvestmentBreakRequestDecisionRequest",
+    "type": "object",
+    "properties": {
+     "applyWaiver": {
+      "type": "boolean"
+     },
+     "complianceReference": {
+      "type": "string"
+     },
+     "evidence": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/InvestmentRequestEvidence"
+      }
+     },
+     "reason": {
+      "type": "string"
+     }
+    }
+   },
+   "InvestmentBreakRequestResponse": {
+    "title": "InvestmentBreakRequestResponse",
+    "type": "object",
+    "properties": {
+     "complianceReference": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "declineReason": {
+      "type": "string"
+     },
+     "evidence": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/InvestmentRequestEvidence"
+      }
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "investmentId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "investmentReference": {
+      "type": "string"
+     },
+     "message": {
+      "type": "string"
+     },
+     "planName": {
+      "type": "string"
+     },
+     "quotedNetAmount": {
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "quotedPenaltyAmount": {
+      "type": "number",
+      "format": "bigdecimal"
+     },
+     "reason": {
+      "type": "string"
+     },
+     "reference": {
+      "type": "string"
+     },
+     "reviewEvidence": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/InvestmentRequestEvidence"
+      }
+     },
+     "reviewNote": {
+      "type": "string"
+     },
+     "reviewedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "reviewedBy": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "reviewedByName": {
+      "type": "string"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "APPROVED",
+       "AUTO_CLOSED",
+       "DECLINED",
+       "PENDING"
+      ]
+     },
+     "statusLabel": {
+      "type": "string"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "waiverApplied": {
+      "type": "boolean"
+     },
+     "waiverRequested": {
+      "type": "boolean"
+     },
+     "withdrawalId": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
+   "InvestmentBreakRequestSubmitRequest": {
+    "title": "InvestmentBreakRequestSubmitRequest",
+    "required": [
+     "reason"
+    ],
+    "type": "object",
+    "properties": {
+     "evidence": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/InvestmentRequestEvidence"
+      }
+     },
+     "pin": {
+      "type": "string"
+     },
+     "reason": {
+      "type": "string"
+     },
+     "waiverRequested": {
+      "type": "boolean"
      }
     }
    },
@@ -35277,6 +38186,7 @@
        "PAYOUT",
        "PRODUCT_CONFIG",
        "ROLLOVER",
+       "SCREENING",
        "TAX",
        "UNLOCK",
        "WITHDRAWAL"
@@ -38626,6 +41536,10 @@
      }
     }
    },
+   "JsonNode": {
+    "title": "JsonNode",
+    "type": "object"
+   },
    "KycTierResponse": {
     "title": "KycTierResponse",
     "type": "object",
@@ -38894,6 +41808,14 @@
     "title": "LoanApplicationResponse",
     "type": "object",
     "properties": {
+     "additionalDocumentsRequestedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "additionalDocumentsSubmittedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
      "additionalInformation": {
       "type": "array",
       "items": {
@@ -38941,6 +41863,9 @@
      },
      "fullName": {
       "type": "string"
+     },
+     "heldForReview": {
+      "type": "boolean"
      },
      "id": {
       "type": "integer",
@@ -39199,6 +42124,32 @@
      },
      "userName": {
       "type": "string"
+     }
+    }
+   },
+   "LoanCreditReportsResponse": {
+    "title": "LoanCreditReportsResponse",
+    "type": "object",
+    "properties": {
+     "blockedReason": {
+      "type": "string"
+     },
+     "customerReady": {
+      "type": "boolean"
+     },
+     "loanApplicationId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "reports": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/CreditBureauReportResponse"
+      }
+     },
+     "reuseDays": {
+      "type": "integer",
+      "format": "int32"
      }
     }
    },
@@ -40139,6 +43090,9 @@
     "title": "NotificationMessageResponse",
     "type": "object",
     "properties": {
+     "actionType": {
+      "type": "string"
+     },
      "createdAt": {
       "type": "string",
       "format": "date-time"
@@ -40161,6 +43115,10 @@
        "SOCIAL",
        "TRANSACTION"
       ]
+     },
+     "referenceId": {
+      "type": "integer",
+      "format": "int64"
      },
      "title": {
       "type": "string"
@@ -40893,6 +43851,14 @@
      "position": {
       "type": "string"
      },
+     "positionStatus": {
+      "type": "string",
+      "enum": [
+       "CURRENT",
+       "ENDED_OVER_2_YEARS",
+       "ENDED_WITHIN_2_YEARS"
+      ]
+     },
      "relationshipType": {
       "type": "string",
       "enum": [
@@ -40938,6 +43904,17 @@
       "type": "string"
      },
      "position": {
+      "type": "string"
+     },
+     "positionStatus": {
+      "type": "string",
+      "enum": [
+       "CURRENT",
+       "ENDED_OVER_2_YEARS",
+       "ENDED_WITHIN_2_YEARS"
+      ]
+     },
+     "positionStatusDisplayName": {
       "type": "string"
      },
      "processedAt": {
@@ -41487,6 +44464,26 @@
      }
     }
    },
+   "RequestedDocumentResponse": {
+    "title": "RequestedDocumentResponse",
+    "type": "object",
+    "properties": {
+     "displayUrl": {
+      "type": "string"
+     },
+     "documentSetupId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "name": {
+      "type": "string"
+     },
+     "uploadedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
    "ResetPassCodeRequest": {
     "title": "ResetPassCodeRequest",
     "type": "object",
@@ -41723,6 +44720,325 @@
      },
      "summary": {
       "type": "string"
+     }
+    }
+   },
+   "ScreeningHitActionResponse": {
+    "title": "ScreeningHitActionResponse",
+    "type": "object",
+    "properties": {
+     "action": {
+      "type": "string",
+      "enum": [
+       "CLEAR",
+       "CONFIRM",
+       "ESCALATE",
+       "FREEZE_REQUEST",
+       "PEP_DECISION",
+       "RAISED",
+       "REOPEN",
+       "START_EDD",
+       "STR_RAISED"
+      ]
+     },
+     "actorId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "actorName": {
+      "type": "string"
+     },
+     "actorRole": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "fromState": {
+      "type": "string",
+      "enum": [
+       "CLEARED",
+       "CONFIRMED_SANCTIONS",
+       "ESCALATED",
+       "PENDING_REVIEW",
+       "PEP_APPROVED",
+       "PEP_DECLINED",
+       "PEP_EDD"
+      ]
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "note": {
+      "type": "string"
+     },
+     "reasonCode": {
+      "type": "string"
+     },
+     "toState": {
+      "type": "string",
+      "enum": [
+       "CLEARED",
+       "CONFIRMED_SANCTIONS",
+       "ESCALATED",
+       "PENDING_REVIEW",
+       "PEP_APPROVED",
+       "PEP_DECLINED",
+       "PEP_EDD"
+      ]
+     }
+    }
+   },
+   "ScreeningHitDecisionRequest": {
+    "title": "ScreeningHitDecisionRequest",
+    "required": [
+     "note",
+     "reasonCode"
+    ],
+    "type": "object",
+    "properties": {
+     "note": {
+      "maxLength": 2000,
+      "minLength": 0,
+      "type": "string"
+     },
+     "reasonCode": {
+      "maxLength": 64,
+      "minLength": 0,
+      "type": "string"
+     }
+    }
+   },
+   "ScreeningHitDetailResponse": {
+    "title": "ScreeningHitDetailResponse",
+    "type": "object",
+    "properties": {
+     "allowedActions": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/AllowedAction"
+      }
+     },
+     "history": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/ScreeningHitActionResponse"
+      }
+     },
+     "hit": {
+      "$ref": "#/components/schemas/ScreeningHitResponse"
+     },
+     "matchDetail": {
+      "$ref": "#/components/schemas/JsonNode"
+     },
+     "otherOpenHits": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "pepDeclaration": {
+      "$ref": "#/components/schemas/PepDeclarationResponse"
+     },
+     "request": {
+      "$ref": "#/components/schemas/ScreeningRequestSummaryResponse"
+     }
+    }
+   },
+   "ScreeningHitResponse": {
+    "title": "ScreeningHitResponse",
+    "type": "object",
+    "properties": {
+     "category": {
+      "type": "string",
+      "enum": [
+       "OTHER",
+       "PEP",
+       "SANCTIONS"
+      ]
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "customerEmail": {
+      "type": "string"
+     },
+     "customerId": {
+      "type": "string"
+     },
+     "customerName": {
+      "type": "string"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "lists": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "matchedName": {
+      "type": "string"
+     },
+     "overdue": {
+      "type": "boolean"
+     },
+     "providerUnavailable": {
+      "type": "boolean"
+     },
+     "requestId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "requestReference": {
+      "type": "string"
+     },
+     "resolvedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "score": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "selfDeclared": {
+      "type": "boolean"
+     },
+     "slaDueAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "state": {
+      "type": "string",
+      "enum": [
+       "CLEARED",
+       "CONFIRMED_SANCTIONS",
+       "ESCALATED",
+       "PENDING_REVIEW",
+       "PEP_APPROVED",
+       "PEP_DECLINED",
+       "PEP_EDD"
+      ]
+     },
+     "subjectRef": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "subjectType": {
+      "type": "string",
+      "enum": [
+       "CORPORATE",
+       "CUSTOMER",
+       "DIRECTOR_UBO",
+       "GUARANTOR"
+      ]
+     },
+     "trigger": {
+      "type": "string",
+      "enum": [
+       "LIST_DELTA",
+       "LOAN_APPLICATION",
+       "MANUAL",
+       "ONBOARDING_T1",
+       "PERIODIC",
+       "PRE_DISBURSEMENT",
+       "PROFILE_CHANGE",
+       "TIER_UPGRADE"
+      ]
+     }
+    }
+   },
+   "ScreeningMetricsResponse": {
+    "title": "ScreeningMetricsResponse",
+    "type": "object",
+    "properties": {
+     "escalated": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "overdue": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "pendingReview": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "pepEdd": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
+   "ScreeningRequestSummaryResponse": {
+    "title": "ScreeningRequestSummaryResponse",
+    "type": "object",
+    "properties": {
+     "attempts": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "completedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "failureReason": {
+      "type": "string"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "outcome": {
+      "type": "string",
+      "enum": [
+       "CLEAR",
+       "PEP_REVIEW",
+       "POTENTIAL_MATCH",
+       "PROVIDER_UNAVAILABLE",
+       "STRONG_SANCTIONS"
+      ]
+     },
+     "provider": {
+      "type": "string"
+     },
+     "reference": {
+      "type": "string"
+     },
+     "relatedApplicationId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "requestedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "selfDeclaredPep": {
+      "type": "boolean"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "COMPLETED",
+       "FAILED",
+       "PENDING"
+      ]
+     },
+     "trigger": {
+      "type": "string",
+      "enum": [
+       "LIST_DELTA",
+       "LOAN_APPLICATION",
+       "MANUAL",
+       "ONBOARDING_T1",
+       "PERIODIC",
+       "PRE_DISBURSEMENT",
+       "PROFILE_CHANGE",
+       "TIER_UPGRADE"
+      ]
      }
     }
    },
@@ -42082,6 +45398,59 @@
      }
     }
    },
+   "SimulatedPayout": {
+    "title": "SimulatedPayout",
+    "type": "object",
+    "properties": {
+     "amount": {
+      "type": "number",
+      "format": "double"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "destinationAccountName": {
+      "type": "string"
+     },
+     "destinationAccountNumber": {
+      "type": "string"
+     },
+     "destinationBankCode": {
+      "type": "string"
+     },
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "narration": {
+      "type": "string"
+     },
+     "recipientUserId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "reference": {
+      "type": "string"
+     },
+     "settledAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "PENDING",
+       "REVERSED",
+       "SUCCESSFUL"
+      ]
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
    "SourceDto": {
     "title": "SourceDto",
     "type": "object",
@@ -42260,6 +45629,18 @@
       "enum": [
        "WITHHOLDING_TAX"
       ]
+     }
+    }
+   },
+   "SubmitRequestedDocumentsRequest": {
+    "title": "SubmitRequestedDocumentsRequest",
+    "type": "object",
+    "properties": {
+     "documents": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/DocumentLibraryRequest"
+      }
      }
     }
    },
