@@ -133,6 +133,8 @@
   .finding h3 { font-size: 1.1rem; margin-top: 10px; }
   .chip { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; background: var(--idle-bg); color: var(--muted); }
   .finding .impact { font-weight: 600; }
+  .status-note { margin: 10px 0 8px; padding: 8px 12px; border-radius: 10px; background: var(--info-bg); color: var(--text); font-size: .93rem; }
+  .status-note strong { color: var(--info); }
   .finding.filtered-out { display: none; }
 
   /* Priority filter */
@@ -165,6 +167,14 @@
   dl { margin: 10px 0 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
   details { margin-top: 8px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 0; min-height: 44px; }
   pre.snippet { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: .85rem; line-height: 1.45; max-height: 420px; overflow: auto; margin: 6px 0 0; }
+  .snippet-wrap { position: relative; }
+  .js .snippet-wrap pre.snippet { padding-top: 44px; }
+  .copy-btn { display: none; position: absolute; top: 6px; right: 6px; z-index: 1; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--muted); font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
+  .js .copy-btn { display: inline-flex; }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .copy-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .copy-btn.copied { color: var(--good); border-color: var(--good); background: var(--good-bg); }
+  .copy-btn.failed { color: var(--bad); border-color: var(--bad); background: var(--bad-bg); }
   details.evidence video { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; background: #000; }
   details img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
   ul.clean { padding-left: 20px; } ul.clean li { margin: 10px 0; }
@@ -342,8 +352,8 @@
 </header>
 <main>
   <div class="tabs" role="tablist" aria-label="Which results to show">
-    <button class="tab" role="tab" id="tab-dashboard" aria-controls="panel-dashboard" aria-selected="true" tabindex="0"><span aria-hidden="true">📊</span> Overview <span class="pill bad">16 urgent</span></button>
-    <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">10 problems</span></button>
+    <button class="tab" role="tab" id="tab-dashboard" aria-controls="panel-dashboard" aria-selected="true" tabindex="0"><span aria-hidden="true">📊</span> Overview <span class="pill bad">15 urgent</span></button>
+    <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">9 problems</span></button>
     <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">32 problems</span></button>
     <button class="tab" role="tab" id="tab-api" aria-controls="panel-api" aria-selected="false" tabindex="-1"><span aria-hidden="true">🔌</span> API <span class="pill bad">6 problems</span></button>
   </div>
@@ -355,21 +365,21 @@
     <p class="muted">Everything the automated and hand checks found across the admin portal, the mobile app and the API, and what has changed recently. Select any number to see the detail behind it.</p>
 
     <section class="card verdict bad">
-      <h3>Not ready for release — 48 open problems</h3>
-      <p>2 Critical (a core journey is blocked) · 14 High (money, security or compliance) · 28 Medium · 4 Low</p>
+      <h3>Not ready for release — 47 open problems</h3>
+      <p>2 Critical (a core journey is blocked) · 13 High (money, security or compliance) · 28 Medium · 4 Low</p>
     </section>
 
-    <div class="kpis"><div class="kpi "><div class="kpi-l">Checks in total</div><div class="kpi-v">328</div><div class="muted small">3 areas: Admin portal, Mobile app, API</div></div><div class="kpi "><div class="kpi-l">Pass rate</div><div class="kpi-v">89%</div><div class="muted small">234 of 263 checks that ran worked</div></div><div class="kpi bad"><div class="kpi-l">Open problems</div><div class="kpi-v">48</div><div class="muted small">from 29 failing checks, plus problems found by hand</div></div><div class="kpi bad"><div class="kpi-l">Critical &amp; High</div><div class="kpi-v">16</div><div class="muted small">fix before release</div></div><div class="kpi "><div class="kpi-l">Not run</div><div class="kpi-v">65</div><div class="muted small">switched-off pages, missing test data or held on purpose</div></div></div>
+    <div class="kpis"><div class="kpi "><div class="kpi-l">Checks in total</div><div class="kpi-v">328</div><div class="muted small">3 areas: Admin portal, Mobile app, API</div></div><div class="kpi "><div class="kpi-l">Pass rate</div><div class="kpi-v">89%</div><div class="muted small">234 of 263 checks that ran worked</div></div><div class="kpi bad"><div class="kpi-l">Open problems</div><div class="kpi-v">47</div><div class="muted small">from 29 failing checks, plus problems found by hand</div></div><div class="kpi bad"><div class="kpi-l">Critical &amp; High</div><div class="kpi-v">15</div><div class="muted small">fix before release</div></div><div class="kpi "><div class="kpi-l">Not run</div><div class="kpi-v">65</div><div class="muted small">switched-off pages, missing test data or held on purpose</div></div></div>
 
     <div class="dash-grid">
       <section class="dash-col">
         <h2>Open problems by priority</h2>
-        <div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><span class="sev-tile s-high zero"><span class="sev-tile-n">14</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></span><span class="sev-tile s-medium zero"><span class="sev-tile-n">28</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></span><span class="sev-tile s-low zero"><span class="sev-tile-n">4</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
+        <div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><span class="sev-tile s-high zero"><span class="sev-tile-n">13</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></span><span class="sev-tile s-medium zero"><span class="sev-tile-n">28</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></span><span class="sev-tile s-low zero"><span class="sev-tile-n">4</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
         <p class="muted small">By area — select a number to open those problems.</p>
         <div class="table-wrap scroll"><table class="matrix">
       <thead><tr><th>Area</th><th class="num"><span class="th-sev"><i class="sev-dot s-critical" aria-hidden="true"></i>Critical</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-high" aria-hidden="true"></i>High</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-medium" aria-hidden="true"></i>Medium</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-low" aria-hidden="true"></i>Low</span></th><th class="num">Total</th></tr></thead>
-      <tbody><tr><th scope="row"><a href="#admin">Admin portal</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#admin/problems/high" aria-label="5 High in Admin portal">5</a></td><td class="num"><a class="mcell s-medium" href="#admin/problems/medium" aria-label="5 Medium in Admin portal">5</a></td><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a href="#admin/problems"><strong>10</strong></a></td></tr><tr><th scope="row"><a href="#mobile">Mobile app</a></th><td class="num"><a class="mcell s-critical" href="#mobile/problems/critical" aria-label="2 Critical in Mobile app">2</a></td><td class="num"><a class="mcell s-high" href="#mobile/problems/high" aria-label="8 High in Mobile app">8</a></td><td class="num"><a class="mcell s-medium" href="#mobile/problems/medium" aria-label="19 Medium in Mobile app">19</a></td><td class="num"><a class="mcell s-low" href="#mobile/problems/low" aria-label="3 Low in Mobile app">3</a></td><td class="num"><a href="#mobile/problems"><strong>32</strong></a></td></tr><tr><th scope="row"><a href="#api">API</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#api/problems/high" aria-label="1 High in API">1</a></td><td class="num"><a class="mcell s-medium" href="#api/problems/medium" aria-label="4 Medium in API">4</a></td><td class="num"><a class="mcell s-low" href="#api/problems/low" aria-label="1 Low in API">1</a></td><td class="num"><a href="#api/problems"><strong>6</strong></a></td></tr></tbody>
-      <tfoot><tr><th scope="row">All areas</th><td class="num"><strong>2</strong></td><td class="num"><strong>14</strong></td><td class="num"><strong>28</strong></td><td class="num"><strong>4</strong></td><td class="num"><strong>48</strong></td></tr></tfoot>
+      <tbody><tr><th scope="row"><a href="#admin">Admin portal</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#admin/problems/high" aria-label="4 High in Admin portal">4</a></td><td class="num"><a class="mcell s-medium" href="#admin/problems/medium" aria-label="5 Medium in Admin portal">5</a></td><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a href="#admin/problems"><strong>9</strong></a></td></tr><tr><th scope="row"><a href="#mobile">Mobile app</a></th><td class="num"><a class="mcell s-critical" href="#mobile/problems/critical" aria-label="2 Critical in Mobile app">2</a></td><td class="num"><a class="mcell s-high" href="#mobile/problems/high" aria-label="8 High in Mobile app">8</a></td><td class="num"><a class="mcell s-medium" href="#mobile/problems/medium" aria-label="19 Medium in Mobile app">19</a></td><td class="num"><a class="mcell s-low" href="#mobile/problems/low" aria-label="3 Low in Mobile app">3</a></td><td class="num"><a href="#mobile/problems"><strong>32</strong></a></td></tr><tr><th scope="row"><a href="#api">API</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#api/problems/high" aria-label="1 High in API">1</a></td><td class="num"><a class="mcell s-medium" href="#api/problems/medium" aria-label="4 Medium in API">4</a></td><td class="num"><a class="mcell s-low" href="#api/problems/low" aria-label="1 Low in API">1</a></td><td class="num"><a href="#api/problems"><strong>6</strong></a></td></tr></tbody>
+      <tfoot><tr><th scope="row">All areas</th><td class="num"><strong>2</strong></td><td class="num"><strong>13</strong></td><td class="num"><strong>28</strong></td><td class="num"><strong>4</strong></td><td class="num"><strong>47</strong></td></tr></tfoot>
     </table></div>
       </section>
       <section class="dash-col">
@@ -389,15 +399,12 @@
         <div><a href="#admin/problems/high">7.5% “Loan VAT” is taken from every loan payout without being shown on the loan</a><div class="muted small">Admin portal · Loan interest calculations · Engineering (loans) and Finance</div></div>
       </li><li>
         <span class="sev s-high">High</span>
-        <div><a href="#admin/problems/high">“Mark as paid” closes a loan that was never paid out</a><div class="muted small">Admin portal · Loan Management (checked by hand) · Engineering (loans back end) and Finance</div></div>
-      </li><li>
-        <span class="sev s-high">High</span>
         <div><a href="#admin/problems/high">Nano and Payday interest is not worked out by the number of days</a><div class="muted small">Admin portal · Loan products (checked by hand) · Engineering (loans calculation)</div></div>
-      </li></ol>
-      <details class="ref"><summary>Show all 16 <span class="muted">· 10 more</span></summary><ol class="attention"><li>
+      </li><li>
         <span class="sev s-high">High</span>
         <div><a href="#admin/problems/high">Force close, write-off and penalty waivers skip the approval workflow</a><div class="muted small">Admin portal · Loan Management (checked by hand) · Engineering (admin portal and loans) and Compliance</div></div>
-      </li><li>
+      </li></ol>
+      <details class="ref"><summary>Show all 15 <span class="muted">· 9 more</span></summary><ol class="attention"><li>
         <span class="sev s-high">High</span>
         <div><a href="#mobile/problems/high">The Personal loan repayment breakdown does not open</a><div class="muted small">Mobile app · Borrowing · Engineering (mobile app and loans)</div></div>
       </li><li>
@@ -434,7 +441,7 @@
         <p class="area-rate"><span class="big">94%</span> <span class="muted">of checks that ran worked</span></p>
         <div class="bar" role="img" aria-label="64 worked, 4 with a problem, 29 not run"><span class="p" style="flex-grow:64" title="64 worked (66%)"></span><span class="f" style="flex-grow:4" title="4 with a problem (4%)"></span><span class="s" style="flex-grow:29" title="29 not run (30%)"></span></div>
         <ul class="area-nums"><li><strong>64</strong> worked</li><li><strong>4</strong> failed</li><li><strong>29</strong> not run</li></ul>
-        <p class="area-sev"><span class="sev s-high">5 High</span> <span class="sev s-medium">5 Medium</span></p>
+        <p class="area-sev"><span class="sev s-high">4 High</span> <span class="sev s-medium">5 Medium</span></p>
         <p class="muted small">Last run 10 November 2026 at 12:44</p>
         <span class="go">Open Admin portal results <span aria-hidden="true">→</span></span>
       </a><a class="area-card" href="#mobile">
@@ -462,7 +469,7 @@
           <div class="act-tags"><span class="src src-admin">Admin portal</span><span class="badge info">Change</span></div>
           <p class="act-title"><strong>New products set up, and one product kept per type</strong></p>
           <p class="muted act-lead">Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M,…</p>
-          <details class="act-more"><summary>Read more</summary><p>Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M, ₦5M–20M and ₦20M+, upfront or at-maturity interest), with rate cards for the 24-month REAP and 180–365-day RTN tenors. Tier access set as asked: REAP for Tiers 1–3, RWIN and RTN for Tiers 2–3 (both now also require Tier 2). Then only one product per type was kept: the old RWIN, REAP and RTN and two drafts holding plans are “Retiring” (closed to new plans; existing plans run to maturity), the other drafts and the “-v2” loan products are retired, and 11 open loans on retired loan products were closed (10 marked as paid or declined, and #95 — see “Problems found”). The Adebanjo loans were checked against the loan specification: Nano and Payday set to 9% per 30-day term (0.30% a day), Payday capped at ₦500,000 and removed from Tier 1 (specification: Tier 2); Personal (up to ₦30M, 3–24 months) and Public Sector (terms per employer) already matched. Retiring the loan products answered with “504 Gateway Time-out” and the dev API then stopped answering for about 20 minutes (the changes had been saved); the dev API was also down at other times today.</p></details>
+          <details class="act-more"><summary>Read more</summary><p>Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M, ₦5M–20M and ₦20M+, upfront or at-maturity interest), with rate cards for the 24-month REAP and 180–365-day RTN tenors. Tier access set as asked: REAP for Tiers 1–3, RWIN and RTN for Tiers 2–3 (both now also require Tier 2). Then only one product per type was kept: the old RWIN, REAP and RTN and two drafts holding plans are “Retiring” (closed to new plans; existing plans run to maturity), the other drafts and the “-v2” loan products are retired, and 11 open loans on retired loan products were closed (10 marked as paid or declined, and #95, never paid out, marked as paid with the test-only shortcut — see “Remove before production”). The Adebanjo loans were checked against the loan specification: Nano and Payday set to 9% per 30-day term (0.30% a day), Payday capped at ₦500,000 and removed from Tier 1 (specification: Tier 2); Personal (up to ₦30M, 3–24 months) and Public Sector (terms per employer) already matched. Retiring the loan products answered with “504 Gateway Time-out” and the dev API then stopped answering for about 20 minutes (the changes had been saved); the dev API was also down at other times today.</p></details>
         </li><li class="act">
           <div class="act-tags"><span class="src src-mobile">Mobile app</span><span class="badge idle">Re-run</span></div>
           <p class="act-title"><strong>New build (code 97) re-run, and the new products booked</strong></p>
@@ -794,8 +801,8 @@
     </div>
 
     <section class="card verdict bad">
-      <h3>Not ready for release — 10 problems need attention (including 6 found by hand)</h3>
-      <p>5 of them are Critical or High priority and should be fixed before release.</p>
+      <h3>Not ready for release — 9 problems need attention (including 5 found by hand)</h3>
+      <p>4 of them are Critical or High priority and should be fixed before release.</p>
     </section>
 
     <div class="stats">
@@ -806,11 +813,11 @@
     </div>
     <div class="bar" role="img" aria-label="64 worked, 4 with a problem, 29 not run"><span class="p" style="flex-grow:64" title="64 worked (66%)"></span><span class="f" style="flex-grow:4" title="4 with a problem (4%)"></span><span class="s" style="flex-grow:29" title="29 not run (30%)"></span></div>
     <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (94% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot dot-idle"></i>Not run</span></div>
-    <h3 class="kicker">Problems by priority</h3><div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><a class="sev-tile s-high" href="#admin/problems/high" title="affects customers’ money, security or a compliance requirement"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></a><a class="sev-tile s-medium" href="#admin/problems/medium" title="a feature is broken, wrong or misleading, but there is a way round it"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></a><span class="sev-tile s-low zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
+    <h3 class="kicker">Problems by priority</h3><div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><a class="sev-tile s-high" href="#admin/problems/high" title="affects customers’ money, security or a compliance requirement"><span class="sev-tile-n">4</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></a><a class="sev-tile s-medium" href="#admin/problems/medium" title="a feature is broken, wrong or misleading, but there is a way round it"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></a><span class="sev-tile s-low zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
 
     <div class="subtabs" role="tablist" aria-label="Admin portal results by kind">
       <button class="subtab" role="tab" id="sub-admin-overview" aria-controls="subpanel-admin-overview" aria-selected="true" tabindex="0" data-panel="admin" data-sub="overview">Overview</button>
-      <button class="subtab t-bad" role="tab" id="sub-admin-problems" aria-controls="subpanel-admin-problems" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="problems">Problems <span class="count">10</span></button>
+      <button class="subtab t-bad" role="tab" id="sub-admin-problems" aria-controls="subpanel-admin-problems" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="problems">Problems <span class="count">9</span></button>
       <button class="subtab t-ok" role="tab" id="sub-admin-passed" aria-controls="subpanel-admin-passed" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="passed">Passed <span class="count">64</span></button>
       <button class="subtab t-idle" role="tab" id="sub-admin-notrun" aria-controls="subpanel-admin-notrun" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="notrun">Not run <span class="count">29</span></button>
       <button class="subtab t-idle" role="tab" id="sub-admin-byhand" aria-controls="subpanel-admin-byhand" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="byhand">Checked by hand <span class="count">13</span></button>
@@ -821,7 +828,7 @@
       
     <div class="sec">
     <h2>What changed since the last run (30 October)</h2>
-    <ul class="clean"><li><strong>23 November: new products set up, and one product kept per type.</strong> Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M, ₦5M–20M and ₦20M+, upfront or at-maturity interest), with rate cards for the 24-month REAP and 180–365-day RTN tenors. Tier access set as asked: REAP for Tiers 1–3, RWIN and RTN for Tiers 2–3 (both now also require Tier 2). Then only one product per type was kept: the old RWIN, REAP and RTN and two drafts holding plans are “Retiring” (closed to new plans; existing plans run to maturity), the other drafts and the “-v2” loan products are retired, and 11 open loans on retired loan products were closed (10 marked as paid or declined, and #95 — see “Problems found”). The Adebanjo loans were checked against the loan specification: Nano and Payday set to 9% per 30-day term (0.30% a day), Payday capped at ₦500,000 and removed from Tier 1 (specification: Tier 2); Personal (up to ₦30M, 3–24 months) and Public Sector (terms per employer) already matched. Retiring the loan products answered with “504 Gateway Time-out” and the dev API then stopped answering for about 20 minutes (the changes had been saved); the dev API was also down at other times today.</li><li><strong>19 November: “not run” checks looked at again.</strong> Every switched-off page was opened in the new portal version. Three are back and their checks now run and pass: Discovery banners (the “Open” button is now “Edit”; the editor offers Save as draft or Send for approval, and “Preview on device” is gone), the Transaction Monitor under Transactions &amp; Ledger (rebuilt: a date range, page size and Refresh, with date, transaction ID, type, category, description, amount and balance after; the old Type, Category, Status, Channel and Provider filters, search box, Export CSV and clickable customer names are gone), and the Account Controls link under Customer Management. Still switched off: the investment request pages, Payroll reconciliation, the Wallet Management live board, the ledger tabs (Reversals &amp; Adjustments, Cashback Ledger, Billers), Support &amp; Tickets, Rewards rules, Dashboards and the five settings pages; Review Queues, Auto Grants and Screening are still gone. Only these checks were re-run; the full admin re-run waits for the go-ahead after the deployment.</li><li><strong>16 November: not re-run.</strong> The portal itself has not changed since 9 November. From about 14:00 the dev API stopped answering requests from the test office’s network (connections open, but no reply comes; outside locations got normal answers). A re-run at 14:38 was blocked again after about 7 minutes. The results below are therefore still those of 10 November; the team has been asked to allow the test network.</li><li><strong>Re-run on 10 November.</strong> No new portal version since 9 November afternoon. Same results: the same 4 problems, nothing newly broken or fixed.</li><li><strong>Re-run on 9 November (afternoon).</strong> A new portal version went live on 9 November. The menu is unchanged; the changes are in Corridors &amp; partners: a new “Duplicate” action (copies a corridor under a new code; checked, opened and cancelled), a “Penalty interest rate” field, every rate and fee now labelled “%” with at most 2 decimals, new corridors filled with 3%, 1% and 0.5%, and at least one tenor required. The two existing corridors were not converted to percent, so a new check fails (see “Problems found”). The other 3 problems are unchanged; nothing was fixed.</li><li><strong>Re-run on 9 November.</strong> No new portal version since 6 November. Same results: the same 3 problems, nothing newly broken or fixed. Checked by hand: notifications the system sends by itself are not recorded anywhere in the portal, and the customers’ in-app inboxes are empty (see “Problems found”).</li><li><strong>Re-run on 6 November.</strong> Two new portal versions went live (5 November 14:00 and 6 November 13:49). The menu is unchanged and the results are the same as on 4 November: the same 3 problems. The Campaigns page was redesigned: it now lists drafts, scheduled and sent campaigns, the “State” filter is called “Status”, and the Delivery log button is gone. The check was updated to match.</li><li><strong>Backlog status check (5 November).</strong> Done: force close, write off and waive penalty (API and portal), General Approvals, message templates, and the customer freeze and close actions. Not built: human metrics (portal and API). NIN verification is in the API but fails with a server error for any NIN (checked 9 November). One problem: the loan actions say they skip the approval workflow. See “What we checked by hand”.</li><li><strong>Re-run on 4 November.</strong> Every check was run again after the latest portal changes. The results are the same as on 3 November: the same 3 problems, with nothing new broken and nothing newly fixed. The menu is unchanged, so none of the switched-off pages has come back. One check failed at first because it opened the newest investment, which had been cancelled and correctly offers no withdraw or top-up. The check now opens an active plan, and it passes. The Public Sector findings were looked at again and still apply: the corridor rate still shows as 0.03%.</li><li><strong>20 pages switched off.</strong> Wallet Management, Transactions &amp; Ledger, Support &amp; Tickets, Rewards &amp; Incentives and Payroll reconciliation are now marked “Coming soon” in the menu and can’t be opened. These were removed from the menu altogether: Discovery banners; the investment request pages (Approval queue, On-behalf requests, Break requests, On-behalf withdrawals, top-ups and rollovers, Unlock requests, Auto-rollover and Statutory tax carry-across); and the settings pages Field Rules Setup, Controlled Vocabularies, Approval Thresholds, Communications Providers and Metric Definitions. Their old addresses now open Pending Approvals or an empty page. Checks on them are listed as “not run” until they come back.</li><li><strong>Customer Management.</strong> The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.</li><li><strong>Pending Approvals.</strong> A new “Created by me” tab lists the requests you raised, with a Withdraw button. This replaces the old investment Approval queue. “Dual-control changes” is marked “Coming soon”, and there is a page-size choice with Previous/Next. Our checks were updated to use it.</li><li><strong>Reports &amp; Analytics.</strong> It has moved to a new address (Reports instead of Dashboards).</li><li><strong>Public Sector loan set-up reviewed.</strong> Products, corridor, fees, pre-eligibility, approval workflows and documents were read (not changed) and compared with the app. See “What we checked by hand” and “Problems found”.</li><li><strong>Fixed.</strong> The audit log now records portal actions, each with a “View” button, and can be exported. Our check passes.</li><li><strong>Still not fixed.</strong> Viewing a customer’s private details is still not recorded in their audit trail, and loan #188 still has the 7.5% deduction from its payout and repayments that don’t match its interest model. The disappearing new biller can no longer be checked, because Transactions &amp; Ledger was taken out of the menu.</li></ul>
+    <ul class="clean"><li><strong>23 November: new products set up, and one product kept per type.</strong> Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M, ₦5M–20M and ₦20M+, upfront or at-maturity interest), with rate cards for the 24-month REAP and 180–365-day RTN tenors. Tier access set as asked: REAP for Tiers 1–3, RWIN and RTN for Tiers 2–3 (both now also require Tier 2). Then only one product per type was kept: the old RWIN, REAP and RTN and two drafts holding plans are “Retiring” (closed to new plans; existing plans run to maturity), the other drafts and the “-v2” loan products are retired, and 11 open loans on retired loan products were closed (10 marked as paid or declined, and #95, never paid out, marked as paid with the test-only shortcut — see “Remove before production”). The Adebanjo loans were checked against the loan specification: Nano and Payday set to 9% per 30-day term (0.30% a day), Payday capped at ₦500,000 and removed from Tier 1 (specification: Tier 2); Personal (up to ₦30M, 3–24 months) and Public Sector (terms per employer) already matched. Retiring the loan products answered with “504 Gateway Time-out” and the dev API then stopped answering for about 20 minutes (the changes had been saved); the dev API was also down at other times today.</li><li><strong>19 November: “not run” checks looked at again.</strong> Every switched-off page was opened in the new portal version. Three are back and their checks now run and pass: Discovery banners (the “Open” button is now “Edit”; the editor offers Save as draft or Send for approval, and “Preview on device” is gone), the Transaction Monitor under Transactions &amp; Ledger (rebuilt: a date range, page size and Refresh, with date, transaction ID, type, category, description, amount and balance after; the old Type, Category, Status, Channel and Provider filters, search box, Export CSV and clickable customer names are gone), and the Account Controls link under Customer Management. Still switched off: the investment request pages, Payroll reconciliation, the Wallet Management live board, the ledger tabs (Reversals &amp; Adjustments, Cashback Ledger, Billers), Support &amp; Tickets, Rewards rules, Dashboards and the five settings pages; Review Queues, Auto Grants and Screening are still gone. Only these checks were re-run; the full admin re-run waits for the go-ahead after the deployment.</li><li><strong>16 November: not re-run.</strong> The portal itself has not changed since 9 November. From about 14:00 the dev API stopped answering requests from the test office’s network (connections open, but no reply comes; outside locations got normal answers). A re-run at 14:38 was blocked again after about 7 minutes. The results below are therefore still those of 10 November; the team has been asked to allow the test network.</li><li><strong>Re-run on 10 November.</strong> No new portal version since 9 November afternoon. Same results: the same 4 problems, nothing newly broken or fixed.</li><li><strong>Re-run on 9 November (afternoon).</strong> A new portal version went live on 9 November. The menu is unchanged; the changes are in Corridors &amp; partners: a new “Duplicate” action (copies a corridor under a new code; checked, opened and cancelled), a “Penalty interest rate” field, every rate and fee now labelled “%” with at most 2 decimals, new corridors filled with 3%, 1% and 0.5%, and at least one tenor required. The two existing corridors were not converted to percent, so a new check fails (see “Problems found”). The other 3 problems are unchanged; nothing was fixed.</li><li><strong>Re-run on 9 November.</strong> No new portal version since 6 November. Same results: the same 3 problems, nothing newly broken or fixed. Checked by hand: notifications the system sends by itself are not recorded anywhere in the portal, and the customers’ in-app inboxes are empty (see “Problems found”).</li><li><strong>Re-run on 6 November.</strong> Two new portal versions went live (5 November 14:00 and 6 November 13:49). The menu is unchanged and the results are the same as on 4 November: the same 3 problems. The Campaigns page was redesigned: it now lists drafts, scheduled and sent campaigns, the “State” filter is called “Status”, and the Delivery log button is gone. The check was updated to match.</li><li><strong>Backlog status check (5 November).</strong> Done: force close, write off and waive penalty (API and portal), General Approvals, message templates, and the customer freeze and close actions. Not built: human metrics (portal and API). NIN verification is in the API but fails with a server error for any NIN (checked 9 November). One problem: the loan actions say they skip the approval workflow. See “What we checked by hand”.</li><li><strong>Re-run on 4 November.</strong> Every check was run again after the latest portal changes. The results are the same as on 3 November: the same 3 problems, with nothing new broken and nothing newly fixed. The menu is unchanged, so none of the switched-off pages has come back. One check failed at first because it opened the newest investment, which had been cancelled and correctly offers no withdraw or top-up. The check now opens an active plan, and it passes. The Public Sector findings were looked at again and still apply: the corridor rate still shows as 0.03%.</li><li><strong>20 pages switched off.</strong> Wallet Management, Transactions &amp; Ledger, Support &amp; Tickets, Rewards &amp; Incentives and Payroll reconciliation are now marked “Coming soon” in the menu and can’t be opened. These were removed from the menu altogether: Discovery banners; the investment request pages (Approval queue, On-behalf requests, Break requests, On-behalf withdrawals, top-ups and rollovers, Unlock requests, Auto-rollover and Statutory tax carry-across); and the settings pages Field Rules Setup, Controlled Vocabularies, Approval Thresholds, Communications Providers and Metric Definitions. Their old addresses now open Pending Approvals or an empty page. Checks on them are listed as “not run” until they come back.</li><li><strong>Customer Management.</strong> The Review Queues, Auto Grants, Screening and Account Controls sub-pages are gone. On a customer’s page the Screening and Support tabs are now marked “Coming soon”. “Freeze account (full)” is now just “Freeze account”, and the note under account controls now says a second administrator (Compliance) must approve every request. Our checks were updated and pass.</li><li><strong>Pending Approvals.</strong> A new “Created by me” tab lists the requests you raised, with a Withdraw button. This replaces the old investment Approval queue. “Dual-control changes” is marked “Coming soon”, and there is a page-size choice with Previous/Next. Our checks were updated to use it.</li><li><strong>Reports &amp; Analytics.</strong> It has moved to a new address (Reports instead of Dashboards).</li><li><strong>Public Sector loan set-up reviewed.</strong> Products, corridor, fees, pre-eligibility, approval workflows and documents were read (not changed) and compared with the app. See “What we checked by hand” and “Problems found”.</li><li><strong>Fixed.</strong> The audit log now records portal actions, each with a “View” button, and can be exported. Our check passes.</li><li><strong>Still not fixed.</strong> Viewing a customer’s private details is still not recorded in their audit trail, and loan #188 still has the 7.5% deduction from its payout and repayments that don’t match its interest model. The disappearing new biller can no longer be checked, because Transactions &amp; Ledger was taken out of the menu.</li></ul>
     </div>
     <div class="sec">
     <h2>What was checked</h2>
@@ -842,9 +849,9 @@
     <p class="muted">These did not behave the way the product documents say they should. Most severe first.</p>
     <div class="sev-filter" role="group" aria-label="Show problems by priority" data-panel="admin">
       <span class="sev-filter-label">Priority</span>
-      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">10</span></button>
+      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">9</span></button>
       <button type="button" class="fchip s-critical" data-sev="critical" aria-pressed="false" title="Critical: blocks a core journey for every customer (for example no one can sign up or invest)" disabled><i class="sev-dot" aria-hidden="true"></i>Critical <span class="count">0</span></button>
-      <button type="button" class="fchip s-high" data-sev="high" aria-pressed="false" title="High: affects customers’ money, security or a compliance requirement"><i class="sev-dot" aria-hidden="true"></i>High <span class="count">5</span></button>
+      <button type="button" class="fchip s-high" data-sev="high" aria-pressed="false" title="High: affects customers’ money, security or a compliance requirement"><i class="sev-dot" aria-hidden="true"></i>High <span class="count">4</span></button>
       <button type="button" class="fchip s-medium" data-sev="medium" aria-pressed="false" title="Medium: a feature is broken, wrong or misleading, but there is a way round it"><i class="sev-dot" aria-hidden="true"></i>Medium <span class="count">5</span></button>
       <button type="button" class="fchip s-low" data-sev="low" aria-pressed="false" title="Low: minor or cosmetic; worth fixing when convenient" disabled><i class="sev-dot" aria-hidden="true"></i>Low <span class="count">0</span></button>
     </div>
@@ -857,15 +864,19 @@
           <h3>Loans on the same setting are repaid using different interest calculations</h3>
           <p class="muted small">Who should look at this: Engineering (loan calculation) and Product</p>
         </header>
+        <p class="status-note"><strong>Status:</strong> Fix expected: the team expects the new loan integration to resolve this (23 November). It stays open until a re-run after that integration is live shows every loan following the same rule.</p>
         <p class="impact">Customers on the same loan product are charged interest in different ways, and older loans may be charged the wrong amount. This affects money and must be confirmed before loans go live.</p>
         <dl>
           <dt>What we saw</dt><dd>Both loans are Personal loans at 8.5% set to “Monthly equal”. The newer loan #188 (₦500,000 over 9 months) collects ₦98,056 a month — the specification’s amount at 8.5% a month (₦98,055.56), rounded up to the whole naira. The older loan #169 (₦5,000,000 over 24 months) still collects ₦226,041.66 a month, which is what you get if 8.5% were the interest for the whole 24 months.</dd>
           <dt>What should happen</dt><dd>Every loan should follow the same rule from the loan specification. For loan #169 that is ₦633,333.33 a month if 8.5% is a monthly rate, or ₦243,750.00 if it is a yearly rate (loan #188: ₦98,055.56 or ₦59,097.23). Rounding up to the whole naira also means loan #188 would collect ₦4 more than the schedule over 9 months unless the last payment is adjusted.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">Error: Loan #169 &lt;name&gt; · Model A (Monthly equal (flat rate)) · ₦5,000,000.00 @ 8.5% × 24m — instalment 1: expected ₦633,333.33 with 8.5%/month (₦243,750.00 if 8.5% p.a.)
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 1" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">Error: Loan #169 &lt;name&gt; · Model A (Monthly equal (flat rate)) · ₦5,000,000.00 @ 8.5% × 24m — instalment 1: expected ₦633,333.33 with 8.5%/month (₦243,750.00 if 8.5% p.a.)
 expect(received).toBe(expected) // Object.is equality
 Expected: &quot;633333.33&quot;</pre>
+          </div>
           
           
         </details>
@@ -876,38 +887,30 @@ Expected: &quot;633333.33&quot;</pre>
           <h3>7.5% “Loan VAT” is taken from every loan payout without being shown on the loan</h3>
           <p class="muted small">Who should look at this: Engineering (loans) and Finance</p>
         </header>
+        
         <p class="impact">Customers receive less than they borrowed, and neither the loan record nor the offer explains why. It happens on every loan checked, including new ones.</p>
         <dl>
           <dt>What we saw</dt><dd>All three loans show a management fee of ₦0, yet exactly 7.5% was kept back: #169 ₦5,000,000 → ₦4,625,000 paid out; #188 ₦500,000 → ₦462,500; #189 (paid out during this round) ₦100,000 → ₦92,500. The customer’s wallet history shows the full amount credited, then the 7.5% taken back as “Loan VAT”.</dd>
           <dt>What should happen</dt><dd>The amount paid out should equal the loan amount minus the charges shown on the loan. Finance should confirm whether VAT applies to the amount lent (it normally applies to fees); if it does, it should be shown on the offer and the loan record.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">Error: Loan #169 &lt;name&gt;: amount ₦5,000,000.00, management fee ₦0.00, disbursed ₦4,625,000.00
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 2" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">Error: Loan #169 &lt;name&gt;: amount ₦5,000,000.00, management fee ₦0.00, disbursed ₦4,625,000.00
 expect(received).toBe(expected) // Object.is equality
 Expected: &quot;5000000.00&quot;</pre>
+          </div>
           
           
         </details>
       </article>
       <article class="card finding s-high" data-sev="high">
         <header>
-          <div class="finding-meta"><span class="sev s-high">High</span><span class="chip">Loan Management (checked by hand)</span><span class="finding-no muted">#3</span></div>
-          <h3>“Mark as paid” closes a loan that was never paid out</h3>
-          <p class="muted small">Who should look at this: Engineering (loans back end) and Finance</p>
-        </header>
-        <p class="impact">A loan can be recorded as repaid although no money was lent or repaid, which corrupts the loan book and the customer’s history.</p>
-        <dl>
-          <dt>What we saw</dt><dd>23 November, while closing loans on retired products: loan #95 (Personal-loan-v2, approved but never disbursed) could not be declined (“Loan can no longer be declined”) or force closed (“Only active loans can be force closed”), but PATCH /api/v3/loan-applications/95/mark-as-paid succeeded and it is now “REPAID”.</dd>
-          <dt>What should happen</dt><dd>Only allow “mark as paid” on a disbursed loan; give approved-but-unpaid loans a proper cancel action.</dd>
-        </dl>
-        
-      </article>
-      <article class="card finding s-high" data-sev="high">
-        <header>
-          <div class="finding-meta"><span class="sev s-high">High</span><span class="chip">Loan products (checked by hand)</span><span class="finding-no muted">#4</span></div>
+          <div class="finding-meta"><span class="sev s-high">High</span><span class="chip">Loan products (checked by hand)</span><span class="finding-no muted">#3</span></div>
           <h3>Nano and Payday interest is not worked out by the number of days</h3>
           <p class="muted small">Who should look at this: Engineering (loans calculation)</p>
         </header>
+        
         <p class="impact">A 7-day loan costs as much as a 30-day loan, against the loan specification; customers repaying early are overcharged.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November, loan calculator (POST /api/v3/loan-calculations, “Daily direct”): ₦20,000 at 0.3 costs ₦60 for 7 days and ₦60 for 30 days; the rate is charged once for the whole loan. The loan specification says interest = principal × daily rate × days (₦20,000 for 7 days at 0.30% a day = ₦420; for 30 days = ₦1,800). The portal field is “Flat interest rate (30-day term)”. Nano and Payday were set to 9% per 30-day term (= 0.30% a day) and left at a 30-day tenor only, so no one is overcharged for now.</dd>
@@ -917,10 +920,11 @@ Expected: &quot;5000000.00&quot;</pre>
       </article>
       <article class="card finding s-high" data-sev="high">
         <header>
-          <div class="finding-meta"><span class="sev s-high">High</span><span class="chip">Loan Management (checked by hand)</span><span class="finding-no muted">#5</span></div>
+          <div class="finding-meta"><span class="sev s-high">High</span><span class="chip">Loan Management (checked by hand)</span><span class="finding-no muted">#4</span></div>
           <h3>Force close, write-off and penalty waivers skip the approval workflow</h3>
           <p class="muted small">Who should look at this: Engineering (admin portal and loans) and Compliance</p>
         </header>
+        
         <p class="impact">One administrator could close a loan, write off its balance or remove its penalty alone, although a sign-off is set up for each. A write-off cannot be undone from the portal.</p>
         <dl>
           <dt>What we saw</dt><dd>On loan #196 (active) the “Force close” dialog, and on loan #169 (overdue) the “Waive penalty” and “Write off” dialogs, each say the action “takes effect immediately, with no second approval”, and ask only for an optional reason. General Approvals has a one-level workflow for each of these three actions (created 23 October), and the page says it decides “who signs off loan force-closes, penalty waivers and write-offs”. The dialogs were opened and cancelled; no action was carried out, so whether the server waits for approval is not yet proven.</dd>
@@ -930,39 +934,46 @@ Expected: &quot;5000000.00&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Customer management</span><span class="finding-no muted">#6</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Customer management</span><span class="finding-no muted">#5</span></div>
           <h3>Viewing a customer’s private details is not recorded</h3>
           <p class="muted small">Who should look at this: Engineering and Compliance (data protection)</p>
         </header>
+        
         <p class="impact">There is no record of which admin looked at a customer’s BVN or NIN, which data-protection rules expect.</p>
         <dl>
           <dt>What we saw</dt><dd>After revealing a customer’s hidden BVN/NIN, the customer’s Audit tab still says “No audit entries found”.</dd>
           <dt>What should happen</dt><dd>Each time an admin reveals private details, it should appear in that customer’s audit history.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">Error: Timed out 10000ms waiting for expect(locator).toBeVisible()
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 5" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">Error: Timed out 10000ms waiting for expect(locator).toBeVisible()
 Locator: getByText(/pii-view|PII/).first()
 Expected: visible
 Call log:
   - expect.toBeVisible with timeout 10000ms
   - waiting for getByText(/pii-view|PII/).first()</pre>
+          </div>
           
           
         </details>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product setup</span><span class="finding-no muted">#7</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product setup</span><span class="finding-no muted">#6</span></div>
           <h3>Public Sector corridors still hold rates as fractions, though the portal now treats them as percent</h3>
           <p class="muted small">Who should look at this: Product and Engineering (loans)</p>
         </header>
+        
         <p class="impact">Staff cannot tell from the portal what rate customers will be charged, and a rate typed in the wrong unit would go live unnoticed.</p>
         <dl>
           <dt>What we saw</dt><dd>Since the 9 November portal update the corridor form labels every rate and fee “%” and fills a new corridor with 3%, 1% and 0.5%, so percent is now the intended unit. The two existing corridors were not converted: Lagos Civil Servants still stores a policy rate of 0.03 and a management fee of 0.01, which the list and form now show as “0.03%” and “0.01%” (its quarterly fee is now 0.4 and a 2.5% penalty rate was added); lagos-v1 shows a 25% policy rate and a 0.01% quarterly fee. The app quotes Lagos Civil Servants loans at 4% a month, which is the corridor’s booked average interim rate. An automated check now flags any rate or fee below 0.1%.</dd>
           <dt>What should happen</dt><dd>The existing corridors’ values re-entered in percent (for example a 3% policy rate and a 1% management fee, if those were meant), the period stated (for example “% per month”), and the customer’s rate clearly identified.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">Error: values that look like fractions, not percent
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 6" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">Error: values that look like fractions, not percent
 expect(received).toEqual(expected) // deep equality
 - Expected  - 1
 + Received  + 5
@@ -972,16 +983,18 @@ expect(received).toEqual(expected) // deep equality
 +   &quot;&lt;name&gt;: managementFee 0.01%&quot;,
 +   &quot;lagos-v1: quarterlyFee 0.01%&quot;,
 + ]</pre>
+          </div>
           
           
         </details>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product Management (checked by hand)</span><span class="finding-no muted">#8</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product Management (checked by hand)</span><span class="finding-no muted">#7</span></div>
           <h3>The new investment product form drops the withholding-tax setting</h3>
           <p class="muted small">Who should look at this: Engineering (admin portal)</p>
         </header>
+        
         <p class="impact">Products are created with WHT off, so interest would be paid without the 10% tax the specifications require.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November: Adebanjo RWIN, REAP and RTN were created in the portal and saved with whtApplicable = false; the form removes the field before sending it. It was then switched on through the API, which accepts it.</dd>
@@ -991,10 +1004,11 @@ expect(received).toEqual(expected) // deep equality
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product Management (checked by hand)</span><span class="finding-no muted">#9</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product Management (checked by hand)</span><span class="finding-no muted">#8</span></div>
           <h3>RWIN set up as the specification describes is refused by the back end</h3>
           <p class="muted small">Who should look at this: Product and Engineering (treasury back end)</p>
         </header>
+        
         <p class="impact">RWIN cannot have both optional autosave and a separate tranche per top-up, as the RWIN specification describes.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November: creating Adebanjo RWIN with recurring contributions and tranche top-ups was refused: “A product funded by contributions credits top-ups to the plan; it cannot book them as tranches.” With recurring contributions on, the app could not book it at all (see the app problem “The app says nothing when a booking is refused”). It is now set as a lump-sum product with tranche top-ups.</dd>
@@ -1004,10 +1018,11 @@ expect(received).toEqual(expected) // deep equality
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Communications (checked by hand)</span><span class="finding-no muted">#10</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Communications (checked by hand)</span><span class="finding-no muted">#9</span></div>
           <h3>Notifications sent by the system are not recorded anywhere staff can see</h3>
           <p class="muted small">Who should look at this: Engineering (backend and admin portal) and Customer Support</p>
         </header>
+        
         <p class="impact">Staff cannot see what a customer was told, or when, about their loans, investments or account (for example “loan approved”, “offer ready”, “paid out”), so support cannot answer “I never got the message” and there is no record for audit or disputes.</p>
         <dl>
           <dt>What we saw</dt><dd>Checked 9 November. Communications → Campaigns, and the notification list behind it, only hold messages staff wrote and sent by hand (each has an admin sender and a recipient segment). Nothing the system sends by itself appears there, although the Tier 1 and Tier 3 test accounts had several loans applied for, approved, offered, accepted, paid out and repaid in the past week. Every messaging page in the portal was checked: Campaigns (menu), its Templates page, the Campaigns “Delivery log” (no longer in the menu since 6 November; its address now sends you back to Campaigns), and Discovery banners (“coming soon”). There is no message centre, inbox or notifications page under any name, the bell-style icon in the header is “Approvals awaiting you”, and the only notification data the portal asks the back end for is the campaign list and the templates. The customers’ own in-app inbox is also empty for all three test accounts.</dd>
@@ -1051,6 +1066,11 @@ expect(received).toEqual(expected) // deep equality
     <div class="subpanel" role="tabpanel" id="subpanel-admin-notes" aria-labelledby="sub-admin-notes" data-sub="notes">
       <p class="subpanel-label">Notes &amp; questions</p>
       
+    <div class="sec">
+    <h2>Remove before production</h2>
+    <p class="muted">Test-only shortcuts the team confirmed are deliberate on the dev system. They are not counted as problems here, but each must be gone before go-live.</p>
+    <ul class="clean"><li><strong>“Mark as paid” on loans (PATCH /api/v3/loan-applications/{id}/mark-as-paid).</strong> A temporary workaround to make testing easier; the team will remove it before production (confirmed 23 November). On dev it closes any loan as “REPAID”, including one that was never paid out: loan #95 (approved, never disbursed) was closed this way on 23 November. Before go-live, check the endpoint and any portal button for it are gone, and that approved-but-unpaid loans have a proper cancel action instead.</li></ul>
+    </div>
     <div class="sec">
     <h2>Differences from the documents (not failures)</h2>
     <p class="muted">These work, but don’t match what the specifications say. Product should confirm which is correct.</p>
@@ -1142,6 +1162,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>Investments cannot be paid for in the app</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and investments)</p>
         </header>
+        
         <p class="impact">No customer can put money into RWIN, REAP or RTN from the app, so no new investment can start.</p>
         <dl>
           <dt>What we saw</dt><dd>Tier 2 test account, 4 November build, with ₦9,900,707.51 in the wallet: an RWIN goal (#85), a REAP goal (#86) and an RTN note (#87) were created, then “Top up” → “Add ₦…” was tapped on each. Nothing happens: no PIN prompt, no message, and the wallet is not charged. All three stay “waiting for funding”. Calling the back end’s funding service directly answers “Your transaction PIN is required”, so the app appears never to ask for the PIN it needs.</dd>
@@ -1155,6 +1176,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>New customers cannot finish sign-up: the Smile ID selfie is refused as “Unauthorized”</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and Smile ID set-up)</p>
         </header>
+        
         <p class="impact">No new customer can open an account: sign-up stops at the selfie (step 3 of 6), and the half-made account cannot be used.</p>
         <dl>
           <dt>What we saw</dt><dd>11 November, 9 November build, a new sign-up with a real phone number, BVN and the tester’s own face (laptop webcam). Phone code, email, passcode and BVN all worked, and the BVN matched NIBSS (“Is this you?”). The Smile ID selfie screen then opened, took the selfie and the smile, and asked “Is this a good quality selfie?”. After “Yes, use this” it showed “Your selfie failed to process — Unauthorized”, and “Retry” failed the same way (4 tries). The app’s log shows why: before anything is uploaded, the Smile ID library asks Smile ID’s test service for permission (POST testapi.smileidentity.com/v1/auth_smile) and is refused every time (HTTP 400, “Error authenticating request”). This points to the Smile ID partner ID, key or signature the app gives the library, not to the selfie itself. The earlier start-up error (“smile_config.json not found”) no longer appears in this build.</dd>
@@ -1168,13 +1190,17 @@ expect(received).toEqual(expected) // deep equality
           <h3>The Personal loan repayment breakdown does not open</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and loans)</p>
         </header>
+        
         <p class="impact">Customers cannot see their monthly repayments before applying for a Personal loan; the review screen only shows the total.</p>
         <dl>
           <dt>What we saw</dt><dd>Tier 3 test account, Adebanjo Personal, ₦100,000 over 3 months: after the three documents are uploaded, the review screen shows 8.5% a month, a ₦1,000 management fee and ₦126,500 to repay, but tapping “See Breakdown” next to “Estimated Monthly Pay” does nothing (watched for 30 and 60 seconds by hand, and 45 seconds by the automated check). The breakdown opened normally on 2 and 3 November. Reaching the review screen took 9 seconds once and over 20 seconds another time.</dd>
           <dt>What should happen</dt><dd>The breakdown should list each month’s repayment, adding up to the total repayable.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">Borrow tab showed neither products nor a loan state</pre>
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 3" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">Borrow tab showed neither products nor a loan state</pre>
+          </div>
           
           
         </details>
@@ -1185,6 +1211,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>New investment plans cannot be paid for in the app</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
+        
         <p class="impact">A customer can book REAP, RWIN or RTN, but the plan stays unpaid at ₦0 and never starts earning; there is no way in the app to put money into it.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November, with the new Adebanjo REAP, RWIN and RTN products: every booking (Tier 1, 2 and 3 test accounts) ended as “PENDING_FUNDING” with ₦0 in the back end, and the wallet was not charged, although the Tier 2 wallet held about ₦9.96M. On the plan, “Top up” → “Add ₦50,000” does nothing: no PIN prompt, no request to the server, no message. The back end itself works: the same plans were paid from the wallet through the API with the transaction PIN (POST /api/v3/investments/{id}/funding), and went ACTIVE with the right amounts.</dd>
@@ -1198,6 +1225,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>Customers get no notification for investments or product retirement</h3>
           <p class="muted small">Who should look at this: Engineering (back end notifications)</p>
         </header>
+        
         <p class="impact">Customers are not told when a plan starts, is paid into, or when a product they hold is closed, although the specifications and the admin portal promise it.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November: the Tier 2 account had three plans activated (₦1.05M taken from its wallet) and holds a plan on a product that was retired the same day; its inbox is empty, in the app and in the back end (GET /api/v3/notifications/inbox). The Tier 3 account had two plans activated and holds retired-product plans; its inbox only has older loan messages. The retire dialog says “Every holder is notified in the app, by push and by email”.</dd>
@@ -1211,6 +1239,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>An overdue Payday loan is not marked overdue</h3>
           <p class="muted small">Who should look at this: Engineering (loans back end and mobile app)</p>
         </header>
+        
         <p class="impact">Customers aren’t told a Payday loan is late, and any late-payment rules (penalty, reminders, credit score) may never start for these loans.</p>
         <dl>
           <dt>What we saw</dt><dd>18 November: the Tier 3 test account’s Payday loan (₦200,000 + ₦16,000 interest) was due on 12 November. Six days later the back end still has it as “ACTIVE”, and the app’s Borrow tab shows “TOTAL REPAYABLE ₦216,000.00 · Payment Due · Due Date 12 November 2026” with no overdue warning. A Public Sector loan due on 15 November on another account was marked “Overdue” with an overdue banner within 3 days.</dd>
@@ -1224,6 +1253,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>Unpaid investments are described as active and auto-debited</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and investments)</p>
         </header>
+        
         <p class="impact">Customers are told their money is invested and earning when nothing has been taken, so they may not notice the plan is unpaid until it lapses.</p>
         <dl>
           <dt>What we saw</dt><dd>After creating the RWIN and REAP goals the app said “Your first debit of ₦… will be automatically processed on 4 November 2026”, but the plans are saved with automatic debit switched off and nothing was taken that day. Overnight the next payment date moved on to 5 December, still with nothing taken and no missed payment recorded. After placing the RTN note it said “Investment confirmed! Your ₦0.00 Rosabon Treasury Note (RTN) is now active and earning interest”, while the note is unpaid. The RTN confirmation also offers “Top up”, which RTN does not allow.</dd>
@@ -1237,6 +1267,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>The loan offer asks the customer to repay ₦865,000 on a ₦100,000 loan</h3>
           <p class="muted small">Who should look at this: Engineering (loans and mobile app)</p>
         </header>
+        <p class="status-note"><strong>Status:</strong> Fix expected: the team believes recent updates fixed this (23 November). Not yet confirmed: no Personal loan offer has been seen since 2 November (a Public Sector offer, #194, showed the right figures on 4 November), and the automated check only runs while an offer is waiting to be accepted. To confirm: approve a small Personal loan in the admin portal and compare the offer screen with the application.</p>
         <p class="impact">Customers are asked to accept terms that are wildly wrong. Most would decline; anyone who accepts is agreeing to repay more than eight times what they borrowed.</p>
         <dl>
           <dt>What we saw</dt><dd>Loan #189 (₦100,000 over 3 months at 8.5% a month, approved in the admin portal) showed “Interest Fee (8.5%) ₦765,000.00 · Repayment Amount ₦865,000.00 · Repayment Date 31 January 2027” on the offer screen — 8.5% charged per day for 90 days, in one payment. When applying, the same loan showed ₦125,500 over three monthly payments, and after acceptance the loan screen shows ₦125,500 outstanding.</dd>
@@ -1250,6 +1281,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>Public Sector loans accept amounts outside the allowed range</h3>
           <p class="muted small">Who should look at this: Engineering (loans and mobile app)</p>
         </header>
+        
         <p class="impact">Customers can apply for, and be shown offers on, loans the product does not allow, so the lending limits are not enforced.</p>
         <dl>
           <dt>What we saw</dt><dd>The Public Sector product’s corridor (Lagos Civil Servants) allows ₦200,000 to ₦10,000,000. The app accepted ₦100,000 and ₦11,000,000, quoted them (₦11,000,000 over 6 months: ₦12,540,000 to repay), and went on to the documents step without any message.</dd>
@@ -1263,6 +1295,7 @@ expect(received).toEqual(expected) // deep equality
           <h3>The Public Sector application skips the employer and payroll steps</h3>
           <p class="muted small">Who should look at this: Product and Engineering (loans and mobile app)</p>
         </header>
+        
         <p class="impact">Loans meant to be repaid through the employer’s payroll can be applied for without saying who the employer is or checking the customer can afford the deductions.</p>
         <dl>
           <dt>What we saw</dt><dd>The app goes straight from amount, tenure and purpose to documents. It never asks the customer to find their employer (corridor), for an IPPIS or staff number, or for a retirement date. No affordability (salary × DTI) check is shown. Above the ₦1,000,000 control-gate threshold set in the admin portal, it asked for the same 6 documents, with no house visit, cheques or utility bill.</dd>
@@ -1276,14 +1309,18 @@ expect(received).toEqual(expected) // deep equality
           <h3>The Tier 3 test account still shows an identity step to complete</h3>
           <p class="muted small">Who should look at this: Product and Compliance (KYC)</p>
         </header>
+        
         <p class="impact">Either the test account is not really Tier 3, or the “Complete your profile” card does not follow the customer’s verification level — which would confuse fully verified customers.</p>
         <dl>
           <dt>What we saw</dt><dd>The Home screen shows “Complete your profile — 2/3, 1 key identity step left” for the Tier 3 test account.</dd>
           <dt>What should happen</dt><dd>A fully verified (Tier 3) customer should have every identity step complete.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 11" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: 3</pre>
+          </div>
           
           
         </details>
@@ -1294,14 +1331,18 @@ Expected: 3</pre>
           <h3>RWIN goals offer tenors that are not in the RWIN rate table</h3>
           <p class="muted small">Who should look at this: Product and Engineering (mobile app)</p>
         </header>
+        
         <p class="impact">Customers can book a term with no published rate, so the rate they get is unclear.</p>
         <dl>
           <dt>What we saw</dt><dd>Booking an RWIN goal offers 60, 90 or 120 days; the RWIN product page lists rates only for 90, 180, 270 and 360 days.</dd>
           <dt>What should happen</dt><dd>Booking should offer the tenors in the rate table (or the table should cover every tenor offered).</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">expect(received).toContain(expected) // indexOf
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 12" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">expect(received).toContain(expected) // indexOf
 Expected substring: &quot;not in table: none&quot;</pre>
+          </div>
           
           
         </details>
@@ -1312,14 +1353,18 @@ Expected substring: &quot;not in table: none&quot;</pre>
           <h3>Investment goals can be created and topped up with an empty wallet, with no warning</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app) and Product</p>
         </header>
+        
         <p class="impact">Customers set up a plan whose first payment will fail, and get no message telling them why nothing happens.</p>
         <dl>
           <dt>What we saw</dt><dd>The Tier 1 test account (₦0.00 balance) can create an RWIN goal whose first debit is due that day. Tapping “Add ₦…” to top it up then does nothing — no “insufficient balance” message and no other way to pay.</dd>
           <dt>What should happen</dt><dd>The app should tell the customer their balance is too low and offer a way to fund it before (or while) creating the goal.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 13" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;the app responded&quot;</pre>
+          </div>
           
           
         </details>
@@ -1330,14 +1375,18 @@ Expected: &quot;the app responded&quot;</pre>
           <h3>Funding the wallet by card does nothing</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and payments)</p>
         </header>
+        
         <p class="impact">Customers cannot add money by card, so they cannot fund investments or repayments that way.</p>
         <dl>
           <dt>What we saw</dt><dd>Fund → Card Payment → entering an amount and tapping “Pay ₦…” does nothing — no card form and no message.</dd>
           <dt>What should happen</dt><dd>The card payment page (Paystack) should open.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 14" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;payment page opened&quot;</pre>
+          </div>
           
           
         </details>
@@ -1348,14 +1397,18 @@ Expected: &quot;payment page opened&quot;</pre>
           <h3>“Log out” does nothing</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
+        <p class="status-note"><strong>Status:</strong> The team believes this is solved (23 November), but the automated check on the 23 November build (code 97, run 10:27 WAT) still found the customer signed in after tapping “Log out”. It needs a check by hand on that build; if Log out works by hand, the automated check is at fault and will be fixed instead.</p>
         <p class="impact">Customers cannot sign out — a risk on shared or lost phones.</p>
         <dl>
           <dt>What we saw</dt><dd>Tapping “Log out” in Settings has no effect. The customer stays signed in until the app times out.</dd>
           <dt>What should happen</dt><dd>Log out should end the session and return to the sign-in screen.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 15" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;signed out&quot;</pre>
+          </div>
           
           
         </details>
@@ -1366,14 +1419,18 @@ Expected: &quot;signed out&quot;</pre>
           <h3>Signing in with a +234 phone number does not work</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
+        
         <p class="impact">Customers who type their number with the country code (+234…) cannot sign in with it.</p>
         <dl>
           <dt>What we saw</dt><dd>On the 4 November build, entering the Tier 2 test account’s number as +234… and tapping Continue never reached the passcode screen (watched for 90 seconds, twice). Once, by hand, the app said “Please enter a valid email or phone number”. The same number written 080… works.</dd>
           <dt>What should happen</dt><dd>Both 080… and +234… should be accepted, as they are the same number.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 16" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;passcode screen&quot;</pre>
+          </div>
           
           
         </details>
@@ -1384,14 +1441,18 @@ Expected: &quot;passcode screen&quot;</pre>
           <h3>Next of kin cannot be saved</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and API)</p>
         </header>
+        
         <p class="impact">Customers cannot add a next of kin, which is normally required for KYC.</p>
         <dl>
           <dt>What we saw</dt><dd>After filling in every field on the Next of Kin form and pressing Save, the app shows “City cannot be empty”. The form has no City field.</dd>
           <dt>What should happen</dt><dd>The form should ask for everything the system needs (add a City field, or stop requiring it).</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">expect(received).toBe(expected) // Object.is equality
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 17" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;QA Test Kin&quot;</pre>
+          </div>
           
           
         </details>
@@ -1402,6 +1463,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Booking success screens show ₦0.00 and missing details</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
+        
         <p class="impact">Right after booking, customers are told their investment of ₦0.00 is “active and earning interest”, which is wrong and alarming.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November: RTN and RWIN end on “Investment confirmed! Your ₦0.00 Adebanjo RTN is now active and earning interest.” For RWIN the first attempt also showed “0% p.a.” and no tenor or maturity date. REAP’s screen was correct (“Your first debit of ₦3,263.86 will be automatically processed on 23 November 2026”).</dd>
@@ -1415,6 +1477,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>RTN quotes two different rates for the same placement</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and treasury rates)</p>
         </header>
+        
         <p class="impact">The customer cannot tell what rate they will earn.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November, ₦1,000,000 for 90 days paid at maturity: the projection screen says “Interest earned (20% p.a.)” (+₦44,383.56), and the next screen, the summary, says “25% p.a.”, which is also what the plan was booked at. Two rate cards cover 90 days (20% for any payout, 25% for monthly back-end interest); the app picks a different one on each screen.</dd>
@@ -1428,6 +1491,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Product pages show rates for tenors the product does not offer</h3>
           <p class="muted small">Who should look at this: Engineering (treasury rates) and Product</p>
         </header>
+        
         <p class="impact">Customers are shown rates they cannot get; REAP is advertised at a rate none of its tenors pays.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November: Adebanjo REAP is advertised as “30% p.a.” on Grow and on its page, and its rate table lists 1-month (30%) and 2-month (18% and 12%) rates, but it only offers 3, 6, 12 and 24 months (14% to 18%). Adebanjo RWIN only offers a 90-day cycle but lists 180, 270 and 360-day rates and a 30% “small” rate. The rate cards seem to come from the older product of the same type.</dd>
@@ -1441,6 +1505,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>The app says nothing when a booking is refused</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
+        
         <p class="impact">Customers tap “Create Goal” and nothing happens, with no reason.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November: while Adebanjo RWIN accepted recurring contributions, the server refused each booking with “A monthly contribution is required for this product” (the RWIN flow never asks for one). The app showed no message; the reason was only in the app log.</dd>
@@ -1454,6 +1519,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Notifications show raw amounts and dates</h3>
           <p class="muted small">Who should look at this: Engineering (back end notification templates)</p>
         </header>
+        
         <p class="impact">Messages look broken and are hard to read; one reads as if a wallet were called “211”.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November, Tier 3 inbox (same text in the back end): “We have received your payment of NGN216000”; “NGN200000.00 credited to your wallet 211. Repayment due on 2026-12-18T07:39:59.910”; “You qualify for NGN200000.00”. In the list, “Loan Disbursed” and “Agreement Executed” are cut off with “…”, hiding the due date and where the documents are.</dd>
@@ -1467,6 +1533,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Borrow shows wrong amounts for a moment after sign-in</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
+        
         <p class="impact">A customer may see a lower amount owed than they really owe and plan their payment on it.</p>
         <dl>
           <dt>What we saw</dt><dd>18 November, overdue Public Sector loan (₦3,000,000, 12 months, 4% a month, reducing balance): straight after signing in, Borrow showed “TOTAL OUTSTANDING ₦3,120,000.00” and “Overdue ₦260,000”. About a minute later it changed to ₦3,780,000.00 and ₦370,000, which match the back end’s schedule (₦780,000 interest; first instalment ₦370,000). The first figures treat 4% as a yearly rate. Seen once; reopening Borrow afterwards always showed the correct figures.</dd>
@@ -1480,6 +1547,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Home counts ₦300,000 in plans the customer does not have</h3>
           <p class="muted small">Who should look at this: Engineering (investments)</p>
         </header>
+        
         <p class="impact">The total balance on Home is overstated by ₦300,000.</p>
         <dl>
           <dt>What we saw</dt><dd>Tier 2 test account: Home shows a total balance of ₦10,200,707.51 (wallet ₦9,900,707.51 plus ₦300,000 in plans), but Grow shows “Active Plans (0)” and every plan on the account is unpaid, with ₦0 in it.</dd>
@@ -1493,6 +1561,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>A sign-up stopped part-way leaves an account that cannot sign in</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and API)</p>
         </header>
+        
         <p class="impact">A customer whose app closes during sign-up is told their password is wrong and pointed to “Forgot password”, although they never set one.</p>
         <dl>
           <dt>What we saw</dt><dd>After the passcode step, the app was restarted. It opened on the Welcome screen with the sign-up forgotten. “I already have an account” recognised the email and asked for a password; the 6-digit passcode was refused with “Incorrect email and password combination. Please click on forgot password link to reset your password”. Starting “Create account” again with the same phone number (a new SMS code) and the same email did pick up the sign-up again.</dd>
@@ -1506,6 +1575,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>A customer with no address on file is told they can no longer change it</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and API) and Product</p>
         </header>
+        
         <p class="impact">Customers without an address cannot add one, although an address is normally needed for KYC.</p>
         <dl>
           <dt>What we saw</dt><dd>The Tier 3 test account’s profile shows no address (“Add your address”). Adding one and pressing “Save changes” briefly shows “You can no longer update your residential address”, and nothing is saved.</dd>
@@ -1519,6 +1589,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Loan documents are marked “Verified” the moment they are uploaded</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app) and Operations</p>
         </header>
+        
         <p class="impact">Customers are told their documents are verified before anyone has checked them, and are asked to upload documents already on file.</p>
         <dl>
           <dt>What we saw</dt><dd>Applying for a Personal loan (2 November) asked for a statement of accounts, NIN document and utility bill, although the admin portal shows this customer uploaded all three on 21 October. A blank test PDF uploaded for each was immediately labelled “Verified”. Still happening on 3 November: a Public Sector application asked for all 6 documents again (the customer had a Public Sector loan in October), and each blank PDF showed “Verified” at once.</dd>
@@ -1532,6 +1603,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Loan screens show a fee that is never charged, and hide the 7.5% VAT that is</h3>
           <p class="muted small">Who should look at this: Engineering (loans) and Finance</p>
         </header>
+        
         <p class="impact">Customers cannot see the real cost of the loan before they accept it.</p>
         <dl>
           <dt>What we saw</dt><dd>Personal loan #189 (2 November): the review screen showed “Management Fee (1%) ₦1,000” and “Total Repayable ₦126,500”, while its own schedule adds up to ₦125,500. The admin portal shows a ₦0 management fee, and no fee was charged. Instead, when ₦100,000 was paid out, ₦7,500 was taken straight back as “Loan VAT” (wallet credited ₦92,500). Same on 3 November with Public Sector loans. Application #191 (₦300,000): the review screen shows “Management Fee (1%) ₦3,000” and “Total Repayable ₦345,000”, its schedule adds up to ₦342,000, and the saved application has a ₦0 fee and 7.5% VAT. VAT is not mentioned on any application or offer screen.</dd>
@@ -1545,6 +1617,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Times are shown an hour behind Nigerian time</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app, admin portal and API)</p>
         </header>
+        
         <p class="impact">Transaction and application times look wrong to customers and staff, which matters for disputes and audits.</p>
         <dl>
           <dt>What we saw</dt><dd>The loan payout made at about 3:30 PM (WAT) on 2 November appears in the app’s activity as 02:30 PM. The admin portal shows the application created at 1:56 PM when it was submitted at about 2:56 PM. Still the same on 3 November: an investment made from the admin portal just before 6 PM shows as 04:58 PM, and a loan paid out at about 7:30 PM shows as 06:30 PM.</dd>
@@ -1558,6 +1631,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>RWIN booking misses the 30-day holding confirmation, and auto-rollover starts off</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
+        
         <p class="impact">Customers are not told up front that RWIN money cannot be withdrawn for 30 days; plans do not roll over unless the customer turns it on.</p>
         <dl>
           <dt>What we saw</dt><dd>23 November: the RWIN booking has no “I understand the 30-day minimum holding period” checkbox (required by the RWIN specification, step 6), and the plans were saved with auto-rollover off, while the specification says it is on by default.</dd>
@@ -1571,6 +1645,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>A waived penalty is not explained to the customer</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app) and Product</p>
         </header>
+        
         <p class="impact">The customer can’t tell whether a penalty was charged or waived, and the repayment sheet labels the instalment as the loan amount.</p>
         <dl>
           <dt>What we saw</dt><dd>18 November, overdue loan whose penalty was waived in admin: Borrow and the Pay Now sheet show only the instalment (₦370,000). Nothing mentions a penalty or that it was waived, and the sheet calls the ₦370,000 instalment “Loan Amount”.</dd>
@@ -1584,6 +1659,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>The selfie screen waits forever when it can’t see a face</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
+        
         <p class="impact">A customer with a poor camera or bad light is left on “Position your face in the oval” with no help and no way out except the phone’s Back button.</p>
         <dl>
           <dt>What we saw</dt><dd>On a camera with no face in view, the Smile ID screen showed “Position your face in the oval” for over a minute with no timeout, tip, Cancel or Close button.</dd>
@@ -1718,9 +1794,10 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>NIN verification refuses the NIN owner’s own account</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
+        
         <p class="impact">Customers cannot complete NIN verification, so they cannot reach the tiers that need it.</p>
         <dl>
-          <dt>What we saw</dt><dd>23 November: PATCH /api/v3/users/verify-nin now reaches the identity provider (earlier attempts on 9 and 16 November ended in a server error or a 504; today the first call still waited 60 s and ended in 504). With a NIN that belongs to someone else it answers “First name does not match NIN details” (correct). With the NIN of the test account’s own holder, given by the tester, it gives the same answer in under a second. The account’s names are stored in capitals with no extra spaces, so the comparison may be case-sensitive or use a different name order than the NIN record.</dd>
+          <dt>What we saw</dt><dd>23 November: PATCH /api/v3/users/verify-nin now reaches the identity provider (earlier attempts on 9 and 16 November ended in a server error or a 504; today the first call still waited 60 s and ended in 504). With a NIN that belongs to someone else it answers “First name does not match NIN details” (correct). With the NIN of the test account’s own holder, given by the tester, it gives the same answer in under a second. The account’s names are stored in capitals with no extra spaces, so the comparison may be case-sensitive or use a different name order than the NIN record. Retried later on 23 November after the team asked: same answer (400 in 0.9 s), and the account is still not NIN-verified — not fixed.</dd>
           <dt>What should happen</dt><dd>Match names ignoring case, extra spaces and order (first, middle and last), and tell the customer which name did not match.</dd>
         </dl>
         
@@ -1731,13 +1808,16 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Some endpoints fail instead of answering</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
+        
         <p class="impact">The app or portal screens that use these endpoints will show errors or empty data.</p>
         <dl>
           <dt>What we saw</dt><dd>GET /api/v3/users/pending-address-verification → 500; GET /api/v3/users/pep-declaration → 404: “PEP declaration not found for this user”; GET /api/v3/users/residential-address → 404: “Residential address not found for this user”; GET /api/v3/wema/bills → 500; GET /api/v3/investment-products/{slug}/rate → 400: “Either tenorDays or tenorMonths is required”; GET /api/v3/loan-applications/{id}/credit-reports → 500; GET /api/v3/loan-applications/{id}/requested-documents → 400: “You are not the owner of this loan”; GET /api/v3/wema/{accountNumber}/balance → 400: “{&quot;code&quot;:&quot;400&quot;,&quot;message&quot;:&quot;Vendor not found&quot;,&quot;PaymentReference&quot;:null,&quot;SessionId&quot;:null}”.</dd>
           <dt>What should happen</dt><dd>A correct request should get a successful answer (2xx).</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">Request: GET /api/v3/users/pending-address-verification (signed in as the customer)
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 2" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">Request: GET /api/v3/users/pending-address-verification (signed in as the customer)
 Answer: 500 in 343 ms
 (no JSON body)
 
@@ -1782,6 +1862,7 @@ Answer: 400 in 247 ms
 Request: GET /api/v3/loan-applications/{id}/credit-reports (signed in as staff)
 Answer: 500 in 1984 ms
 (no JSON body)</pre>
+          </div>
           
           
         </details>
@@ -1792,13 +1873,16 @@ Answer: 500 in 1984 ms
           <h3>Some answers don’t match their documented format</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
+        
         <p class="impact">Apps built from the API document will misread these answers — for example dates sent as lists of numbers instead of text.</p>
         <dl>
           <dt>What we saw</dt><dd>GET /api/v3/country → $: expected object, got array; GET /api/v3/investment-management/approval-queue → $.content[0].proposedAt: expected text, got array; $.content[1].proposedAt: expected text, got array; GET /api/v3/investment-management/break-requests → $.content[0].createdAt: expected text, got array; $.content[1].createdAt: expected text, got array; GET /api/v3/investment-management/break-requests/{id} → $.createdAt: expected text, got array; GET /api/v3/investment-products/{slug}/retirement-impact → $.lastMaturityDate: expected text, got array; GET /api/v3/products/{productKey}/config → $.cycleDays: expected object, got number; $.maxPerPlan: expected object, got number; GET /api/v3/state/{countryId} → $: expected object, got array; GET /api/v3/lga/{stateId} → $: expected object, got array.</dd>
           <dt>What should happen</dt><dd>Each answer should match the format the API document gives for it, or the document should be corrected.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">$: expected object, got array
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 3" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">$: expected object, got array
 
 Request: GET /api/v3/country (signed in as the customer)
 Answer: 200 in 245 ms
@@ -1952,6 +2036,7 @@ Answer: 200 in 833 ms
  &quot;interestRatePct&quot;: &quot;&lt;number&gt;&quot;,
  &quot;partialMinRetained&quot;: &quot;&lt;number&gt;&quot;
 }</pre>
+          </div>
           
           
         </details>
@@ -1962,13 +2047,16 @@ Answer: 200 in 833 ms
           <h3>Some endpoints are slow</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
+        
         <p class="impact">Screens using them will feel slow.</p>
         <dl>
           <dt>What we saw</dt><dd>GET /api/v3/screening/hits/{id} (5.6 s); GET /api/v3/wema/{accountNumber}/balance (13.4 s).</dd>
           <dt>What should happen</dt><dd>Answers within 5 seconds on the dev system.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <pre class="snippet">Request: GET /api/v3/screening/hits/{id} (signed in as staff)
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 4" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">Request: GET /api/v3/screening/hits/{id} (signed in as staff)
 Answer: 200 in 5626 ms
 {
  &quot;hit&quot;: {
@@ -2023,6 +2111,7 @@ Answer: 400 in 13358 ms
  &quot;message&quot;: &quot;{\&quot;code\&quot;:\&quot;400\&quot;,\&quot;message\&quot;:\&quot;Vendor not found\&quot;,\&quot;PaymentReference\&quot;:null,\&quot;SessionId\&quot;:null}&quot;,
  &quot;data&quot;: null
 }</pre>
+          </div>
           
           
         </details>
@@ -2033,6 +2122,7 @@ Answer: 400 in 13358 ms
           <h3>Saved beneficiaries accept a bank that doesn’t exist, and can’t be edited</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
+        
         <p class="impact">Customers can save recipients that can never be paid (a bank that doesn’t exist), and must delete and re-add a recipient to correct a typo.</p>
         <dl>
           <dt>What we saw</dt><dd>Signed in as a test customer: POST /api/v3/user-account-beneficiaries saved a recipient with bank code “999” and bank name “Not A Bank” (201; still so on 19 November). Currency is fixed: since 19 November anything other than NGN is refused (“Currency can only be NGN”). There is no endpoint to change a saved recipient: PUT and PATCH on /api/v3/user-account-beneficiaries/{id} answer 405. What works: a recipient with a real-style name and a 10-digit account number saves; “abc” or a 5-digit number is refused; the same recipient can’t be saved twice; another customer can’t see, search or delete it; delete works, and deleting again gives 404. The test recipients were deleted afterwards.</dd>
@@ -2046,6 +2136,7 @@ Answer: 400 in 13358 ms
           <h3>Some endpoints refuse with the wrong error code</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
+        
         <p class="impact">The request is refused, but with “bad request” (400) instead of “not signed in” (401) or “not allowed” (403), so apps can’t tell the customer to sign in again.</p>
         <dl>
           <dt>What we saw</dt><dd>2 endpoints: GET /api/v3/users/attestation; GET /api/v3/users/pep-declaration.</dd>
@@ -2308,6 +2399,46 @@ Answer: 400 in 13358 ms
       if (e.key !== '/' || /^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
       var box = document.querySelector('section[role="tabpanel"]:not([hidden]) .search input');
       if (box) { e.preventDefault(); box.focus(); }
+    });
+
+    // Copy a problem's error details. The Clipboard API needs a secure page (https); elsewhere
+    // (e.g. the internal report opened from disk) fall back to a hidden textarea and execCommand.
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+      return new Promise(function (resolve, reject) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        if (ok) resolve(); else reject(new Error('copy refused'));
+      });
+    }
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('.copy-btn');
+      if (!btn) return;
+      var pre = btn.parentNode.querySelector('pre.snippet');
+      var label = btn.querySelector('.copy-label');
+      var card = btn.closest('article.finding');
+      var title = card && card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : '';
+      var text = (title ? title + '\n\n' : '') + pre.textContent;
+      function done(ok) {
+        btn.classList.remove('copied', 'failed');
+        btn.classList.add(ok ? 'copied' : 'failed');
+        label.textContent = ok ? 'Copied' : 'Copy failed';
+        clearTimeout(btn._t);
+        btn._t = setTimeout(function () { btn.classList.remove('copied', 'failed'); label.textContent = 'Copy'; }, 2000);
+      }
+      copyText(text).then(function () { done(true); }, function () {
+        // Last resort: select the text so Ctrl+C / long-press copy works.
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        done(false);
+      });
     });
 
     // Back to top: appears once the page has scrolled a screen or so.

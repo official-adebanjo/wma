@@ -62,6 +62,7 @@ const FINDINGS = [
     title: 'Loans on the same setting are repaid using different interest calculations',
     severity: 'High',
     owner: 'Engineering (loan calculation) and Product',
+    status: 'Fix expected: the team expects the new loan integration to resolve this (23 November). It stays open until a re-run after that integration is live shows every loan following the same rule.',
     impact: 'Customers on the same loan product are charged interest in different ways, and older loans may be charged the wrong amount. This affects money and must be confirmed before loans go live.',
     saw: 'Both loans are Personal loans at 8.5% set to “Monthly equal”. The newer loan #188 (₦500,000 over 9 months) collects ₦98,056 a month — the specification’s amount at 8.5% a month (₦98,055.56), rounded up to the whole naira. The older loan #169 (₦5,000,000 over 24 months) still collects ₦226,041.66 a month, which is what you get if 8.5% were the interest for the whole 24 months.',
     expected: 'Every loan should follow the same rule from the loan specification. For loan #169 that is ₦633,333.33 a month if 8.5% is a monthly rate, or ₦243,750.00 if it is a yearly rate (loan #188: ₦98,055.56 or ₦59,097.23). Rounding up to the whole naira also means loan #188 would collect ₦4 more than the schedule over 9 months unless the last payment is adjusted.',
@@ -132,16 +133,15 @@ const QUESTIONS = [
 ];
 
 /** Problems found by hand in the admin portal (no automated check covers them yet). */
+/**
+ * Test-only shortcuts the team has confirmed are deliberate on dev. Not problems here, but each must be
+ * gone before production; listed on the Admin tab's notes so the removal is not forgotten.
+ */
+const ADMIN_PRE_PROD = [
+  ['“Mark as paid” on loans (PATCH /api/v3/loan-applications/{id}/mark-as-paid)', 'A temporary workaround to make testing easier; the team will remove it before production (confirmed 23 November). On dev it closes any loan as “REPAID”, including one that was never paid out: loan #95 (approved, never disbursed) was closed this way on 23 November. Before go-live, check the endpoint and any portal button for it are gone, and that approved-but-unpaid loans have a proper cancel action instead.'],
+];
+
 const ADMIN_EXTRA_FINDINGS = [
-  {
-    title: '“Mark as paid” closes a loan that was never paid out',
-    severity: 'High',
-    owner: 'Engineering (loans back end) and Finance',
-    impact: 'A loan can be recorded as repaid although no money was lent or repaid, which corrupts the loan book and the customer’s history.',
-    saw: '23 November, while closing loans on retired products: loan #95 (Personal-loan-v2, approved but never disbursed) could not be declined (“Loan can no longer be declined”) or force closed (“Only active loans can be force closed”), but PATCH /api/v3/loan-applications/95/mark-as-paid succeeded and it is now “REPAID”.',
-    expected: 'Only allow “mark as paid” on a disbursed loan; give approved-but-unpaid loans a proper cancel action.',
-    area: 'Loan Management (checked by hand)',
-  },
   {
     title: 'Nano and Payday interest is not worked out by the number of days',
     severity: 'High',
@@ -214,7 +214,7 @@ const ADMIN_JOURNEYS = {
 const ADMIN_CHANGES = {
   since: '30 October',
   items: [
-    ['23 November: new products set up, and one product kept per type', 'Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M, ₦5M–20M and ₦20M+, upfront or at-maturity interest), with rate cards for the 24-month REAP and 180–365-day RTN tenors. Tier access set as asked: REAP for Tiers 1–3, RWIN and RTN for Tiers 2–3 (both now also require Tier 2). Then only one product per type was kept: the old RWIN, REAP and RTN and two drafts holding plans are “Retiring” (closed to new plans; existing plans run to maturity), the other drafts and the “-v2” loan products are retired, and 11 open loans on retired loan products were closed (10 marked as paid or declined, and #95 — see “Problems found”). The Adebanjo loans were checked against the loan specification: Nano and Payday set to 9% per 30-day term (0.30% a day), Payday capped at ₦500,000 and removed from Tier 1 (specification: Tier 2); Personal (up to ₦30M, 3–24 months) and Public Sector (terms per employer) already matched. Retiring the loan products answered with “504 Gateway Time-out” and the dev API then stopped answering for about 20 minutes (the changes had been saved); the dev API was also down at other times today.'],
+    ['23 November: new products set up, and one product kept per type', 'Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M, ₦5M–20M and ₦20M+, upfront or at-maturity interest), with rate cards for the 24-month REAP and 180–365-day RTN tenors. Tier access set as asked: REAP for Tiers 1–3, RWIN and RTN for Tiers 2–3 (both now also require Tier 2). Then only one product per type was kept: the old RWIN, REAP and RTN and two drafts holding plans are “Retiring” (closed to new plans; existing plans run to maturity), the other drafts and the “-v2” loan products are retired, and 11 open loans on retired loan products were closed (10 marked as paid or declined, and #95, never paid out, marked as paid with the test-only shortcut — see “Remove before production”). The Adebanjo loans were checked against the loan specification: Nano and Payday set to 9% per 30-day term (0.30% a day), Payday capped at ₦500,000 and removed from Tier 1 (specification: Tier 2); Personal (up to ₦30M, 3–24 months) and Public Sector (terms per employer) already matched. Retiring the loan products answered with “504 Gateway Time-out” and the dev API then stopped answering for about 20 minutes (the changes had been saved); the dev API was also down at other times today.'],
     ['19 November: “not run” checks looked at again', 'Every switched-off page was opened in the new portal version. Three are back and their checks now run and pass: Discovery banners (the “Open” button is now “Edit”; the editor offers Save as draft or Send for approval, and “Preview on device” is gone), the Transaction Monitor under Transactions & Ledger (rebuilt: a date range, page size and Refresh, with date, transaction ID, type, category, description, amount and balance after; the old Type, Category, Status, Channel and Provider filters, search box, Export CSV and clickable customer names are gone), and the Account Controls link under Customer Management. Still switched off: the investment request pages, Payroll reconciliation, the Wallet Management live board, the ledger tabs (Reversals & Adjustments, Cashback Ledger, Billers), Support & Tickets, Rewards rules, Dashboards and the five settings pages; Review Queues, Auto Grants and Screening are still gone. Only these checks were re-run; the full admin re-run waits for the go-ahead after the deployment.'],
     ['16 November: not re-run', 'The portal itself has not changed since 9 November. From about 14:00 the dev API stopped answering requests from the test office’s network (connections open, but no reply comes; outside locations got normal answers). A re-run at 14:38 was blocked again after about 7 minutes. The results below are therefore still those of 10 November; the team has been asked to allow the test network.'],
     ['Re-run on 10 November', 'No new portal version since 9 November afternoon. Same results: the same 4 problems, nothing newly broken or fixed.'],
@@ -346,6 +346,7 @@ const MOBILE_FINDINGS = [
     title: 'The loan offer asks the customer to repay ₦865,000 on a ₦100,000 loan',
     severity: 'High',
     owner: 'Engineering (loans and mobile app)',
+    status: 'Fix expected: the team believes recent updates fixed this (23 November). Not yet confirmed: no Personal loan offer has been seen since 2 November (a Public Sector offer, #194, showed the right figures on 4 November), and the automated check only runs while an offer is waiting to be accepted. To confirm: approve a small Personal loan in the admin portal and compare the offer screen with the application.',
     impact: 'Customers are asked to accept terms that are wildly wrong.',
     saw: 'The offer screen’s repayment amount does not match either loan interest rule (see the technical report for the figures).',
     expected: 'The offer should show the same terms as the application and the admin portal.',
@@ -382,6 +383,7 @@ const MOBILE_FINDINGS = [
     title: '“Log out” does nothing',
     severity: 'Medium',
     owner: 'Engineering (mobile app)',
+    status: 'The team believes this is solved (23 November), but the automated check on the 23 November build (code 97, run 10:27 WAT) still found the customer signed in after tapping “Log out”. It needs a check by hand on that build; if Log out works by hand, the automated check is at fault and will be fixed instead.',
     impact: 'Customers cannot sign out — a risk on shared or lost phones.',
     saw: 'Tapping “Log out” in Settings has no effect. The customer stays signed in until the app times out.',
     expected: 'Log out should end the session and return to the sign-in screen.',
@@ -594,6 +596,7 @@ const MOBILE_EXTRA_FINDINGS = [
     title: 'The loan offer asks the customer to repay ₦865,000 on a ₦100,000 loan',
     severity: 'High',
     owner: 'Engineering (loans and mobile app)',
+    status: 'Fix expected: the team believes recent updates fixed this (23 November). Not yet confirmed: no Personal loan offer has been seen since 2 November (a Public Sector offer, #194, showed the right figures on 4 November), and the automated check only runs while an offer is waiting to be accepted. To confirm: approve a small Personal loan in the admin portal and compare the offer screen with the application.',
     impact: 'Customers are asked to accept terms that are wildly wrong. Most would decline; anyone who accepts is agreeing to repay more than eight times what they borrowed.',
     saw: 'Loan #189 (₦100,000 over 3 months at 8.5% a month, approved in the admin portal) showed “Interest Fee (8.5%) ₦765,000.00 · Repayment Amount ₦865,000.00 · Repayment Date 31 January 2027” on the offer screen — 8.5% charged per day for 90 days, in one payment. When applying, the same loan showed ₦125,500 over three monthly payments, and after acceptance the loan screen shows ₦125,500 outstanding.',
     expected: 'The offer should show the same terms as the application and the admin portal: ₦125,500 in three monthly payments of about ₦41,833 (“Monthly equal”), the first on 2 December 2026.',
@@ -799,7 +802,7 @@ function readAdmin() {
     runText: `Automated check run on ${fmt(new Date(results.stats.startTime))} (WAT) · took about ${Math.round(results.stats.duration / 60000)} minutes`,
     intro: 'An automated tester used the admin portal the way a staff member would — opening pages, filling in forms and checking the results against the product documents.',
     tests, findings, areas: AREAS, mismatches: MISMATCHES, questions: QUESTIONS, changes: ADMIN_CHANGES,
-    extraCount: ADMIN_EXTRA_FINDINGS.length, extraNote: 'found by hand', journeys: ADMIN_JOURNEYS,
+    extraCount: ADMIN_EXTRA_FINDINGS.length, extraNote: 'found by hand', journeys: ADMIN_JOURNEYS, preProd: ADMIN_PRE_PROD,
     notRunReason: (t) => (SKIP_REASONS.find(([re]) => re.test(t.rawTitle + ' ' + t.skipReason)) || [null, 'Not run: ' + (t.skipReason || 'see technical report')])[1],
     techInternal: '<p class="muted">The full technical report has every step of every check, with screenshots, recordings and timings.</p>\n    <a class="tech" href="report.html">Open the technical report →</a>',
     techPublic: '<p class="muted">Screenshots and the full technical report (every step, with recordings and timings) are kept internally because they contain customer details and system access data. Ask the QA team for access.</p>',
@@ -878,6 +881,9 @@ function publicSnippet(s) {
   }).join('\n');
 }
 
+/** Two overlapping sheets; inherits the text colour. */
+const COPY_ICON = '<svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
 /** "View": what the check saw when it failed. Screenshots and videos stay on the internal page. */
 function evidence(f, i, pub) {
   const snippet = pub ? (f.sawPublic ? '' : f.snippet && publicSnippet(f.snippet)) : f.snippet;
@@ -888,7 +894,10 @@ function evidence(f, i, pub) {
   }
   const what = [snippet && 'error details', shot && 'screenshot', video && 'video'].filter(Boolean).join(', ');
   return `<details class="evidence"><summary>View <span class="muted">(${what})</span></summary>
-          ${snippet ? `<pre class="snippet">${esc(snippet)}</pre>` : ''}
+          ${snippet ? `<div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem ${i + 1}" title="Copy error details">${COPY_ICON}<span class="copy-label">Copy</span></button>
+            <pre class="snippet">${esc(snippet)}</pre>
+          </div>` : ''}
           ${shot ? `<a href="${f.shot}" target="_blank" rel="noopener"><img src="${f.shot}" alt="Screenshot taken when problem ${i + 1} was found" loading="lazy"></a>` : ''}
           ${video ? `<video controls preload="none" src="${f.video}" aria-label="Recording of the check for problem ${i + 1}"></video>` : ''}
         </details>`;
@@ -943,6 +952,7 @@ function panel(d, pub) {
           <h3>${esc(f.title)}</h3>
           <p class="muted small">Who should look at this: ${esc(f.owner)}</p>
         </header>
+        ${f.status ? `<p class="status-note"><strong>Status:</strong> ${esc(f.status)}</p>` : ''}
         <p class="impact">${esc(f.impact)}</p>
         <dl>
           <dt>What we saw</dt><dd>${esc(pub && f.sawPublic ? f.sawPublic : f.saw)}</dd>
@@ -1026,7 +1036,12 @@ function panel(d, pub) {
     </div>
     </div>` : '',
     endpoints: d.reference ? `<div class="sec">${d.reference(pub)}</div>` : '',
-    notes: `
+    notes: `${d.preProd && d.preProd.length ? `
+    <div class="sec">
+    <h2>Remove before production</h2>
+    <p class="muted">Test-only shortcuts the team confirmed are deliberate on the dev system. They are not counted as problems here, but each must be gone before go-live.</p>
+    <ul class="clean">${d.preProd.map(([t, x]) => `<li><strong>${esc(t)}.</strong> ${esc(x)}</li>`).join('')}</ul>
+    </div>` : ''}
     <div class="sec">
     <h2>${esc(d.mismatchesHeading || 'Differences from the documents (not failures)')}</h2>
     <p class="muted">${esc(d.mismatchesIntro || 'These work, but don’t match what the specifications say. Product should confirm which is correct.')}</p>
@@ -1455,7 +1470,7 @@ function readApi() {
     title: 'NIN verification refuses the NIN owner’s own account',
     severity: 'High',
     impact: 'Customers cannot complete NIN verification, so they cannot reach the tiers that need it.',
-    saw: '23 November: PATCH /api/v3/users/verify-nin now reaches the identity provider (earlier attempts on 9 and 16 November ended in a server error or a 504; today the first call still waited 60 s and ended in 504). With a NIN that belongs to someone else it answers “First name does not match NIN details” (correct). With the NIN of the test account’s own holder, given by the tester, it gives the same answer in under a second. The account’s names are stored in capitals with no extra spaces, so the comparison may be case-sensitive or use a different name order than the NIN record.',
+    saw: '23 November: PATCH /api/v3/users/verify-nin now reaches the identity provider (earlier attempts on 9 and 16 November ended in a server error or a 504; today the first call still waited 60 s and ended in 504). With a NIN that belongs to someone else it answers “First name does not match NIN details” (correct). With the NIN of the test account’s own holder, given by the tester, it gives the same answer in under a second. The account’s names are stored in capitals with no extra spaces, so the comparison may be case-sensitive or use a different name order than the NIN record. Retried later on 23 November after the team asked: same answer (400 in 0.9 s), and the account is still not NIN-verified — not fixed.',
     expected: 'Match names ignoring case, extra spaces and order (first, middle and last), and tell the customer which name did not match.',
   });
 
@@ -1704,6 +1719,8 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .finding h3 { font-size: 1.1rem; margin-top: 10px; }
   .chip { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; background: var(--idle-bg); color: var(--muted); }
   .finding .impact { font-weight: 600; }
+  .status-note { margin: 10px 0 8px; padding: 8px 12px; border-radius: 10px; background: var(--info-bg); color: var(--text); font-size: .93rem; }
+  .status-note strong { color: var(--info); }
   .finding.filtered-out { display: none; }
 
   /* Priority filter */
@@ -1736,6 +1753,14 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   dl { margin: 10px 0 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
   details { margin-top: 8px; } summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 0; min-height: 44px; }
   pre.snippet { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: .85rem; line-height: 1.45; max-height: 420px; overflow: auto; margin: 6px 0 0; }
+  .snippet-wrap { position: relative; }
+  .js .snippet-wrap pre.snippet { padding-top: 44px; }
+  .copy-btn { display: none; position: absolute; top: 6px; right: 6px; z-index: 1; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--muted); font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
+  .js .copy-btn { display: inline-flex; }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .copy-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .copy-btn.copied { color: var(--good); border-color: var(--good); background: var(--good-bg); }
+  .copy-btn.failed { color: var(--bad); border-color: var(--bad); background: var(--bad-bg); }
   details.evidence video { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; background: #000; }
   details img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
   ul.clean { padding-left: 20px; } ul.clean li { margin: 10px 0; }
@@ -2081,6 +2106,46 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
       if (e.key !== '/' || /^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
       var box = document.querySelector('section[role="tabpanel"]:not([hidden]) .search input');
       if (box) { e.preventDefault(); box.focus(); }
+    });
+
+    // Copy a problem's error details. The Clipboard API needs a secure page (https); elsewhere
+    // (e.g. the internal report opened from disk) fall back to a hidden textarea and execCommand.
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+      return new Promise(function (resolve, reject) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        if (ok) resolve(); else reject(new Error('copy refused'));
+      });
+    }
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('.copy-btn');
+      if (!btn) return;
+      var pre = btn.parentNode.querySelector('pre.snippet');
+      var label = btn.querySelector('.copy-label');
+      var card = btn.closest('article.finding');
+      var title = card && card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : '';
+      var text = (title ? title + '\\n\\n' : '') + pre.textContent;
+      function done(ok) {
+        btn.classList.remove('copied', 'failed');
+        btn.classList.add(ok ? 'copied' : 'failed');
+        label.textContent = ok ? 'Copied' : 'Copy failed';
+        clearTimeout(btn._t);
+        btn._t = setTimeout(function () { btn.classList.remove('copied', 'failed'); label.textContent = 'Copy'; }, 2000);
+      }
+      copyText(text).then(function () { done(true); }, function () {
+        // Last resort: select the text so Ctrl+C / long-press copy works.
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        done(false);
+      });
     });
 
     // Back to top: appears once the page has scrolled a screen or so.
