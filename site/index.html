@@ -386,7 +386,7 @@
     <button class="tab" role="tab" id="tab-dashboard" aria-controls="panel-dashboard" aria-selected="true" tabindex="0"><span aria-hidden="true">📊</span> Overview <span class="pill bad">16 urgent</span></button>
     <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">10 problems</span></button>
     <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">33 problems</span></button>
-    <button class="tab" role="tab" id="tab-api" aria-controls="panel-api" aria-selected="false" tabindex="-1"><span aria-hidden="true">🔌</span> API <span class="pill bad">8 problems</span></button>
+    <button class="tab" role="tab" id="tab-api" aria-controls="panel-api" aria-selected="false" tabindex="-1"><span aria-hidden="true">🔌</span> API <span class="pill bad">9 problems</span></button>
   </div>
 
   <section role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard" tabindex="0">
@@ -396,21 +396,21 @@
     <p class="muted">Everything the automated and hand checks found across the admin portal, the mobile app and the API, and what has changed recently. Select any number to see the detail behind it.</p>
 
     <section class="card verdict bad">
-      <h3>Not ready for release — 51 open problems</h3>
-      <p>2 Critical (a core journey is blocked) · 14 High (money, security or compliance) · 30 Medium · 5 Low</p>
+      <h3>Not ready for release — 52 open problems</h3>
+      <p>2 Critical (a core journey is blocked) · 14 High (money, security or compliance) · 31 Medium · 5 Low</p>
     </section>
 
-    <div class="kpis"><div class="kpi "><div class="kpi-l">Checks in total</div><div class="kpi-v">328</div><div class="muted small">3 areas: Admin portal, Mobile app, API</div></div><div class="kpi ok"><div class="kpi-l">Pass rate</div><div class="kpi-v">90%</div><div class="muted small">236 of 263 checks that ran worked</div></div><div class="kpi bad"><div class="kpi-l">Open problems</div><div class="kpi-v">51</div><div class="muted small">from 27 failing checks, plus problems found by hand</div></div><div class="kpi bad"><div class="kpi-l">Critical &amp; High</div><div class="kpi-v">16</div><div class="muted small">fix before release</div></div><div class="kpi "><div class="kpi-l">Not run</div><div class="kpi-v">65</div><div class="muted small">switched-off pages, missing test data or held on purpose</div></div></div>
+    <div class="kpis"><div class="kpi "><div class="kpi-l">Checks in total</div><div class="kpi-v">328</div><div class="muted small">3 areas: Admin portal, Mobile app, API</div></div><div class="kpi ok"><div class="kpi-l">Pass rate</div><div class="kpi-v">90%</div><div class="muted small">236 of 263 checks that ran worked</div></div><div class="kpi bad"><div class="kpi-l">Open problems</div><div class="kpi-v">52</div><div class="muted small">from 27 failing checks, plus problems found by hand</div></div><div class="kpi bad"><div class="kpi-l">Critical &amp; High</div><div class="kpi-v">16</div><div class="muted small">fix before release</div></div><div class="kpi "><div class="kpi-l">Not run</div><div class="kpi-v">65</div><div class="muted small">switched-off pages, missing test data or held on purpose</div></div></div>
 
     <div class="dash-grid">
       <section class="dash-col">
         <h2>Open problems by priority</h2>
-        <div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><span class="sev-tile s-high zero"><span class="sev-tile-n">14</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></span><span class="sev-tile s-medium zero"><span class="sev-tile-n">30</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></span><span class="sev-tile s-low zero"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
+        <div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><span class="sev-tile s-high zero"><span class="sev-tile-n">14</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></span><span class="sev-tile s-medium zero"><span class="sev-tile-n">31</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></span><span class="sev-tile s-low zero"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
         <p class="muted small">By area — select a number to open those problems.</p>
         <div class="table-wrap scroll"><table class="matrix">
       <thead><tr><th>Area</th><th class="num"><span class="th-sev"><i class="sev-dot s-critical" aria-hidden="true"></i>Critical</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-high" aria-hidden="true"></i>High</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-medium" aria-hidden="true"></i>Medium</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-low" aria-hidden="true"></i>Low</span></th><th class="num">Total</th></tr></thead>
-      <tbody><tr><th scope="row"><a href="#admin">Admin portal</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#admin/problems/high" aria-label="4 High in Admin portal">4</a></td><td class="num"><a class="mcell s-medium" href="#admin/problems/medium" aria-label="6 Medium in Admin portal">6</a></td><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a href="#admin/problems"><strong>10</strong></a></td></tr><tr><th scope="row"><a href="#mobile">Mobile app</a></th><td class="num"><a class="mcell s-critical" href="#mobile/problems/critical" aria-label="2 Critical in Mobile app">2</a></td><td class="num"><a class="mcell s-high" href="#mobile/problems/high" aria-label="8 High in Mobile app">8</a></td><td class="num"><a class="mcell s-medium" href="#mobile/problems/medium" aria-label="20 Medium in Mobile app">20</a></td><td class="num"><a class="mcell s-low" href="#mobile/problems/low" aria-label="3 Low in Mobile app">3</a></td><td class="num"><a href="#mobile/problems"><strong>33</strong></a></td></tr><tr><th scope="row"><a href="#api">API</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#api/problems/high" aria-label="2 High in API">2</a></td><td class="num"><a class="mcell s-medium" href="#api/problems/medium" aria-label="4 Medium in API">4</a></td><td class="num"><a class="mcell s-low" href="#api/problems/low" aria-label="2 Low in API">2</a></td><td class="num"><a href="#api/problems"><strong>8</strong></a></td></tr></tbody>
-      <tfoot><tr><th scope="row">All areas</th><td class="num"><strong>2</strong></td><td class="num"><strong>14</strong></td><td class="num"><strong>30</strong></td><td class="num"><strong>5</strong></td><td class="num"><strong>51</strong></td></tr></tfoot>
+      <tbody><tr><th scope="row"><a href="#admin">Admin portal</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#admin/problems/high" aria-label="4 High in Admin portal">4</a></td><td class="num"><a class="mcell s-medium" href="#admin/problems/medium" aria-label="6 Medium in Admin portal">6</a></td><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a href="#admin/problems"><strong>10</strong></a></td></tr><tr><th scope="row"><a href="#mobile">Mobile app</a></th><td class="num"><a class="mcell s-critical" href="#mobile/problems/critical" aria-label="2 Critical in Mobile app">2</a></td><td class="num"><a class="mcell s-high" href="#mobile/problems/high" aria-label="8 High in Mobile app">8</a></td><td class="num"><a class="mcell s-medium" href="#mobile/problems/medium" aria-label="20 Medium in Mobile app">20</a></td><td class="num"><a class="mcell s-low" href="#mobile/problems/low" aria-label="3 Low in Mobile app">3</a></td><td class="num"><a href="#mobile/problems"><strong>33</strong></a></td></tr><tr><th scope="row"><a href="#api">API</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#api/problems/high" aria-label="2 High in API">2</a></td><td class="num"><a class="mcell s-medium" href="#api/problems/medium" aria-label="5 Medium in API">5</a></td><td class="num"><a class="mcell s-low" href="#api/problems/low" aria-label="2 Low in API">2</a></td><td class="num"><a href="#api/problems"><strong>9</strong></a></td></tr></tbody>
+      <tfoot><tr><th scope="row">All areas</th><td class="num"><strong>2</strong></td><td class="num"><strong>14</strong></td><td class="num"><strong>31</strong></td><td class="num"><strong>5</strong></td><td class="num"><strong>52</strong></td></tr></tfoot>
     </table></div>
       </section>
       <section class="dash-col">
@@ -491,7 +491,7 @@
         <p class="area-rate"><span class="big">91%</span> <span class="muted">of checks that ran worked</span></p>
         <div class="bar" role="img" aria-label="148 worked, 15 with a problem, 13 not run"><span class="p" style="flex-grow:148" title="148 worked (84%)"></span><span class="f" style="flex-grow:15" title="15 with a problem (9%)"></span><span class="s" style="flex-grow:13" title="13 not run (7%)"></span></div>
         <ul class="area-nums"><li><strong>148</strong> worked</li><li><strong>15</strong> failed</li><li><strong>13</strong> not run</li></ul>
-        <p class="area-sev"><span class="sev s-high">2 High</span> <span class="sev s-medium">4 Medium</span> <span class="sev s-low">2 Low</span></p>
+        <p class="area-sev"><span class="sev s-high">2 High</span> <span class="sev s-medium">5 Medium</span> <span class="sev s-low">2 Low</span></p>
         <p class="muted small">Last run 24 November 2026 at 10:05</p>
         <span class="go">Open API results <span aria-hidden="true">→</span></span>
       </a></div>
@@ -1813,7 +1813,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
     </div>
 
     <section class="card verdict warn">
-      <h3>Mostly working — 8 problems need attention</h3>
+      <h3>Mostly working — 9 problems need attention</h3>
       <p>2 of them are Critical or High priority and should be fixed before release.</p>
     </section>
 
@@ -1825,11 +1825,11 @@ Expected: &quot;QA Test Kin&quot;</pre>
     </div>
     <div class="bar" role="img" aria-label="148 worked, 15 with a problem, 13 not run"><span class="p" style="flex-grow:148" title="148 worked (84%)"></span><span class="f" style="flex-grow:15" title="15 with a problem (9%)"></span><span class="s" style="flex-grow:13" title="13 not run (7%)"></span></div>
     <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (91% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot dot-idle"></i>Not run</span></div>
-    <h3 class="kicker">Problems by priority</h3><div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><a class="sev-tile s-high" href="#api/problems/high" title="affects customers’ money, security or a compliance requirement"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></a><a class="sev-tile s-medium" href="#api/problems/medium" title="a feature is broken, wrong or misleading, but there is a way round it"><span class="sev-tile-n">4</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></a><a class="sev-tile s-low" href="#api/problems/low" title="minor or cosmetic; worth fixing when convenient"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></a></div>
+    <h3 class="kicker">Problems by priority</h3><div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><a class="sev-tile s-high" href="#api/problems/high" title="affects customers’ money, security or a compliance requirement"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></a><a class="sev-tile s-medium" href="#api/problems/medium" title="a feature is broken, wrong or misleading, but there is a way round it"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></a><a class="sev-tile s-low" href="#api/problems/low" title="minor or cosmetic; worth fixing when convenient"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></a></div>
 
     <div class="subtabs" role="tablist" aria-label="API results by kind">
       <button class="subtab" role="tab" id="sub-api-overview" aria-controls="subpanel-api-overview" aria-selected="true" tabindex="0" data-panel="api" data-sub="overview">Overview</button>
-      <button class="subtab t-bad" role="tab" id="sub-api-problems" aria-controls="subpanel-api-problems" aria-selected="false" tabindex="-1" data-panel="api" data-sub="problems">Problems <span class="count">8</span></button>
+      <button class="subtab t-bad" role="tab" id="sub-api-problems" aria-controls="subpanel-api-problems" aria-selected="false" tabindex="-1" data-panel="api" data-sub="problems">Problems <span class="count">9</span></button>
       <button class="subtab t-ok" role="tab" id="sub-api-passed" aria-controls="subpanel-api-passed" aria-selected="false" tabindex="-1" data-panel="api" data-sub="passed">Passed <span class="count">148</span></button>
       <button class="subtab t-idle" role="tab" id="sub-api-notrun" aria-controls="subpanel-api-notrun" aria-selected="false" tabindex="-1" data-panel="api" data-sub="notrun">Not run <span class="count">13</span></button>
       <button class="subtab" role="tab" id="sub-api-endpoints" aria-controls="subpanel-api-endpoints" aria-selected="false" tabindex="-1" data-panel="api" data-sub="endpoints">Endpoints</button>
@@ -1861,10 +1861,10 @@ Expected: &quot;QA Test Kin&quot;</pre>
     <p class="muted">These did not behave the way the product documents say they should. Most severe first.</p>
     <div class="sev-filter" role="group" aria-label="Show problems by priority" data-panel="api">
       <span class="sev-filter-label">Priority</span>
-      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">8</span></button>
+      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">9</span></button>
       <button type="button" class="fchip s-critical" data-sev="critical" aria-pressed="false" title="Critical: blocks a core journey for every customer (for example no one can sign up or invest)" disabled><i class="sev-dot" aria-hidden="true"></i>Critical <span class="count">0</span></button>
       <button type="button" class="fchip s-high" data-sev="high" aria-pressed="false" title="High: affects customers’ money, security or a compliance requirement"><i class="sev-dot" aria-hidden="true"></i>High <span class="count">2</span></button>
-      <button type="button" class="fchip s-medium" data-sev="medium" aria-pressed="false" title="Medium: a feature is broken, wrong or misleading, but there is a way round it"><i class="sev-dot" aria-hidden="true"></i>Medium <span class="count">4</span></button>
+      <button type="button" class="fchip s-medium" data-sev="medium" aria-pressed="false" title="Medium: a feature is broken, wrong or misleading, but there is a way round it"><i class="sev-dot" aria-hidden="true"></i>Medium <span class="count">5</span></button>
       <button type="button" class="fchip s-low" data-sev="low" aria-pressed="false" title="Low: minor or cosmetic; worth fixing when convenient"><i class="sev-dot" aria-hidden="true"></i>Low <span class="count">2</span></button>
     </div>
     <p class="muted small sev-filter-status" aria-live="polite"></p>
@@ -1876,7 +1876,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
           <h3>Every loan gets the same credit score, 569</h3>
           <p class="muted small">Who should look at this: Engineering (backend, loan decisioning)</p>
         </header>
-        
+        <p class="status-note"><strong>Status:</strong> Fix expected: the team believes these loans predate the Mono account linking and credit-scoring integration, and that a loan applied for once it is in use will get its own score (24 November). It stays open until a retest shows that. Note: loan #219, applied for on 24 November, also has 569, and no customer has yet given BVN consent for a credit check, so the retest needs a loan whose customer has linked a bank account through Mono and agreed to the credit check.</p>
         <p class="impact">Automated underwriting can’t tell a good borrower from a bad one if the score never changes; it looks like a fixed placeholder.</p>
         <dl>
           <dt>What we saw</dt><dd>24 November: GET /api/v3/loan-applications (staff) — all of the latest 40 loans, from 15 different customers, products and dates (11 to 24 November), have creditScore 569. No credit bureau report has been pulled for any of them (see the next problem), so the score can’t come from the bureaus.</dd>
@@ -1901,18 +1901,41 @@ Expected: &quot;QA Test Kin&quot;</pre>
       <article class="card finding s-medium" data-sev="medium">
         <header>
           <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">API</span><span class="finding-no muted">#3</span></div>
+          <h3>Wema bill payments fail at the provider</h3>
+          <p class="muted small">Who should look at this: Integration (Wema, third party)</p>
+        </header>
+        <p class="status-note"><strong>Status:</strong> The team confirmed on 24 November that this is a third-party (Wema) integration problem, not a fault in Rosabon’s code. It stays open until a re-run shows the bill list answering.</p>
+        <p class="impact">Customers can’t see or pay bills in the app until the provider side works.</p>
+        <dl>
+          <dt>What we saw</dt><dd>GET /api/v3/wema/bills → 500 (failing since it was added on 16 November).</dd>
+          <dt>What should happen</dt><dd>The bill list should answer successfully once the Wema integration works; meanwhile the app should show a clear “bills unavailable” message rather than an error.</dd>
+        </dl>
+        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
+          <div class="snippet-wrap">
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 3" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <pre class="snippet">Request: GET /api/v3/wema/bills (signed in as the customer)
+Answer: 500 in 1941 ms
+(no JSON body)</pre>
+          </div>
+          
+          
+        </details>
+      </article>
+      <article class="card finding s-medium" data-sev="medium">
+        <header>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">API</span><span class="finding-no muted">#4</span></div>
           <h3>Some endpoints fail instead of answering</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
         
         <p class="impact">The app or portal screens that use these endpoints will show errors or empty data.</p>
         <dl>
-          <dt>What we saw</dt><dd>GET /api/v3/users/pending-address-verification → 500; GET /api/v3/users/pep-declaration → 404: “PEP declaration not found for this user”; GET /api/v3/users/residential-address → 404: “Residential address not found for this user”; GET /api/v3/wema/bills → 500; GET /api/v3/investment-products/{slug}/rate → 400: “Either tenorDays or tenorMonths is required”; GET /api/v3/loan-applications/{id}/requested-documents → 400: “You are not the owner of this loan”; GET /api/v3/wema/{accountNumber}/balance → 400: “{&quot;code&quot;:&quot;400&quot;,&quot;message&quot;:&quot;Vendor not found&quot;,&quot;PaymentReference&quot;:null,&quot;SessionId&quot;:null}”.</dd>
+          <dt>What we saw</dt><dd>GET /api/v3/users/pending-address-verification → 500; GET /api/v3/users/pep-declaration → 404: “PEP declaration not found for this user”; GET /api/v3/users/residential-address → 404: “Residential address not found for this user”; GET /api/v3/investment-products/{slug}/rate → 400: “Either tenorDays or tenorMonths is required”; GET /api/v3/loan-applications/{id}/requested-documents → 400: “You are not the owner of this loan”; GET /api/v3/wema/{accountNumber}/balance → 400: “{&quot;code&quot;:&quot;400&quot;,&quot;message&quot;:&quot;Vendor not found&quot;,&quot;PaymentReference&quot;:null,&quot;SessionId&quot;:null}”.</dd>
           <dt>What should happen</dt><dd>A correct request should get a successful answer (2xx).</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 3" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 4" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
             <pre class="snippet">Request: GET /api/v3/users/pending-address-verification (signed in as the customer)
 Answer: 500 in 265 ms
 (no JSON body)
@@ -1939,12 +1962,6 @@ Answer: 404 in 1593 ms
 
 ────────
 
-Request: GET /api/v3/wema/bills (signed in as the customer)
-Answer: 500 in 1941 ms
-(no JSON body)
-
-────────
-
 Request: GET /api/v3/investment-products/{slug}/rate (signed in as the customer)
 Answer: 400 in 651 ms
 {
@@ -1961,6 +1978,16 @@ Answer: 400 in 277 ms
  &quot;status&quot;: 400,
  &quot;message&quot;: &quot;You are not the owner of this loan&quot;,
  &quot;data&quot;: null
+}
+
+────────
+
+Request: GET /api/v3/wema/{accountNumber}/balance (signed in as the customer)
+Answer: 400 in 1429 ms
+{
+ &quot;status&quot;: 400,
+ &quot;message&quot;: &quot;{\&quot;code\&quot;:\&quot;400\&quot;,\&quot;message\&quot;:\&quot;Vendor not found\&quot;,\&quot;PaymentReference\&quot;:null,\&quot;SessionId\&quot;:null}&quot;,
+ &quot;data&quot;: null
 }</pre>
           </div>
           
@@ -1969,7 +1996,7 @@ Answer: 400 in 277 ms
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">API</span><span class="finding-no muted">#4</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">API</span><span class="finding-no muted">#5</span></div>
           <h3>Some answers don’t match their documented format</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
@@ -1981,7 +2008,7 @@ Answer: 400 in 277 ms
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 4" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 5" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
             <pre class="snippet">$: expected object, got array
 
 Request: GET /api/v3/country (signed in as the customer)
@@ -2143,7 +2170,7 @@ Answer: 200 in 677 ms
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">API</span><span class="finding-no muted">#5</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">API</span><span class="finding-no muted">#6</span></div>
           <h3>Saved beneficiaries accept a bank that doesn’t exist, and can’t be edited</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
@@ -2157,7 +2184,7 @@ Answer: 200 in 677 ms
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">API</span><span class="finding-no muted">#6</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">API</span><span class="finding-no muted">#7</span></div>
           <h3>Credit reports for a declined loan fail with a server error</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
@@ -2171,7 +2198,7 @@ Answer: 200 in 677 ms
       </article>
       <article class="card finding s-low" data-sev="low">
         <header>
-          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">API</span><span class="finding-no muted">#7</span></div>
+          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">API</span><span class="finding-no muted">#8</span></div>
           <h3>Some endpoints refuse with the wrong error code</h3>
           <p class="muted small">Who should look at this: Engineering (backend)</p>
         </header>
@@ -2185,7 +2212,7 @@ Answer: 200 in 677 ms
       </article>
       <article class="card finding s-low" data-sev="low">
         <header>
-          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">API</span><span class="finding-no muted">#8</span></div>
+          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">API</span><span class="finding-no muted">#9</span></div>
           <h3>Wallet history puts credits in the “debit” field</h3>
           <p class="muted small">Who should look at this: Engineering (backend, wallet)</p>
         </header>

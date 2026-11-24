@@ -1436,7 +1436,7 @@ function readApi() {
   // "View" evidence: the redacted request/answer each record kept for the check behind the card.
   const CHECKS_FOR = {
     'Data is available without signing in': ['noAuth'], 'A customer can read another customer’s records': ['otherCustomer'],
-    'A customer sign-in can read staff-only data': ['customerOnAdmin'], 'Some endpoints fail instead of answering': ['call'],
+    'A customer sign-in can read staff-only data': ['customerOnAdmin'], 'Some endpoints fail instead of answering': ['call'], 'Wema bill payments fail at the provider': ['call'],
     'Some answers don’t match their documented format': ['schema'], 'Some endpoints are slow': ['speed'],
     'Some endpoints refuse with the wrong error code': ['noAuth', 'customerOnAdmin'],
   };
@@ -1468,7 +1468,17 @@ function readApi() {
     sawPublic: `A customer sign-in got data from ${staff.length} staff-only endpoint${staff.length > 1 ? 's' : ''}. ${offPublic}`,
     expected: 'Staff-only areas should refuse customer sign-ins (403).',
   });
-  const broken = failing('call');
+  // Failures the team traced to a third-party provider, not Rosabon code (kept open, owned by the integration).
+  const THIRD_PARTY = { 'GET /api/v3/wema/bills': 'Wema bill payments' };
+  const broken = failing('call').filter((r) => !THIRD_PARTY[key(r)]);
+  const thirdParty = failing('call').filter((r) => THIRD_PARTY[key(r)]);
+  add(thirdParty, {
+    title: 'Wema bill payments fail at the provider', severity: 'Medium', owner: 'Integration (Wema, third party)',
+    impact: 'Customers can’t see or pay bills in the app until the provider side works.',
+    saw: named(thirdParty, (r) => ` → ${r.status === 0 ? 'no answer' : r.status}`) + ' (failing since it was added on 16 November).',
+    status: 'The team confirmed on 24 November that this is a third-party (Wema) integration problem, not a fault in Rosabon’s code. It stays open until a re-run shows the bill list answering.',
+    expected: 'The bill list should answer successfully once the Wema integration works; meanwhile the app should show a clear “bills unavailable” message rather than an error.',
+  });
   add(broken, {
     title: 'Some endpoints fail instead of answering', severity: 'Medium',
     impact: 'The app or portal screens that use these endpoints will show errors or empty data.',
@@ -1516,6 +1526,7 @@ function readApi() {
   findings.push({
     area: 'API', owner: 'Engineering (backend, loan decisioning)', severity: 'High',
     title: 'Every loan gets the same credit score, 569',
+    status: 'Fix expected: the team believes these loans predate the Mono account linking and credit-scoring integration, and that a loan applied for once it is in use will get its own score (24 November). It stays open until a retest shows that. Note: loan #219, applied for on 24 November, also has 569, and no customer has yet given BVN consent for a credit check, so the retest needs a loan whose customer has linked a bank account through Mono and agreed to the credit check.',
     impact: 'Automated underwriting can’t tell a good borrower from a bad one if the score never changes; it looks like a fixed placeholder.',
     saw: '24 November: GET /api/v3/loan-applications (staff) — all of the latest 40 loans, from 15 different customers, products and dates (11 to 24 November), have creditScore 569. No credit bureau report has been pulled for any of them (see the next problem), so the score can’t come from the bureaus.',
     expected: 'Work out the score per customer and application from the bureau and bank-statement data, as the decisioning ticket (423) describes, or leave it empty until it can be worked out.',
