@@ -143,6 +143,15 @@ const ADMIN_PRE_PROD = [
 
 const ADMIN_EXTRA_FINDINGS = [
   {
+    title: 'Wallet history in the portal doesn’t say whose wallet each line belongs to',
+    severity: 'Medium',
+    owner: 'Engineering (admin portal)',
+    impact: 'Staff can’t look up one customer’s wallet history, answer a customer query or follow a transfer between two customers, which is what the wallet-history ticket (748) is for.',
+    saw: '24 November, Transactions & Ledger → Transaction Monitor: it lists all 460 wallet movements of every customer, with date, transaction ID, type, category, description, amount and balance after — but no customer name or ID, and the only filter is a date range (no search by customer, transaction ID, type or category). Rows can’t be opened. A transfer shows as two lines (a debit and a “SIM…” credit) whose “balance after” belongs to two different wallets, with nothing to tell them apart. The back end can already return one customer’s history (GET /api/v3/wallet-histories/{userId}).',
+    expected: 'Show the customer on each line (linking to Customer 360), let staff filter by customer, transaction ID, type and category, and show a customer’s wallet history on their profile.',
+    area: 'Transactions & Ledger (checked by hand)',
+  },
+  {
     title: 'Nano and Payday interest is not worked out by the number of days',
     severity: 'High',
     owner: 'Engineering (loans calculation)',
@@ -214,6 +223,7 @@ const ADMIN_JOURNEYS = {
 const ADMIN_CHANGES = {
   since: '30 October',
   items: [
+    ['24 November: wallet history, discovery banners and the new Rewards Engine checked', 'Checked the tickets reported as done (747, 748, 752). Rewards & Incentives is back in the menu as a new “Rewards Engine” page: it lists referral rewards (stage, target plan, flat or percentage value) and the “New referral reward” form works — stages Registered, Wallet funded and Plan created; target plan offers only active products (the three Adebanjo plans); the value label switches between ₦ and %. Nothing was saved. The four existing rewards (July) all point to products retired on 23 November, so they show as “#2”, “#10” and “#3” instead of a name, and no reward is set up for the active products — a set-up choice for the team. Discovery banners work as on 19 November (one draft, one unpublished, none live). The Transaction Monitor now lists every customer’s wallet movements, but without the customer (see “Problems found”). Wallet Management is still “Coming soon”.'],
     ['23 November: new products set up, and one product kept per type', 'Created Adebanjo RWIN (90-day cycle, 14%, ₦50,000 to ₦100M, 30-day lock), Adebanjo REAP (3, 6, 12 and 24 months at 14%, 16.5%, 18% and 18%, from ₦10,000, target required) and Adebanjo RTN (30 to 365 days, from ₦1M, amount bands ₦1M–5M, ₦5M–20M and ₦20M+, upfront or at-maturity interest), with rate cards for the 24-month REAP and 180–365-day RTN tenors. Tier access set as asked: REAP for Tiers 1–3, RWIN and RTN for Tiers 2–3 (both now also require Tier 2). Then only one product per type was kept: the old RWIN, REAP and RTN and two drafts holding plans are “Retiring” (closed to new plans; existing plans run to maturity), the other drafts and the “-v2” loan products are retired, and 11 open loans on retired loan products were closed (10 marked as paid or declined, and #95, never paid out, marked as paid with the test-only shortcut — see “Remove before production”). The Adebanjo loans were checked against the loan specification: Nano and Payday set to 9% per 30-day term (0.30% a day), Payday capped at ₦500,000 and removed from Tier 1 (specification: Tier 2); Personal (up to ₦30M, 3–24 months) and Public Sector (terms per employer) already matched. Retiring the loan products answered with “504 Gateway Time-out” and the dev API then stopped answering for about 20 minutes (the changes had been saved); the dev API was also down at other times today.'],
     ['19 November: “not run” checks looked at again', 'Every switched-off page was opened in the new portal version. Three are back and their checks now run and pass: Discovery banners (the “Open” button is now “Edit”; the editor offers Save as draft or Send for approval, and “Preview on device” is gone), the Transaction Monitor under Transactions & Ledger (rebuilt: a date range, page size and Refresh, with date, transaction ID, type, category, description, amount and balance after; the old Type, Category, Status, Channel and Provider filters, search box, Export CSV and clickable customer names are gone), and the Account Controls link under Customer Management. Still switched off: the investment request pages, Payroll reconciliation, the Wallet Management live board, the ledger tabs (Reversals & Adjustments, Cashback Ledger, Billers), Support & Tickets, Rewards rules, Dashboards and the five settings pages; Review Queues, Auto Grants and Screening are still gone. Only these checks were re-run; the full admin re-run waits for the go-ahead after the deployment.'],
     ['16 November: not re-run', 'The portal itself has not changed since 9 November. From about 14:00 the dev API stopped answering requests from the test office’s network (connections open, but no reply comes; outside locations got normal answers). A re-run at 14:38 was blocked again after about 7 minutes. The results below are therefore still those of 10 November; the team has been asked to allow the test network.'],
@@ -420,6 +430,15 @@ const MOBILE_FINDINGS = [
 /** Problems seen during the mobile run that no automated check covers yet (from the app’s own error log). */
 const MOBILE_EXTRA_FINDINGS = [
   {
+    title: 'Send money shows a fee and stamp duty that are not charged, and the two screens disagree',
+    severity: 'Medium',
+    owner: 'Engineering (mobile app and wallet back end)',
+    impact: 'Customers are told different totals before and after a transfer, and neither matches what leaves the wallet; if the fees are meant to apply, Rosabon is not collecting them.',
+    saw: '24 November, Send → Wema Bank, ₦100 from the Tier 2 to the Tier 3 test account (ticket 742): the name lookup found the right account and the transfer arrived (status SUCCESSFUL in about 7 seconds). The “Confirm Transfer” screen showed a ₦10.00 transaction fee and “Total Debit ₦110.00”; the “Transfer Successful” receipt then also listed “Stamp Duty ₦50”, which the confirm screen had not shown. The wallet was debited ₦100 only (no fee or duty entries in the wallet history). Stamp duty of ₦50 normally applies only to transfers of ₦10,000 or more.',
+    expected: 'Show the same, correct charges on both screens (no stamp duty under ₦10,000), and debit exactly the total the customer confirmed, with each charge as its own wallet-history line.',
+    area: 'Wallet (tried by hand)',
+  },
+  {
     title: 'New investment plans cannot be paid for in the app',
     severity: 'High',
     owner: 'Engineering (mobile app)',
@@ -474,11 +493,11 @@ const MOBILE_EXTRA_FINDINGS = [
     area: 'Investing (tried by hand)',
   },
   {
-    title: 'Customers get no notification for investments or product retirement',
+    title: 'Customers get no notification for investments, wallet funding or product retirement',
     severity: 'High',
     owner: 'Engineering (back end notifications)',
-    impact: 'Customers are not told when a plan starts, is paid into, or when a product they hold is closed, although the specifications and the admin portal promise it.',
-    saw: '23 November: the Tier 2 account had three plans activated (₦1.05M taken from its wallet) and holds a plan on a product that was retired the same day; its inbox is empty, in the app and in the back end (GET /api/v3/notifications/inbox). The Tier 3 account had two plans activated and holds retired-product plans; its inbox only has older loan messages. The retire dialog says “Every holder is notified in the app, by push and by email”.',
+    impact: 'Customers are not told when a plan starts, is paid into, when money arrives in their wallet by bank transfer, or when a product they hold is closed, although the specifications and the admin portal promise it.',
+    saw: '23 November: the Tier 2 account had three plans activated (₦1.05M taken from its wallet) and holds a plan on a product that was retired the same day; its inbox is empty, in the app and in the back end (GET /api/v3/notifications/inbox). The Tier 3 account had two plans activated and holds retired-product plans; its inbox only has older loan messages. The retire dialog says “Every holder is notified in the app, by push and by email”. 24 November: a ₦1,000 bank transfer into the Tier 2 account’s Wema account number (test transfer) credited the wallet at once but sent no notification. Wallet-to-wallet transfers do notify both sides, with well-formatted text (“₦100.00 has been sent to …”, “You received ₦100.00 from …”).',
     expected: 'Send and store the notifications the specifications list (plan created, contribution, top-up, maturity, retirement), in the app and by push or email.',
     area: 'Notifications (checked by hand)',
   },
@@ -643,9 +662,10 @@ const MOBILE_EXTRA_FINDINGS = [
 
 /** Activities done by hand in the app on 2 November (30 October build), with the outcome. */
 const MOBILE_JOURNEYS = {
-  when: '2–23 November, 30 October, 3, 4, 9, 18 and 23 November builds',
+  when: '2–24 November, 30 October, 3, 4, 9, 18 and 23 November builds',
   intro: 'A tester used the app like a customer with the Tier 1 and Tier 3 test accounts (Tier 2 is on hold). Real records were created on the test system; test data was removed where possible. The main journeys are now automated checks (Investing, Borrowing, Profile and Account in the table above), so they re-run on every new build.',
   items: [
+    ['24 Nov (23 November build): wallet — account number, fund, balance and send (tickets 720, 739, 741–743)', 'bad', 'Account number: all three test accounts have a dedicated Wema account number, shown on Fund → Bank Transfer with a Copy button. Fund: a ₦1,000 test bank transfer into the Tier 2 account number credited the wallet at once; the balance and Recent Activity (“Wallet Funded +₦1,000.00”) updated correctly, but no notification was sent. Balance: the Home balance matched the back end after each step. Send: ₦100 to the Tier 3 account (Wema Bank) — bank search, name lookup, PIN and receipt work, the money arrived and both customers were notified; the fee and stamp duty shown are wrong and not charged (see “Problems found”). The bank picker suggests only four banks (Paycom, Keystone, Hayat Trust MFB, Polaris), but search finds the rest.'],
     ['23 Nov (23 November build): book Adebanjo REAP, RWIN and RTN as Tier 1, 2 and 3', 'bad', 'Tier 1: REAP goal booked (₦10,000 target, 3 months, 14%); RWIN and RTN correctly blocked (“This investment isn’t available on your current tier”). Tier 2: all three booked (REAP ₦10,000 target; RWIN ₦50,000 for 90 days at 14%; RTN ₦1,000,000 for 90 days at 25%). Tier 3: all three booked. None could be paid for in the app (see “Problems found”); paid through the API instead with the transaction PIN: Tier 2’s three plans and Tier 3’s REAP and RWIN went ACTIVE (Tier 2’s wallet went down by exactly ₦1,053,263.86). Tier 3’s RTN was refused for lack of funds (₦968k left) and Tier 1 has no PIN or money, so those two stay unpaid. Projections were right once RWIN was set as a lump-sum product (₦1,553.43 on ₦50,000 for 90 days at 14%, net of 10% WHT).'],
     ['23 Nov (23 November build): notifications after the bookings', 'bad', 'No notification for any booking, payment or product retirement; older loan messages show raw amounts and dates (see “Problems found”).'],
     ['18 Nov (18 November build): overdue loan with its penalty waived in admin', 'ok', 'Test account with an overdue Public Sector loan (₦3,000,000, 12 months, due 15 November) whose penalty was waived in admin. Back end: the loan’s penalty rate is 0 and it stays “Overdue” (correct — it is still unpaid). App: Borrow shows ₦3,780,000 outstanding, “Your Repayment is Overdue (3 days) ₦370,000”, and Pay Now opens a sheet asking for ₦370,000 — exactly the back end’s schedule with no penalty added. Nothing was paid. Two smaller problems: wrong figures for a moment after sign-in, and no mention of the waiver (see “Problems found”).'],
@@ -1326,6 +1346,8 @@ const API_DOC_NOTES = [
   ['Paging starts at 1', 'List endpoints take pageNo starting at 1 — pageNo=0 is rejected as “pageNo is required”. Leaving out the optional pageNo on GET /api/v3/loan-products fails with “Page index must not be less than zero”. The API document says neither.'],
 ];
 const API_QUESTIONS = [
+  'Where in the app does a customer re-enter their BVN and agree to a credit check (POST /api/v3/loan-products/credit-check)? On 24 November no loan had a bureau report because no customer had done this step.',
+  'Should Payday products have a debt-to-income limit? On 24 November their bank assessments say “Product has no DTI limit” and pass at any level.',
   'Where should NIN verification happen in the app? The ticket says during onboarding, but the app has no NIN step. (The API itself verifies a NIN correctly since 24 November.)',
   'Should the completed KYC steps (GET /api/v3/users/completed-user-tier) include NIN once it is verified? On 24 November it did not, and it listed email and phone as completed although the profile shows them as not verified.',
   'Which roles may call each staff-only area? The API document does not say, so these checks treat Investment Management, the Investment and Loan reports, the approval workflows, the audit log, account controls and portal admin users as staff-only.',
@@ -1336,6 +1358,7 @@ const apiAreaName = (tag) => (tag === 'lead-api-resource' ? 'Leads' : tag.replac
 
 /** What the latest backend update changed, written up after each re-run (shown above the live comparison). */
 const API_UPDATES = [
+  ['24 November: re-run, wallet (Wema) and loan decisioning checked', 'Re-run after a dev outage interrupted the first attempt: 149 checks passed, nothing new broken. Fixed: credit reports for a loan (GET /api/v3/loan-applications/{id}/credit-reports) no longer fail for the loan the check uses — but they still fail for a declined loan (see “Problems found”). New in the API document: a Freshdesk webhook (POST /api/v3/webhooks/freshdesk); it correctly refuses calls without its secret or with a wrong one (401). Wallet tickets (720, 739, 741–743): every test customer has a Wema account number; a test bank transfer (POST /api/v3/simulation/wallet-inflows) credits the wallet at once; a wallet-to-wallet send settles in about 7 seconds and both sides are notified; Wema account balance (GET /api/v3/wema/{accountNumber}/balance) still answers 400 “Vendor not found”. Loan decisioning tickets (422, 423, 424): the Mono endpoints (link a bank account, linked accounts, direct-debit mandate, bank-statement assessment for staff) answer correctly; there are no separate endpoints for underwriting or routing, so their effect was checked on the latest 40 loans — the same credit score everywhere and assessments that pass failed checks (see “Problems found”).'],
   ['24 November: NIN verification fixed', 'PATCH /api/v3/users/verify-nin now accepts the account holder’s own NIN: “Operation successful” (200) in about 1 second, and the profile then shows the NIN as verified. On 23 November the same account and NIN were refused with “First name does not match NIN details”. A NIN that belongs to someone else is still refused with that message, and a malformed NIN with “Your NIN is invalid” (both correct). One open question: the customer’s list of completed KYC steps (GET /api/v3/users/completed-user-tier) does not include NIN after verification, and it lists “Email Address” and “Phone Number” although the profile shows both as not verified.'],
   ['23 November: NIN, investment funding and loan calculator', 'NIN verification now reaches the identity provider, but refuses the owner’s own NIN (fixed 24 November). Investment funding works through the API (POST /api/v3/investments/{id}/funding) when the transaction PIN is sent; without it the answer is “Your transaction PIN is required”, and a customer who has no PIN gets “Set up a transaction PIN before funding an investment”. The loan calculator matches the specification’s worked examples for monthly loans (₦6M over 6 months at 2% a month: ₦6,720,000 flat, ₦6,420,000 reducing balance) but not for daily loans (see the admin problem about Nano and Payday). New in the API document: POST /api/v3/loan-calculations/overdue-loan. Re-run on 23 November (the 19 November results were lost when the test sign-in was refreshed): 26 endpoints added since 19 November — plan break requests (customer request; staff list, approve, decline), credit-bureau reports and credit checks for loans, customer upload of documents requested for a loan, sanctions and PEP screening (queue, clear, confirm, escalate, enhanced due diligence), and simulation endpoints for test transfers into a wallet. New problem: GET /api/v3/loan-applications/{id}/credit-reports fails with a server error (500); the new break-request answers send dates in a different format from the API document. Nothing reported earlier is fixed.'],
   ['19 November: “not run” checks looked at again', 'Four checks that used to be skipped now run, and all four work: LGAs for a state, KYC tier by name, one field classification, and the auto-rollover default preview. They were skipped because the check couldn’t find a value to call them with (the lists name it differently, or answered later in the run); the check now finds it. Still not run, because dev has no records to try them with: account-control requests, rollover, unlock and withdrawal requests, auto-rollover and statutory-rate propagations, a customer’s referral history by code (no referral code on the test customers), media details and media by URL, and Wema transaction status. “Generate user account number” stays out on purpose (a GET that creates data).'],
@@ -1488,6 +1511,36 @@ function readApi() {
   });
 
   // 'NIN verification refuses the NIN owner’s own account' (High, 23 Nov) — fixed 24 November, see API_UPDATES.
+
+  // Loan decisioning (tickets 422, 423, 424), checked by hand on 24 November against the last 40 loans.
+  findings.push({
+    area: 'API', owner: 'Engineering (backend, loan decisioning)', severity: 'High',
+    title: 'Every loan gets the same credit score, 569',
+    impact: 'Automated underwriting can’t tell a good borrower from a bad one if the score never changes; it looks like a fixed placeholder.',
+    saw: '24 November: GET /api/v3/loan-applications (staff) — all of the latest 40 loans, from 15 different customers, products and dates (11 to 24 November), have creditScore 569. No credit bureau report has been pulled for any of them (see the next problem), so the score can’t come from the bureaus.',
+    expected: 'Work out the score per customer and application from the bureau and bank-statement data, as the decisioning ticket (423) describes, or leave it empty until it can be worked out.',
+  });
+  findings.push({
+    area: 'API', owner: 'Engineering (backend, loan decisioning)', severity: 'High',
+    title: 'The bank-statement check passes loans whose creditworthiness check failed or never ran',
+    impact: 'Loans can be approved even though the Mono check failed, so the automated decision doesn’t protect Rosabon from risky lending.',
+    saw: '24 November, GET /api/v3/mono/admin/loan-applications/{id}/bank-assessment: loans #205 and #206 show creditworthinessStatus “FAILED” (“Mono: BVN does not match sandbox BVN”) but passed: true; loans #207, #217 and #219 show “SKIPPED_NO_BVN” and passed: true. canAfford is empty on every assessment. Payday loans have no debt-to-income limit (“Product has no DTI limit”), so #207 passed at 39% of income. Bureau reports: GET /api/v3/loan-applications/{id}/credit-reports says for every loan “The customer hasn’t re-entered their BVN and agreed to a credit check yet”, so no bureau check has run on any loan. On dev every bank assessment uses the same Mono test account and name, which is expected for the Mono sandbox.',
+    expected: 'Fail or hold for review a loan whose creditworthiness check failed or was skipped, fill canAfford, and require the bureau check (or a staff decision) before approval.',
+  });
+  findings.push({
+    area: 'API', owner: 'Engineering (backend)', severity: 'Medium',
+    title: 'Credit reports for a declined loan fail with a server error',
+    impact: 'Staff looking at a closed application get a crash page instead of the reports or a clear message.',
+    saw: '24 November: GET /api/v3/loan-applications/218/credit-reports (a declined Personal loan) answers 500 with the web server’s own error page, twice. The same call works for other loans, which is why the automatic check — that uses a different loan — now passes.',
+    expected: 'Return the reports, or a 4xx with a clear message if reports are not available for a closed loan.',
+  });
+  findings.push({
+    area: 'API', owner: 'Engineering (backend, wallet)', severity: 'Low',
+    title: 'Wallet history puts credits in the “debit” field',
+    impact: 'Anything that adds up credits and debits from the API (reports, exports, reconciliation) will get wrong totals.',
+    saw: '24 November, GET /api/v3/wallet-histories (customer): a ₦1,000 incoming bank transfer is returned as transactionType “CREDIT” with credit: null and debit: 1000; every entry, credit or debit, has its amount in “debit”. The app shows the direction correctly because it reads transactionType. The incoming transfer also has wemaInflow: false and no sender name (“Simulated inflow”), and on the receiving side of a wallet-to-wallet transfer the description names the receiver (“Transfer to Rosabon/<receiver>”) instead of the sender.',
+    expected: 'Put the amount in “credit” for credits, mark Wema inflows, and describe a received transfer with the sender’s name.',
+  });
 
   // ---- Documentation gaps (not failures)
   const docGaps = [...API_DOC_NOTES];
