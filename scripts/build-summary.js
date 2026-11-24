@@ -71,10 +71,10 @@ const FINDINGS = [
     match: /disbursed amount = amount − stated management fee/,
     title: '7.5% “Loan VAT” is taken from every loan payout without being shown on the loan',
     severity: 'High',
-    owner: 'Engineering (loans) and Finance',
+    owner: 'Engineering (loans)',
     impact: 'Customers receive less than they borrowed, and neither the loan record nor the offer explains why. It happens on every loan checked, including new ones.',
-    saw: 'All three loans show a management fee of ₦0, yet exactly 7.5% was kept back: #169 ₦5,000,000 → ₦4,625,000 paid out; #188 ₦500,000 → ₦462,500; #189 (paid out during this round) ₦100,000 → ₦92,500. The customer’s wallet history shows the full amount credited, then the 7.5% taken back as “Loan VAT”.',
-    expected: 'The amount paid out should equal the loan amount minus the charges shown on the loan. Finance should confirm whether VAT applies to the amount lent (it normally applies to fees); if it does, it should be shown on the offer and the loan record.',
+    saw: 'All three loans show a management fee of ₦0, yet exactly 7.5% was kept back: #169 ₦5,000,000 → ₦4,625,000 paid out; #188 ₦500,000 → ₦462,500; #189 (paid out during this round) ₦100,000 → ₦92,500. The customer’s wallet history shows the full amount credited, then the 7.5% taken back as “Loan VAT”. The VAT itself comes from the fee structure linked to each loan product (an admin setting — whether it should apply to the amount lent is listed under “Admin set-up to review”); the problem here is that it is not disclosed.',
+    expected: 'Every charge the fee structure applies should be shown on the offer and the loan record, and the amount paid out should equal the loan amount minus those shown charges.',
   },
   {
     match: /Audit log: portal actions are recorded/,
@@ -105,6 +105,8 @@ const FINDINGS = [
   },
   {
     match: /rates and fees are stored in percent/,
+    // Corridor values are entered in the admin portal: a set-up item, listed in CONFIG_REVIEW, not a problem.
+    setUp: true,
     title: 'Public Sector corridors still hold rates as fractions, though the portal now treats them as percent',
     severity: 'Medium',
     owner: 'Product and Engineering (loans)',
@@ -137,6 +139,32 @@ const QUESTIONS = [
  * Test-only shortcuts the team has confirmed are deliberate on dev. Not problems here, but each must be
  * gone before production; listed on the Admin tab's notes so the removal is not forgotten.
  */
+/**
+ * Admin set-up compared with the specifications (24 November). Settings are never counted as problems
+ * (anything an admin can change is a set-up choice); this list makes sure differences from the spec
+ * are seen. status: 'fixed' (changed in the admin to match the spec), 'decide' (the spec doesn't give
+ * the value, or changing it affects existing customers), 'cannot' (the admin has no setting for it).
+ */
+const CONFIG_REVIEW = {
+  when: '24 November',
+  items: [
+    { status: 'fixed', area: 'Loans', setting: 'Adebanjo Nano — loan lengths offered', spec: '1 to 30 days, chosen by the customer (worked examples: 3, 7, 14 and 30 days) — Loan product specification §2.1', was: '30 days only', now: '3, 7, 14 and 30 days' },
+    { status: 'cannot', area: 'Loans', setting: 'Adebanjo Payday — loan lengths offered', spec: '7 to 30 days (worked examples: 7, 15, 21 and 30 days) — Loan product specification §3.1', was: '30 days only', now: 'Can’t be set in the admin: the Payday form locks “Available tenors” to 30 days (“Fixed for this loan type”). Engineering to unlock it, or Product to confirm Payday stays at 30 days.' },
+    { status: 'fixed', area: 'Investments', setting: 'Adebanjo RWIN — rate table', spec: 'One fixed rate for the 90-day cycle — RWIN 2.0 specification', was: 'Rows for 180, 270 and 360 days, a 30% “small” rate and a 12.5% “standard” rate copied from the old RWIN, beside the 14% 90-day rate', now: 'Only the 14% rate for 90 days. The app had shown the extra tenors and rates (problem “RWIN goals offer tenors that are not in the RWIN rate table”).' },
+    { status: 'fixed', area: 'Investments', setting: 'Adebanjo REAP — rate table', spec: 'A rate for each tenor offered (3, 6, 12 and 24 months) — REAP specification step 3', was: 'Also rows for 1 month (30%), 2 months (18% and 12%) and 8–10 months (17.5%) copied from the old REAP, so the app advertised “30% p.a.”', now: '14%, 16.5%, 18% and 18% for 3, 6, 12 and 24 months only; the headline rate is now 18% (was 30%)' },
+    { status: 'decide', area: 'Investments', setting: 'Adebanjo RTN — rate table', spec: 'A rate matrix by amount and tenor (30, 60, 90, 120, 180, 365 days) — RTN specification; the rates themselves are not given', was: 'Two different rates for the same 0–120 days (25% and 20%), a 10% 1-month rollover rate and 20% for 121–365 days, with no amount bands. This is why the app quoted 20% and then 25% for the same ₦1M, 90-day placement.', now: 'Unchanged — please supply the RTN rate matrix (amount bands × tenors) to enter.' },
+    { status: 'decide', area: 'Investments', setting: 'Adebanjo RTN — lowest tier', spec: 'Individual RTN from Tier 1 (corporate from Tier 2) — RTN specification', was: 'Tier 2', now: 'Unchanged: set to Tier 2 and 3 as you asked on 23 November. Noted only because the specification says Tier 1.' },
+    { status: 'decide', area: 'Tiers', setting: 'Tier 1 — requirements', spec: 'BVN (matching name and date of birth), full name, verified email and phone — KYC specification V4 §2', was: 'Also proof of address, residential address and a passport photograph', now: 'Unchanged — removing requirements changes what existing customers must provide; your call.' },
+    { status: 'decide', area: 'Tiers', setting: 'Tier 1 — limits', spec: 'Single transfer ₦300,000; daily ₦20,000; wallet balance unlimited — KYC specification V4 §1', was: 'Daily ₦20,000 (matches); balance cap ₦6,000,000; single deposit ₦1,000,000; investments ₦500,000 each, ₦2,000,000 a year', now: 'Unchanged — the admin has no “single transfer” field, and the balance cap would need to be removed.' },
+    { status: 'decide', area: 'Tiers', setting: 'Tier 2 — requirements and limits', spec: 'Tier 1 plus NIN, residential address, employment details and email; single transfer ₦5,000,000, daily ₦20,000,000, balance unlimited', was: 'Employment, liveness check and passport photograph, but not residential address; no daily, single or balance limit set', now: 'Unchanged — adding residential address could move existing Tier 2 customers (including the test account) down a tier.' },
+    { status: 'decide', area: 'Tiers', setting: 'Tier 3 — requirements and limits', spec: 'All of Tier 2 plus proof of address (utility bill or bank statement under 3 months), a government ID and income verified through Mono; single ₦5,000,000, daily ₦20,000,000', was: 'No requirement switched on at all; no daily, single or balance limit set', now: 'Unchanged — switching requirements on could move existing Tier 3 customers down a tier.' },
+    { status: 'cannot', area: 'Tiers', setting: 'NIN and government ID as tier requirements', spec: 'NIN for Tiers 2 and 3; government ID for Tier 3 — KYC specification V4 §2', was: 'The tier form has no NIN or government-ID option (it has BVN, TIN, liveness, passport photograph and others)', now: 'Can’t be set in the admin — needs the option adding (Engineering).' },
+    { status: 'decide', area: 'Loans', setting: 'Public Sector corridors — rates and fees', spec: 'Each employer corridor has its own rate, DTI, tenors and fees — Public Sector specification; the values are not given', was: 'Lagos Civil Servants stores a policy rate of 0.03 and a management fee of 0.01, shown as “0.03%” and “0.01%” since the portal switched to percent on 9 November; lagos-v1 has a 0.01% quarterly fee', now: 'Unchanged — please confirm the intended values (for example 3% and 1%) to enter.' },
+    { status: 'decide', area: 'Loans', setting: 'Fee structures — VAT on the amount lent', spec: 'Not covered by the loan specification', was: 'The fee structures linked to the loan products take 7.5% “Loan VAT” from every payout (₦100,000 → ₦92,500)', now: 'Unchanged — Finance to confirm whether VAT should apply to the amount lent (it normally applies to fees). Not showing it to the customer is reported as a problem.' },
+    { status: 'decide', area: 'Rewards', setting: 'Referral rewards', spec: 'Customer referral rewards are configured under Rewards & Referrals — Admin PRD (amounts not given)', was: 'Four rewards from July, all pointing at older products that are no longer on offer (shown as “#2”, “#3”, “#10”); none for the active Adebanjo products', now: 'Unchanged — please give the reward amounts to set for the active products.' },
+  ],
+};
+
 const ADMIN_PRE_PROD = [
   ['“Mark as paid” on loans (PATCH /api/v3/loan-applications/{id}/mark-as-paid)', 'A temporary workaround to make testing easier; the team will remove it before production (confirmed 23 November). On dev it closes any loan as “REPAID”, including one that was never paid out: loan #95 (approved, never disbursed) was closed this way on 23 November. Before go-live, check the endpoint and any portal button for it are gone, and that approved-but-unpaid loans have a proper cancel action instead.'],
 ];
@@ -245,6 +273,7 @@ const ADMIN_CHANGES = {
 };
 
 const SKIP_REASONS = [
+  [/admin set-up/, 'Not counted as a problem: it fails only because of an admin setting. See “Admin set-up to review” on the Overview.'],
   [/No longer in the portal/, 'Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.'],
   [/destructive|Acts on existing records/, 'Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.'],
   [/No investments in status|No audit entries|No .* yet|Approval queue is empty|No .*requests|No alerts|No masked/, 'Not run: there was no suitable data on the test system to check this against.'],
@@ -419,6 +448,8 @@ const MOBILE_FINDINGS = [
   },
   {
     match: /tenors match the product rate table/,
+    // Tenors and rate rows are both admin settings: listed in CONFIG_REVIEW, not a problem.
+    setUp: true,
     title: 'RWIN goals offer tenors that are not in the RWIN rate table',
     severity: 'Medium',
     owner: 'Product and Engineering (mobile app)',
@@ -455,24 +486,6 @@ const MOBILE_EXTRA_FINDINGS = [
     impact: 'Right after booking, customers are told their investment of ₦0.00 is “active and earning interest”, which is wrong and alarming.',
     saw: '23 November: RTN and RWIN end on “Investment confirmed! Your ₦0.00 Adebanjo RTN is now active and earning interest.” For RWIN the first attempt also showed “0% p.a.” and no tenor or maturity date. REAP’s screen was correct (“Your first debit of ₦3,263.86 will be automatically processed on 23 November 2026”).',
     expected: 'Show the booked amount, rate, tenor and maturity, and say “waiting for payment” until the plan is funded.',
-    area: 'Investing (tried by hand)',
-  },
-  {
-    title: 'RTN quotes two different rates for the same placement',
-    severity: 'Medium',
-    owner: 'Engineering (mobile app and treasury rates)',
-    impact: 'The customer cannot tell what rate they will earn.',
-    saw: '23 November, ₦1,000,000 for 90 days paid at maturity: the projection screen says “Interest earned (20% p.a.)” (+₦44,383.56), and the next screen, the summary, says “25% p.a.”, which is also what the plan was booked at. Two rate cards cover 90 days (20% for any payout, 25% for monthly back-end interest); the app picks a different one on each screen.',
-    expected: 'One rate per amount, tenor and timing, the same on every screen; and the rate cards should not overlap.',
-    area: 'Investing (tried by hand)',
-  },
-  {
-    title: 'Product pages show rates for tenors the product does not offer',
-    severity: 'Medium',
-    owner: 'Engineering (treasury rates) and Product',
-    impact: 'Customers are shown rates they cannot get; REAP is advertised at a rate none of its tenors pays.',
-    saw: '23 November: Adebanjo REAP is advertised as “30% p.a.” on Grow and on its page, and its rate table lists 1-month (30%) and 2-month (18% and 12%) rates, but it only offers 3, 6, 12 and 24 months (14% to 18%). Adebanjo RWIN only offers a 90-day cycle but lists 180, 270 and 360-day rates and a 30% “small” rate. The rate cards seem to come from the older product of the same type.',
-    expected: 'The headline rate and rate table should come only from the rates of tenors the product offers.',
     area: 'Investing (tried by hand)',
   },
   {
@@ -732,6 +745,7 @@ const MOBILE_QUESTIONS = [
 ];
 
 const MOBILE_SKIP_REASONS = [
+  [/SETUP/, 'Not counted as a problem: it fails only because of an admin setting. See “Admin set-up to review” on the Overview.'],
   [/onboarding-login\.spec\.ts/, 'Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.'],
   [/HELD/, 'Held back on purpose: this test account has only 1 sign-in attempt left, and a wrong try would lock it. It will run once the account is confirmed or reset.'],
   [/phone \+ passcode/, 'Not run: no phone number and passcode are on file for this test account yet.'],
@@ -799,6 +813,8 @@ function readAdmin() {
     }
   }
 
+  // A check that fails only because of an admin setting is a set-up item, not a problem (see CONFIG_REVIEW).
+  for (const t of tests) if (t.status === 'problem' && FINDINGS.find((x) => x.match.test(t.rawTitle))?.setUp) { t.status = 'not-run'; t.skipReason = 'admin set-up'; }
   const findings = tests.filter((t) => t.status === 'problem').map((t) => {
     const f = FINDINGS.find((x) => x.match.test(t.rawTitle)) || genericFinding(t);
     let shot = null;
@@ -855,6 +871,7 @@ function readMobile() {
     error: r.error || '',
     detail: r.detail || '',
   }));
+  for (const t of tests) if (t.status === 'problem' && MOBILE_FINDINGS.find((x) => x.match.test(t.rawTitle))?.setUp) { t.status = 'not-run'; t.setUp = true; }
   const fromChecks = tests.filter((t) => t.status === 'problem').map((t) => ({
     ...(MOBILE_FINDINGS.find((x) => x.match.test(t.rawTitle)) || genericFinding(t)),
     area: MOBILE_AREAS[t.file]?.name || t.file,
@@ -880,7 +897,7 @@ function readMobile() {
     intro: 'An automated tester used the Rosabon app on an Android phone the way a customer would — signing in, moving between screens and checking what they show against the product documents. Nothing was booked, borrowed or paid during these checks.',
     tests, findings, extraCount: MOBILE_EXTRA_FINDINGS.length, journeys: MOBILE_JOURNEYS,
     areas: MOBILE_AREAS, mismatches: MOBILE_MISMATCHES, questions: MOBILE_QUESTIONS, changes: MOBILE_CHANGES,
-    notRunReason: (t) => (MOBILE_SKIP_REASONS.find(([re]) => re.test(`${t.held ? 'HELD ' : ''}${t.file} ${t.rawTitle}`)) || [null, 'Not run in this round.'])[1],
+    notRunReason: (t) => (MOBILE_SKIP_REASONS.find(([re]) => re.test(`${t.setUp ? 'SETUP ' : ''}${t.held ? 'HELD ' : ''}${t.file} ${t.rawTitle}`)) || [null, 'Not run in this round.'])[1],
     techInternal: '<p class="muted">The mobile app blocks screenshots for security, so failures are recorded as the screen’s layout instead. These are in <code>reports/mobile-screens/</code> with the QA team.</p>',
     techPublic: '<p class="muted">Step-by-step technical detail is kept internally. Ask the QA team for access.</p>',
   };
@@ -1202,6 +1219,30 @@ function activities(areas, year) {
   return out.sort((a, b) => b.date - a.date || order[a.d.id] - order[b.d.id]);
 }
 
+/** "Admin set-up to review": settings that differ from the specifications (never counted as problems). */
+function configReview() {
+  const ORDER = { decide: 0, cannot: 1, fixed: 2 };
+  const LABEL = { decide: ['Your decision', 'warn'], cannot: ['Can’t be set in the admin', 'bad'], fixed: [`Fixed ${CONFIG_REVIEW.when}`, 'ok'] };
+  const items = [...CONFIG_REVIEW.items].sort((a, b) => ORDER[a.status] - ORDER[b.status]);
+  const n = (s) => items.filter((i) => i.status === s).length;
+  const row = (i) => `<tr>
+        <td class="area"><span class="badge ${LABEL[i.status][1]}">${esc(LABEL[i.status][0])}</span><div><strong>${esc(i.setting)}</strong></div><div class="muted small">${esc(i.area)}</div></td>
+        <td><span class="cr-k">Specification</span>${esc(i.spec)}</td>
+        <td><span class="cr-k">Was in the admin</span>${esc(i.was)}</td>
+        <td><span class="cr-k">Now</span>${esc(i.now)}</td>
+      </tr>`;
+  const table = (rs) => rs.length ? `<div class="table-wrap"><table class="cr-table">
+        <thead><tr><th>Setting</th><th>Specification</th><th>Was in the admin</th><th>Now</th></tr></thead>
+        <tbody>${rs.map(row).join('')}</tbody>
+      </table></div>` : '';
+  return `<section class="card config-review" id="config-review">
+      <h2>Admin set-up to review</h2>
+      <p>Settings that can be changed in the admin portal are not counted as problems. These are the ones that differ from the specifications (checked ${esc(CONFIG_REVIEW.when)}): <strong>${n('decide')} need your decision</strong>, ${n('cannot')} can’t be set in the admin yet, and ${n('fixed')} were changed to match the specification.</p>
+      ${table(items.filter((i) => i.status !== 'fixed'))}
+      ${n('fixed') ? `<details class="ref"><summary>Show the ${n('fixed')} settings changed to match the specification</summary>${table(items.filter((i) => i.status === 'fixed'))}</details>` : ''}
+    </section>`;
+}
+
 function dashboard(areas, pub) {
   if (!areas.length) return emptyPanel('Overview', 'Run any of the checks to fill this in.');
   const all = areas.flatMap((d) => d.tests);
@@ -1315,6 +1356,8 @@ function dashboard(areas, pub) {
         ${attention}
       </section>
     </div>
+
+    ${configReview()}
 
     <h2>Areas</h2>
     <div class="area-cards">${areaCards}</div>
@@ -1772,6 +1815,18 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
   .dot-idle { background: var(--s-low); opacity: .55; }
   .kicker { margin: 22px 0 8px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .table-wrap { overflow-x: auto; }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .config-review { border-left: 4px solid var(--warn); margin: 24px 0; }
+  .config-review h2 { margin-top: 0; }
+  .cr-table td { vertical-align: top; font-size: .92em; }
+  .cr-table td .badge { margin-bottom: 4px; display: inline-block; }
+  .cr-k { display: none; }
+  @media (max-width: 760px) {
+    .cr-table thead { display: none; }
+    .cr-table tr { display: block; border-bottom: 1px solid var(--line, #ddd); padding: 8px 0; }
+    .cr-table td { display: block; border: 0; padding: 4px 0; }
+    .cr-k { display: block; font-size: .8em; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  }
   /* "Show all" list under a gap in the API document: grouped by area, path + field tags. */
   details.gaps[open] > summary { margin-bottom: 4px; }
   .gaps-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 10px 0 4px; }

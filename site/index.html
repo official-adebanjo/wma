@@ -106,6 +106,18 @@
   .dot-idle { background: var(--s-low); opacity: .55; }
   .kicker { margin: 22px 0 8px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .table-wrap { overflow-x: auto; }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .config-review { border-left: 4px solid var(--warn); margin: 24px 0; }
+  .config-review h2 { margin-top: 0; }
+  .cr-table td { vertical-align: top; font-size: .92em; }
+  .cr-table td .badge { margin-bottom: 4px; display: inline-block; }
+  .cr-k { display: none; }
+  @media (max-width: 760px) {
+    .cr-table thead { display: none; }
+    .cr-table tr { display: block; border-bottom: 1px solid var(--line, #ddd); padding: 8px 0; }
+    .cr-table td { display: block; border: 0; padding: 4px 0; }
+    .cr-k { display: block; font-size: .8em; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  }
   /* "Show all" list under a gap in the API document: grouped by area, path + field tags. */
   details.gaps[open] > summary { margin-bottom: 4px; }
   .gaps-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 10px 0 4px; }
@@ -384,8 +396,8 @@
 <main>
   <div class="tabs" role="tablist" aria-label="Which results to show">
     <button class="tab" role="tab" id="tab-dashboard" aria-controls="panel-dashboard" aria-selected="true" tabindex="0"><span aria-hidden="true">📊</span> Overview <span class="pill bad">16 urgent</span></button>
-    <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">10 problems</span></button>
-    <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">33 problems</span></button>
+    <button class="tab" role="tab" id="tab-admin" aria-controls="panel-admin" aria-selected="false" tabindex="-1"><span aria-hidden="true">🖥</span> Admin portal <span class="pill bad">9 problems</span></button>
+    <button class="tab" role="tab" id="tab-mobile" aria-controls="panel-mobile" aria-selected="false" tabindex="-1"><span aria-hidden="true">📱</span> Mobile app <span class="pill bad">30 problems</span></button>
     <button class="tab" role="tab" id="tab-api" aria-controls="panel-api" aria-selected="false" tabindex="-1"><span aria-hidden="true">🔌</span> API <span class="pill bad">9 problems</span></button>
   </div>
 
@@ -396,21 +408,21 @@
     <p class="muted">Everything the automated and hand checks found across the admin portal, the mobile app and the API, and what has changed recently. Select any number to see the detail behind it.</p>
 
     <section class="card verdict bad">
-      <h3>Not ready for release — 52 open problems</h3>
-      <p>2 Critical (a core journey is blocked) · 14 High (money, security or compliance) · 31 Medium · 5 Low</p>
+      <h3>Not ready for release — 48 open problems</h3>
+      <p>2 Critical (a core journey is blocked) · 14 High (money, security or compliance) · 27 Medium · 5 Low</p>
     </section>
 
-    <div class="kpis"><div class="kpi "><div class="kpi-l">Checks in total</div><div class="kpi-v">328</div><div class="muted small">3 areas: Admin portal, Mobile app, API</div></div><div class="kpi ok"><div class="kpi-l">Pass rate</div><div class="kpi-v">90%</div><div class="muted small">236 of 263 checks that ran worked</div></div><div class="kpi bad"><div class="kpi-l">Open problems</div><div class="kpi-v">52</div><div class="muted small">from 27 failing checks, plus problems found by hand</div></div><div class="kpi bad"><div class="kpi-l">Critical &amp; High</div><div class="kpi-v">16</div><div class="muted small">fix before release</div></div><div class="kpi "><div class="kpi-l">Not run</div><div class="kpi-v">65</div><div class="muted small">switched-off pages, missing test data or held on purpose</div></div></div>
+    <div class="kpis"><div class="kpi "><div class="kpi-l">Checks in total</div><div class="kpi-v">328</div><div class="muted small">3 areas: Admin portal, Mobile app, API</div></div><div class="kpi ok"><div class="kpi-l">Pass rate</div><div class="kpi-v">90%</div><div class="muted small">236 of 261 checks that ran worked</div></div><div class="kpi bad"><div class="kpi-l">Open problems</div><div class="kpi-v">48</div><div class="muted small">from 25 failing checks, plus problems found by hand</div></div><div class="kpi bad"><div class="kpi-l">Critical &amp; High</div><div class="kpi-v">16</div><div class="muted small">fix before release</div></div><div class="kpi "><div class="kpi-l">Not run</div><div class="kpi-v">67</div><div class="muted small">switched-off pages, missing test data or held on purpose</div></div></div>
 
     <div class="dash-grid">
       <section class="dash-col">
         <h2>Open problems by priority</h2>
-        <div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><span class="sev-tile s-high zero"><span class="sev-tile-n">14</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></span><span class="sev-tile s-medium zero"><span class="sev-tile-n">31</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></span><span class="sev-tile s-low zero"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
+        <div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><span class="sev-tile s-high zero"><span class="sev-tile-n">14</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></span><span class="sev-tile s-medium zero"><span class="sev-tile-n">27</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></span><span class="sev-tile s-low zero"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
         <p class="muted small">By area — select a number to open those problems.</p>
         <div class="table-wrap scroll"><table class="matrix">
       <thead><tr><th>Area</th><th class="num"><span class="th-sev"><i class="sev-dot s-critical" aria-hidden="true"></i>Critical</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-high" aria-hidden="true"></i>High</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-medium" aria-hidden="true"></i>Medium</span></th><th class="num"><span class="th-sev"><i class="sev-dot s-low" aria-hidden="true"></i>Low</span></th><th class="num">Total</th></tr></thead>
-      <tbody><tr><th scope="row"><a href="#admin">Admin portal</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#admin/problems/high" aria-label="4 High in Admin portal">4</a></td><td class="num"><a class="mcell s-medium" href="#admin/problems/medium" aria-label="6 Medium in Admin portal">6</a></td><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a href="#admin/problems"><strong>10</strong></a></td></tr><tr><th scope="row"><a href="#mobile">Mobile app</a></th><td class="num"><a class="mcell s-critical" href="#mobile/problems/critical" aria-label="2 Critical in Mobile app">2</a></td><td class="num"><a class="mcell s-high" href="#mobile/problems/high" aria-label="8 High in Mobile app">8</a></td><td class="num"><a class="mcell s-medium" href="#mobile/problems/medium" aria-label="20 Medium in Mobile app">20</a></td><td class="num"><a class="mcell s-low" href="#mobile/problems/low" aria-label="3 Low in Mobile app">3</a></td><td class="num"><a href="#mobile/problems"><strong>33</strong></a></td></tr><tr><th scope="row"><a href="#api">API</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#api/problems/high" aria-label="2 High in API">2</a></td><td class="num"><a class="mcell s-medium" href="#api/problems/medium" aria-label="5 Medium in API">5</a></td><td class="num"><a class="mcell s-low" href="#api/problems/low" aria-label="2 Low in API">2</a></td><td class="num"><a href="#api/problems"><strong>9</strong></a></td></tr></tbody>
-      <tfoot><tr><th scope="row">All areas</th><td class="num"><strong>2</strong></td><td class="num"><strong>14</strong></td><td class="num"><strong>31</strong></td><td class="num"><strong>5</strong></td><td class="num"><strong>52</strong></td></tr></tfoot>
+      <tbody><tr><th scope="row"><a href="#admin">Admin portal</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#admin/problems/high" aria-label="4 High in Admin portal">4</a></td><td class="num"><a class="mcell s-medium" href="#admin/problems/medium" aria-label="5 Medium in Admin portal">5</a></td><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a href="#admin/problems"><strong>9</strong></a></td></tr><tr><th scope="row"><a href="#mobile">Mobile app</a></th><td class="num"><a class="mcell s-critical" href="#mobile/problems/critical" aria-label="2 Critical in Mobile app">2</a></td><td class="num"><a class="mcell s-high" href="#mobile/problems/high" aria-label="8 High in Mobile app">8</a></td><td class="num"><a class="mcell s-medium" href="#mobile/problems/medium" aria-label="17 Medium in Mobile app">17</a></td><td class="num"><a class="mcell s-low" href="#mobile/problems/low" aria-label="3 Low in Mobile app">3</a></td><td class="num"><a href="#mobile/problems"><strong>30</strong></a></td></tr><tr><th scope="row"><a href="#api">API</a></th><td class="num"><span class="muted" aria-label="none">–</span></td><td class="num"><a class="mcell s-high" href="#api/problems/high" aria-label="2 High in API">2</a></td><td class="num"><a class="mcell s-medium" href="#api/problems/medium" aria-label="5 Medium in API">5</a></td><td class="num"><a class="mcell s-low" href="#api/problems/low" aria-label="2 Low in API">2</a></td><td class="num"><a href="#api/problems"><strong>9</strong></a></td></tr></tbody>
+      <tfoot><tr><th scope="row">All areas</th><td class="num"><strong>2</strong></td><td class="num"><strong>14</strong></td><td class="num"><strong>27</strong></td><td class="num"><strong>5</strong></td><td class="num"><strong>48</strong></td></tr></tfoot>
     </table></div>
       </section>
       <section class="dash-col">
@@ -427,7 +439,7 @@
         <div><a href="#admin/problems/high">Loans on the same setting are repaid using different interest calculations</a><div class="muted small">Admin portal · Loan interest calculations · Engineering (loan calculation) and Product</div></div>
       </li><li>
         <span class="sev s-high">High</span>
-        <div><a href="#admin/problems/high">7.5% “Loan VAT” is taken from every loan payout without being shown on the loan</a><div class="muted small">Admin portal · Loan interest calculations · Engineering (loans) and Finance</div></div>
+        <div><a href="#admin/problems/high">7.5% “Loan VAT” is taken from every loan payout without being shown on the loan</a><div class="muted small">Admin portal · Loan interest calculations · Engineering (loans)</div></div>
       </li><li>
         <span class="sev s-high">High</span>
         <div><a href="#admin/problems/high">Nano and Payday interest is not worked out by the number of days</a><div class="muted small">Admin portal · Loan products (checked by hand) · Engineering (loans calculation)</div></div>
@@ -469,21 +481,104 @@
       </section>
     </div>
 
+    <section class="card config-review" id="config-review">
+      <h2>Admin set-up to review</h2>
+      <p>Settings that can be changed in the admin portal are not counted as problems. These are the ones that differ from the specifications (checked 24 November): <strong>9 need your decision</strong>, 2 can’t be set in the admin yet, and 3 were changed to match the specification.</p>
+      <div class="table-wrap"><table class="cr-table">
+        <thead><tr><th>Setting</th><th>Specification</th><th>Was in the admin</th><th>Now</th></tr></thead>
+        <tbody><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Adebanjo RTN — rate table</strong></div><div class="muted small">Investments</div></td>
+        <td><span class="cr-k">Specification</span>A rate matrix by amount and tenor (30, 60, 90, 120, 180, 365 days) — RTN specification; the rates themselves are not given</td>
+        <td><span class="cr-k">Was in the admin</span>Two different rates for the same 0–120 days (25% and 20%), a 10% 1-month rollover rate and 20% for 121–365 days, with no amount bands. This is why the app quoted 20% and then 25% for the same ₦1M, 90-day placement.</td>
+        <td><span class="cr-k">Now</span>Unchanged — please supply the RTN rate matrix (amount bands × tenors) to enter.</td>
+      </tr><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Adebanjo RTN — lowest tier</strong></div><div class="muted small">Investments</div></td>
+        <td><span class="cr-k">Specification</span>Individual RTN from Tier 1 (corporate from Tier 2) — RTN specification</td>
+        <td><span class="cr-k">Was in the admin</span>Tier 2</td>
+        <td><span class="cr-k">Now</span>Unchanged: set to Tier 2 and 3 as you asked on 23 November. Noted only because the specification says Tier 1.</td>
+      </tr><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Tier 1 — requirements</strong></div><div class="muted small">Tiers</div></td>
+        <td><span class="cr-k">Specification</span>BVN (matching name and date of birth), full name, verified email and phone — KYC specification V4 §2</td>
+        <td><span class="cr-k">Was in the admin</span>Also proof of address, residential address and a passport photograph</td>
+        <td><span class="cr-k">Now</span>Unchanged — removing requirements changes what existing customers must provide; your call.</td>
+      </tr><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Tier 1 — limits</strong></div><div class="muted small">Tiers</div></td>
+        <td><span class="cr-k">Specification</span>Single transfer ₦300,000; daily ₦20,000; wallet balance unlimited — KYC specification V4 §1</td>
+        <td><span class="cr-k">Was in the admin</span>Daily ₦20,000 (matches); balance cap ₦6,000,000; single deposit ₦1,000,000; investments ₦500,000 each, ₦2,000,000 a year</td>
+        <td><span class="cr-k">Now</span>Unchanged — the admin has no “single transfer” field, and the balance cap would need to be removed.</td>
+      </tr><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Tier 2 — requirements and limits</strong></div><div class="muted small">Tiers</div></td>
+        <td><span class="cr-k">Specification</span>Tier 1 plus NIN, residential address, employment details and email; single transfer ₦5,000,000, daily ₦20,000,000, balance unlimited</td>
+        <td><span class="cr-k">Was in the admin</span>Employment, liveness check and passport photograph, but not residential address; no daily, single or balance limit set</td>
+        <td><span class="cr-k">Now</span>Unchanged — adding residential address could move existing Tier 2 customers (including the test account) down a tier.</td>
+      </tr><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Tier 3 — requirements and limits</strong></div><div class="muted small">Tiers</div></td>
+        <td><span class="cr-k">Specification</span>All of Tier 2 plus proof of address (utility bill or bank statement under 3 months), a government ID and income verified through Mono; single ₦5,000,000, daily ₦20,000,000</td>
+        <td><span class="cr-k">Was in the admin</span>No requirement switched on at all; no daily, single or balance limit set</td>
+        <td><span class="cr-k">Now</span>Unchanged — switching requirements on could move existing Tier 3 customers down a tier.</td>
+      </tr><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Public Sector corridors — rates and fees</strong></div><div class="muted small">Loans</div></td>
+        <td><span class="cr-k">Specification</span>Each employer corridor has its own rate, DTI, tenors and fees — Public Sector specification; the values are not given</td>
+        <td><span class="cr-k">Was in the admin</span>Lagos Civil Servants stores a policy rate of 0.03 and a management fee of 0.01, shown as “0.03%” and “0.01%” since the portal switched to percent on 9 November; lagos-v1 has a 0.01% quarterly fee</td>
+        <td><span class="cr-k">Now</span>Unchanged — please confirm the intended values (for example 3% and 1%) to enter.</td>
+      </tr><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Fee structures — VAT on the amount lent</strong></div><div class="muted small">Loans</div></td>
+        <td><span class="cr-k">Specification</span>Not covered by the loan specification</td>
+        <td><span class="cr-k">Was in the admin</span>The fee structures linked to the loan products take 7.5% “Loan VAT” from every payout (₦100,000 → ₦92,500)</td>
+        <td><span class="cr-k">Now</span>Unchanged — Finance to confirm whether VAT should apply to the amount lent (it normally applies to fees). Not showing it to the customer is reported as a problem.</td>
+      </tr><tr>
+        <td class="area"><span class="badge warn">Your decision</span><div><strong>Referral rewards</strong></div><div class="muted small">Rewards</div></td>
+        <td><span class="cr-k">Specification</span>Customer referral rewards are configured under Rewards &amp; Referrals — Admin PRD (amounts not given)</td>
+        <td><span class="cr-k">Was in the admin</span>Four rewards from July, all pointing at older products that are no longer on offer (shown as “#2”, “#3”, “#10”); none for the active Adebanjo products</td>
+        <td><span class="cr-k">Now</span>Unchanged — please give the reward amounts to set for the active products.</td>
+      </tr><tr>
+        <td class="area"><span class="badge bad">Can’t be set in the admin</span><div><strong>Adebanjo Payday — loan lengths offered</strong></div><div class="muted small">Loans</div></td>
+        <td><span class="cr-k">Specification</span>7 to 30 days (worked examples: 7, 15, 21 and 30 days) — Loan product specification §3.1</td>
+        <td><span class="cr-k">Was in the admin</span>30 days only</td>
+        <td><span class="cr-k">Now</span>Can’t be set in the admin: the Payday form locks “Available tenors” to 30 days (“Fixed for this loan type”). Engineering to unlock it, or Product to confirm Payday stays at 30 days.</td>
+      </tr><tr>
+        <td class="area"><span class="badge bad">Can’t be set in the admin</span><div><strong>NIN and government ID as tier requirements</strong></div><div class="muted small">Tiers</div></td>
+        <td><span class="cr-k">Specification</span>NIN for Tiers 2 and 3; government ID for Tier 3 — KYC specification V4 §2</td>
+        <td><span class="cr-k">Was in the admin</span>The tier form has no NIN or government-ID option (it has BVN, TIN, liveness, passport photograph and others)</td>
+        <td><span class="cr-k">Now</span>Can’t be set in the admin — needs the option adding (Engineering).</td>
+      </tr></tbody>
+      </table></div>
+      <details class="ref"><summary>Show the 3 settings changed to match the specification</summary><div class="table-wrap"><table class="cr-table">
+        <thead><tr><th>Setting</th><th>Specification</th><th>Was in the admin</th><th>Now</th></tr></thead>
+        <tbody><tr>
+        <td class="area"><span class="badge ok">Fixed 24 November</span><div><strong>Adebanjo Nano — loan lengths offered</strong></div><div class="muted small">Loans</div></td>
+        <td><span class="cr-k">Specification</span>1 to 30 days, chosen by the customer (worked examples: 3, 7, 14 and 30 days) — Loan product specification §2.1</td>
+        <td><span class="cr-k">Was in the admin</span>30 days only</td>
+        <td><span class="cr-k">Now</span>3, 7, 14 and 30 days</td>
+      </tr><tr>
+        <td class="area"><span class="badge ok">Fixed 24 November</span><div><strong>Adebanjo RWIN — rate table</strong></div><div class="muted small">Investments</div></td>
+        <td><span class="cr-k">Specification</span>One fixed rate for the 90-day cycle — RWIN 2.0 specification</td>
+        <td><span class="cr-k">Was in the admin</span>Rows for 180, 270 and 360 days, a 30% “small” rate and a 12.5% “standard” rate copied from the old RWIN, beside the 14% 90-day rate</td>
+        <td><span class="cr-k">Now</span>Only the 14% rate for 90 days. The app had shown the extra tenors and rates (problem “RWIN goals offer tenors that are not in the RWIN rate table”).</td>
+      </tr><tr>
+        <td class="area"><span class="badge ok">Fixed 24 November</span><div><strong>Adebanjo REAP — rate table</strong></div><div class="muted small">Investments</div></td>
+        <td><span class="cr-k">Specification</span>A rate for each tenor offered (3, 6, 12 and 24 months) — REAP specification step 3</td>
+        <td><span class="cr-k">Was in the admin</span>Also rows for 1 month (30%), 2 months (18% and 12%) and 8–10 months (17.5%) copied from the old REAP, so the app advertised “30% p.a.”</td>
+        <td><span class="cr-k">Now</span>14%, 16.5%, 18% and 18% for 3, 6, 12 and 24 months only; the headline rate is now 18% (was 30%)</td>
+      </tr></tbody>
+      </table></div></details>
+    </section>
+
     <h2>Areas</h2>
     <div class="area-cards"><a class="area-card" href="#admin">
         <div class="area-head"><span class="area-icon" aria-hidden="true">🖥</span><div><h3>Admin portal</h3><p class="muted small">Chrome browser · dev environment</p></div></div>
-        <p class="area-rate"><span class="big">94%</span> <span class="muted">of checks that ran worked</span></p>
-        <div class="bar" role="img" aria-label="64 worked, 4 with a problem, 29 not run"><span class="p" style="flex-grow:64" title="64 worked (66%)"></span><span class="f" style="flex-grow:4" title="4 with a problem (4%)"></span><span class="s" style="flex-grow:29" title="29 not run (30%)"></span></div>
-        <ul class="area-nums"><li><strong>64</strong> worked</li><li><strong>4</strong> failed</li><li><strong>29</strong> not run</li></ul>
-        <p class="area-sev"><span class="sev s-high">4 High</span> <span class="sev s-medium">6 Medium</span></p>
+        <p class="area-rate"><span class="big">96%</span> <span class="muted">of checks that ran worked</span></p>
+        <div class="bar" role="img" aria-label="64 worked, 3 with a problem, 30 not run"><span class="p" style="flex-grow:64" title="64 worked (66%)"></span><span class="f" style="flex-grow:3" title="3 with a problem (3%)"></span><span class="s" style="flex-grow:30" title="30 not run (31%)"></span></div>
+        <ul class="area-nums"><li><strong>64</strong> worked</li><li><strong>3</strong> failed</li><li><strong>30</strong> not run</li></ul>
+        <p class="area-sev"><span class="sev s-high">4 High</span> <span class="sev s-medium">5 Medium</span></p>
         <p class="muted small">Last run 10 November 2026 at 12:44</p>
         <span class="go">Open Admin portal results <span aria-hidden="true">→</span></span>
       </a><a class="area-card" href="#mobile">
         <div class="area-head"><span class="area-icon" aria-hidden="true">📱</span><div><h3>Mobile app</h3><p class="muted small">Device: Google sdk_gphone64_x86_64 · Android 17 · dev environment</p></div></div>
-        <p class="area-rate"><span class="big">75%</span> <span class="muted">of checks that ran worked</span></p>
-        <div class="bar" role="img" aria-label="24 worked, 8 with a problem, 23 not run"><span class="p" style="flex-grow:24" title="24 worked (44%)"></span><span class="f" style="flex-grow:8" title="8 with a problem (15%)"></span><span class="s" style="flex-grow:23" title="23 not run (42%)"></span></div>
-        <ul class="area-nums"><li><strong>24</strong> worked</li><li><strong>8</strong> failed</li><li><strong>23</strong> not run</li></ul>
-        <p class="area-sev"><span class="sev s-critical">2 Critical</span> <span class="sev s-high">8 High</span> <span class="sev s-medium">20 Medium</span> <span class="sev s-low">3 Low</span></p>
+        <p class="area-rate"><span class="big">77%</span> <span class="muted">of checks that ran worked</span></p>
+        <div class="bar" role="img" aria-label="24 worked, 7 with a problem, 24 not run"><span class="p" style="flex-grow:24" title="24 worked (44%)"></span><span class="f" style="flex-grow:7" title="7 with a problem (13%)"></span><span class="s" style="flex-grow:24" title="24 not run (44%)"></span></div>
+        <ul class="area-nums"><li><strong>24</strong> worked</li><li><strong>7</strong> failed</li><li><strong>24</strong> not run</li></ul>
+        <p class="area-sev"><span class="sev s-critical">2 Critical</span> <span class="sev s-high">8 High</span> <span class="sev s-medium">17 Medium</span> <span class="sev s-low">3 Low</span></p>
         <p class="muted small">Last run 23 November 2026 at 10:14</p>
         <span class="go">Open Mobile app results <span aria-hidden="true">→</span></span>
       </a><a class="area-card" href="#api">
@@ -865,25 +960,25 @@
     </div>
 
     <section class="card verdict bad">
-      <h3>Not ready for release — 10 problems need attention (including 6 found by hand)</h3>
+      <h3>Not ready for release — 9 problems need attention (including 6 found by hand)</h3>
       <p>4 of them are Critical or High priority and should be fixed before release.</p>
     </section>
 
     <div class="stats">
       <a class="stat" href="#admin"><div class="n">97</div><div class="muted">checks in total</div></a>
       <a class="stat ok" href="#admin/passed"><div class="n">64</div><div class="muted">worked as expected <span class="go" aria-hidden="true">→</span></div></a>
-      <a class="stat bad" href="#admin/problems"><div class="n">4</div><div class="muted">checks with a problem <span class="go" aria-hidden="true">→</span></div></a>
-      <a class="stat" href="#admin/notrun"><div class="n">29</div><div class="muted">not run <span class="go" aria-hidden="true">→</span></div></a>
+      <a class="stat bad" href="#admin/problems"><div class="n">3</div><div class="muted">checks with a problem <span class="go" aria-hidden="true">→</span></div></a>
+      <a class="stat" href="#admin/notrun"><div class="n">30</div><div class="muted">not run <span class="go" aria-hidden="true">→</span></div></a>
     </div>
-    <div class="bar" role="img" aria-label="64 worked, 4 with a problem, 29 not run"><span class="p" style="flex-grow:64" title="64 worked (66%)"></span><span class="f" style="flex-grow:4" title="4 with a problem (4%)"></span><span class="s" style="flex-grow:29" title="29 not run (30%)"></span></div>
-    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (94% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot dot-idle"></i>Not run</span></div>
-    <h3 class="kicker">Problems by priority</h3><div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><a class="sev-tile s-high" href="#admin/problems/high" title="affects customers’ money, security or a compliance requirement"><span class="sev-tile-n">4</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></a><a class="sev-tile s-medium" href="#admin/problems/medium" title="a feature is broken, wrong or misleading, but there is a way round it"><span class="sev-tile-n">6</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></a><span class="sev-tile s-low zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
+    <div class="bar" role="img" aria-label="64 worked, 3 with a problem, 30 not run"><span class="p" style="flex-grow:64" title="64 worked (66%)"></span><span class="f" style="flex-grow:3" title="3 with a problem (3%)"></span><span class="s" style="flex-grow:30" title="30 not run (31%)"></span></div>
+    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (96% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot dot-idle"></i>Not run</span></div>
+    <h3 class="kicker">Problems by priority</h3><div class="sev-tiles"><span class="sev-tile s-critical zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></span><a class="sev-tile s-high" href="#admin/problems/high" title="affects customers’ money, security or a compliance requirement"><span class="sev-tile-n">4</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></a><a class="sev-tile s-medium" href="#admin/problems/medium" title="a feature is broken, wrong or misleading, but there is a way round it"><span class="sev-tile-n">5</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></a><span class="sev-tile s-low zero"><span class="sev-tile-n">0</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></span></div>
 
     <div class="subtabs" role="tablist" aria-label="Admin portal results by kind">
       <button class="subtab" role="tab" id="sub-admin-overview" aria-controls="subpanel-admin-overview" aria-selected="true" tabindex="0" data-panel="admin" data-sub="overview">Overview</button>
-      <button class="subtab t-bad" role="tab" id="sub-admin-problems" aria-controls="subpanel-admin-problems" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="problems">Problems <span class="count">10</span></button>
+      <button class="subtab t-bad" role="tab" id="sub-admin-problems" aria-controls="subpanel-admin-problems" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="problems">Problems <span class="count">9</span></button>
       <button class="subtab t-ok" role="tab" id="sub-admin-passed" aria-controls="subpanel-admin-passed" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="passed">Passed <span class="count">64</span></button>
-      <button class="subtab t-idle" role="tab" id="sub-admin-notrun" aria-controls="subpanel-admin-notrun" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="notrun">Not run <span class="count">29</span></button>
+      <button class="subtab t-idle" role="tab" id="sub-admin-notrun" aria-controls="subpanel-admin-notrun" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="notrun">Not run <span class="count">30</span></button>
       <button class="subtab t-idle" role="tab" id="sub-admin-byhand" aria-controls="subpanel-admin-byhand" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="byhand">Checked by hand <span class="count">13</span></button>
       <button class="subtab" role="tab" id="sub-admin-notes" aria-controls="subpanel-admin-notes" aria-selected="false" tabindex="-1" data-panel="admin" data-sub="notes">Notes &amp; questions</button>
     </div>
@@ -900,7 +995,7 @@
     <div class="table-wrap">
     <table>
       <thead><tr><th>Area</th><th class="num">Checks run</th><th class="num">Worked</th><th>Result</th></tr></thead>
-      <tbody><tr><td class="area"><strong>Signing in</strong><div class="muted">Admins can sign in, and a wrong password is refused.</div></td><td class="num" data-label="Checks run">2</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge ok">All good</span></td></tr><tr><td class="area"><strong>Every page opens correctly</strong><div class="muted">Each of the admin portal’s sections, sub-pages and tabs opens without errors, blank screens or system failures.</div></td><td class="num" data-label="Checks run">22</td><td class="num" data-label="Worked">22</td><td class="result"><span class="badge ok">All good</span></td></tr><tr><td class="area"><strong>Customer management</strong><div class="muted">Finding customers, viewing their full profile, reviewing documents and protecting personal data.</div></td><td class="num" data-label="Checks run">6</td><td class="num" data-label="Worked">5</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Investments</strong><div class="muted">Searching and filtering investments, viewing a plan, and booking, topping up or withdrawing on a customer’s behalf.</div></td><td class="num" data-label="Checks run">8</td><td class="num" data-label="Worked">8</td><td class="result"><span class="badge ok">All good</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Investment approvals, alerts and audit log</strong><div class="muted">Approval queues, on-behalf requests, system alerts, tax settings and the record of who did what.</div></td><td class="num" data-label="Checks run">4</td><td class="num" data-label="Worked">4</td><td class="result"><span class="badge ok">All good</span><div class="muted small">11 not run</div></td></tr><tr><td class="area"><strong>Loan interest calculations</strong><div class="muted">That loans charge interest the way the loan specification says — “Monthly equal” (Model A) or “Monthly reducing” (Model B).</div></td><td class="num" data-label="Checks run">7</td><td class="num" data-label="Worked">5</td><td class="result"><span class="badge bad">2 problems</span></td></tr><tr><td class="area"><strong>Loans</strong><div class="muted">Loan applications, booking a loan on a customer’s behalf, repayments and payroll reconciliation.</div></td><td class="num" data-label="Checks run">4</td><td class="num" data-label="Worked">4</td><td class="result"><span class="badge ok">All good</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Product setup</strong><div class="muted">Creating and editing investment and loan products, loan purposes, variants, eligibility rules and required documents.</div></td><td class="num" data-label="Checks run">11</td><td class="num" data-label="Worked">10</td><td class="result"><span class="badge bad">1 problem</span></td></tr><tr><td class="area"><strong>Transactions, billers and communications</strong><div class="muted">The transaction monitor, billers, the approvals inbox, campaigns and in-app banners.</div></td><td class="num" data-label="Checks run">4</td><td class="num" data-label="Worked">4</td><td class="result"><span class="badge ok">All good</span><div class="muted small">3 not run</div></td></tr><tr><td class="area"><strong>Wallet management</strong><div class="muted">The live wallet board, payment providers, routing rules, wallet settings and manual ledger tools.</div></td><td class="num" data-label="Checks run">0</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge idle">Not run yet</span><div class="muted small">9 not run</div></td></tr></tbody>
+      <tbody><tr><td class="area"><strong>Signing in</strong><div class="muted">Admins can sign in, and a wrong password is refused.</div></td><td class="num" data-label="Checks run">2</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge ok">All good</span></td></tr><tr><td class="area"><strong>Every page opens correctly</strong><div class="muted">Each of the admin portal’s sections, sub-pages and tabs opens without errors, blank screens or system failures.</div></td><td class="num" data-label="Checks run">22</td><td class="num" data-label="Worked">22</td><td class="result"><span class="badge ok">All good</span></td></tr><tr><td class="area"><strong>Customer management</strong><div class="muted">Finding customers, viewing their full profile, reviewing documents and protecting personal data.</div></td><td class="num" data-label="Checks run">6</td><td class="num" data-label="Worked">5</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Investments</strong><div class="muted">Searching and filtering investments, viewing a plan, and booking, topping up or withdrawing on a customer’s behalf.</div></td><td class="num" data-label="Checks run">8</td><td class="num" data-label="Worked">8</td><td class="result"><span class="badge ok">All good</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Investment approvals, alerts and audit log</strong><div class="muted">Approval queues, on-behalf requests, system alerts, tax settings and the record of who did what.</div></td><td class="num" data-label="Checks run">4</td><td class="num" data-label="Worked">4</td><td class="result"><span class="badge ok">All good</span><div class="muted small">11 not run</div></td></tr><tr><td class="area"><strong>Loan interest calculations</strong><div class="muted">That loans charge interest the way the loan specification says — “Monthly equal” (Model A) or “Monthly reducing” (Model B).</div></td><td class="num" data-label="Checks run">7</td><td class="num" data-label="Worked">5</td><td class="result"><span class="badge bad">2 problems</span></td></tr><tr><td class="area"><strong>Loans</strong><div class="muted">Loan applications, booking a loan on a customer’s behalf, repayments and payroll reconciliation.</div></td><td class="num" data-label="Checks run">4</td><td class="num" data-label="Worked">4</td><td class="result"><span class="badge ok">All good</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Product setup</strong><div class="muted">Creating and editing investment and loan products, loan purposes, variants, eligibility rules and required documents.</div></td><td class="num" data-label="Checks run">10</td><td class="num" data-label="Worked">10</td><td class="result"><span class="badge ok">All good</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Transactions, billers and communications</strong><div class="muted">The transaction monitor, billers, the approvals inbox, campaigns and in-app banners.</div></td><td class="num" data-label="Checks run">4</td><td class="num" data-label="Worked">4</td><td class="result"><span class="badge ok">All good</span><div class="muted small">3 not run</div></td></tr><tr><td class="area"><strong>Wallet management</strong><div class="muted">The live wallet board, payment providers, routing rules, wallet settings and manual ledger tools.</div></td><td class="num" data-label="Checks run">0</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge idle">Not run yet</span><div class="muted small">9 not run</div></td></tr></tbody>
     </table>
     </div>
     </div>
@@ -913,10 +1008,10 @@
     <p class="muted">These did not behave the way the product documents say they should. Most severe first.</p>
     <div class="sev-filter" role="group" aria-label="Show problems by priority" data-panel="admin">
       <span class="sev-filter-label">Priority</span>
-      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">10</span></button>
+      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">9</span></button>
       <button type="button" class="fchip s-critical" data-sev="critical" aria-pressed="false" title="Critical: blocks a core journey for every customer (for example no one can sign up or invest)" disabled><i class="sev-dot" aria-hidden="true"></i>Critical <span class="count">0</span></button>
       <button type="button" class="fchip s-high" data-sev="high" aria-pressed="false" title="High: affects customers’ money, security or a compliance requirement"><i class="sev-dot" aria-hidden="true"></i>High <span class="count">4</span></button>
-      <button type="button" class="fchip s-medium" data-sev="medium" aria-pressed="false" title="Medium: a feature is broken, wrong or misleading, but there is a way round it"><i class="sev-dot" aria-hidden="true"></i>Medium <span class="count">6</span></button>
+      <button type="button" class="fchip s-medium" data-sev="medium" aria-pressed="false" title="Medium: a feature is broken, wrong or misleading, but there is a way round it"><i class="sev-dot" aria-hidden="true"></i>Medium <span class="count">5</span></button>
       <button type="button" class="fchip s-low" data-sev="low" aria-pressed="false" title="Low: minor or cosmetic; worth fixing when convenient" disabled><i class="sev-dot" aria-hidden="true"></i>Low <span class="count">0</span></button>
     </div>
     <p class="muted small sev-filter-status" aria-live="polite"></p>
@@ -949,13 +1044,13 @@ Expected: &quot;633333.33&quot;</pre>
         <header>
           <div class="finding-meta"><span class="sev s-high">High</span><span class="chip">Loan interest calculations</span><span class="finding-no muted">#2</span></div>
           <h3>7.5% “Loan VAT” is taken from every loan payout without being shown on the loan</h3>
-          <p class="muted small">Who should look at this: Engineering (loans) and Finance</p>
+          <p class="muted small">Who should look at this: Engineering (loans)</p>
         </header>
         
         <p class="impact">Customers receive less than they borrowed, and neither the loan record nor the offer explains why. It happens on every loan checked, including new ones.</p>
         <dl>
-          <dt>What we saw</dt><dd>All three loans show a management fee of ₦0, yet exactly 7.5% was kept back: #169 ₦5,000,000 → ₦4,625,000 paid out; #188 ₦500,000 → ₦462,500; #189 (paid out during this round) ₦100,000 → ₦92,500. The customer’s wallet history shows the full amount credited, then the 7.5% taken back as “Loan VAT”.</dd>
-          <dt>What should happen</dt><dd>The amount paid out should equal the loan amount minus the charges shown on the loan. Finance should confirm whether VAT applies to the amount lent (it normally applies to fees); if it does, it should be shown on the offer and the loan record.</dd>
+          <dt>What we saw</dt><dd>All three loans show a management fee of ₦0, yet exactly 7.5% was kept back: #169 ₦5,000,000 → ₦4,625,000 paid out; #188 ₦500,000 → ₦462,500; #189 (paid out during this round) ₦100,000 → ₦92,500. The customer’s wallet history shows the full amount credited, then the 7.5% taken back as “Loan VAT”. The VAT itself comes from the fee structure linked to each loan product (an admin setting — whether it should apply to the amount lent is listed under “Admin set-up to review”); the problem here is that it is not disclosed.</dd>
+          <dt>What should happen</dt><dd>Every charge the fee structure applies should be shown on the offer and the loan record, and the amount paid out should equal the loan amount minus those shown charges.</dd>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <div class="snippet-wrap">
@@ -1024,37 +1119,7 @@ Call log:
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product setup</span><span class="finding-no muted">#6</span></div>
-          <h3>Public Sector corridors still hold rates as fractions, though the portal now treats them as percent</h3>
-          <p class="muted small">Who should look at this: Product and Engineering (loans)</p>
-        </header>
-        
-        <p class="impact">Staff cannot tell from the portal what rate customers will be charged, and a rate typed in the wrong unit would go live unnoticed.</p>
-        <dl>
-          <dt>What we saw</dt><dd>Since the 9 November portal update the corridor form labels every rate and fee “%” and fills a new corridor with 3%, 1% and 0.5%, so percent is now the intended unit. The two existing corridors were not converted: Lagos Civil Servants still stores a policy rate of 0.03 and a management fee of 0.01, which the list and form now show as “0.03%” and “0.01%” (its quarterly fee is now 0.4 and a 2.5% penalty rate was added); lagos-v1 shows a 25% policy rate and a 0.01% quarterly fee. The app quotes Lagos Civil Servants loans at 4% a month, which is the corridor’s booked average interim rate. An automated check now flags any rate or fee below 0.1%.</dd>
-          <dt>What should happen</dt><dd>The existing corridors’ values re-entered in percent (for example a 3% policy rate and a 1% management fee, if those were meant), the period stated (for example “% per month”), and the customer’s rate clearly identified.</dd>
-        </dl>
-        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 6" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
-            <pre class="snippet">Error: values that look like fractions, not percent
-expect(received).toEqual(expected) // deep equality
-- Expected  - 1
-+ Received  + 5
-- Array []
-+ Array [
-+   &quot;&lt;name&gt;: policyRate 0.03%&quot;,
-+   &quot;&lt;name&gt;: managementFee 0.01%&quot;,
-+   &quot;lagos-v1: quarterlyFee 0.01%&quot;,
-+ ]</pre>
-          </div>
-          
-          
-        </details>
-      </article>
-      <article class="card finding s-medium" data-sev="medium">
-        <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Transactions &amp; Ledger (checked by hand)</span><span class="finding-no muted">#7</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Transactions &amp; Ledger (checked by hand)</span><span class="finding-no muted">#6</span></div>
           <h3>Wallet history in the portal doesn’t say whose wallet each line belongs to</h3>
           <p class="muted small">Who should look at this: Engineering (admin portal)</p>
         </header>
@@ -1068,7 +1133,7 @@ expect(received).toEqual(expected) // deep equality
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product Management (checked by hand)</span><span class="finding-no muted">#8</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product Management (checked by hand)</span><span class="finding-no muted">#7</span></div>
           <h3>The new investment product form drops the withholding-tax setting</h3>
           <p class="muted small">Who should look at this: Engineering (admin portal)</p>
         </header>
@@ -1082,7 +1147,7 @@ expect(received).toEqual(expected) // deep equality
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product Management (checked by hand)</span><span class="finding-no muted">#9</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Product Management (checked by hand)</span><span class="finding-no muted">#8</span></div>
           <h3>RWIN set up as the specification describes is refused by the back end</h3>
           <p class="muted small">Who should look at this: Product and Engineering (treasury back end)</p>
         </header>
@@ -1096,7 +1161,7 @@ expect(received).toEqual(expected) // deep equality
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Communications (checked by hand)</span><span class="finding-no muted">#10</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Communications (checked by hand)</span><span class="finding-no muted">#9</span></div>
           <h3>Notifications sent by the system are not recorded anywhere staff can see</h3>
           <p class="muted small">Who should look at this: Engineering (backend and admin portal) and Customer Support</p>
         </header>
@@ -1124,7 +1189,7 @@ expect(received).toEqual(expected) // deep equality
       
     <div class="sec">
     <h2>Not run in this round</h2>
-    <ul class="clean"><li><strong>Review Queues: document reviews, failed checks and tier-upgrade requests are listed</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Review Queues: open a document review and back out without deciding</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Screening: escalate a hit</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Customer 360: freeze wallet</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>closed plan: audit entry &quot;View details&quot; opens and closes</strong> <span class="muted">(Investments)</span><br><span class="muted">Not run: there was no suitable data on the test system to check this against.</span></li><li><strong>Approval queue: state filters, scope toggle, action filter and export</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Approval queue: inspect a pending item shows proposed changes</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>On-behalf requests: states, request detail with evidence, export</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Break requests: states and export</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>On-behalf withdrawals list loads</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>On-behalf top-ups list loads</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>On-behalf rollovers list loads</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Unlock requests list loads</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>System alerts: acknowledge and resolve</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Auto-rollover carry-across: dialog lists products, needs a reason, cancels</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Statutory tax carry-across: states and export</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Payroll reconciliation page loads</strong> <span class="muted">(Loans)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Transaction monitor: customer name opens the Customer 360 drawer with all tabs</strong> <span class="muted">(Transactions, billers and communications)</span><br><span class="muted">Not run: The rebuilt Transaction Monitor (19 November) shows no customer names to open</span></li><li><strong>ledger sub-pages load</strong> <span class="muted">(Transactions, billers and communications)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Add biller → visible in Pending Approvals (dual control)</strong> <span class="muted">(Transactions, billers and communications)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Live board: provider health, held, stuck and failed sections</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>sub-pages load: Payment Providers, Routing Policy, Wallet Config, Settlement, Manual Ledger, Incidents</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Manual ledger: credit, debit and reversal dialogs open and close</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Routing policy: override history opens; manual-override dialog cancels</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Payment providers: add provider is submitted for approval</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Routing policy: edit rule submits for approval</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Wallet config: capability, fee and velocity settings submit for approval</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Live board: release / reject / reconcile / query / manual complete</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Providers: mark status / retire; routing manual override</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li></ul>
+    <ul class="clean"><li><strong>Review Queues: document reviews, failed checks and tier-upgrade requests are listed</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Review Queues: open a document review and back out without deciding</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Screening: escalate a hit</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Customer 360: freeze wallet</strong> <span class="muted">(Customer management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>closed plan: audit entry &quot;View details&quot; opens and closes</strong> <span class="muted">(Investments)</span><br><span class="muted">Not run: there was no suitable data on the test system to check this against.</span></li><li><strong>Approval queue: state filters, scope toggle, action filter and export</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Approval queue: inspect a pending item shows proposed changes</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>On-behalf requests: states, request detail with evidence, export</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Break requests: states and export</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>On-behalf withdrawals list loads</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>On-behalf top-ups list loads</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>On-behalf rollovers list loads</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Unlock requests list loads</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>System alerts: acknowledge and resolve</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Auto-rollover carry-across: dialog lists products, needs a reason, cancels</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Statutory tax carry-across: states and export</strong> <span class="muted">(Investment approvals, alerts and audit log)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Payroll reconciliation page loads</strong> <span class="muted">(Loans)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Corridors: rates and fees are stored in percent, as the form labels them</strong> <span class="muted">(Product setup)</span><br><span class="muted">Not counted as a problem: it fails only because of an admin setting. See “Admin set-up to review” on the Overview.</span></li><li><strong>Transaction monitor: customer name opens the Customer 360 drawer with all tabs</strong> <span class="muted">(Transactions, billers and communications)</span><br><span class="muted">Not run: The rebuilt Transaction Monitor (19 November) shows no customer names to open</span></li><li><strong>ledger sub-pages load</strong> <span class="muted">(Transactions, billers and communications)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Add biller → visible in Pending Approvals (dual control)</strong> <span class="muted">(Transactions, billers and communications)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Live board: provider health, held, stuck and failed sections</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>sub-pages load: Payment Providers, Routing Policy, Wallet Config, Settlement, Manual Ledger, Incidents</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Manual ledger: credit, debit and reversal dialogs open and close</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Routing policy: override history opens; manual-override dialog cancels</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Payment providers: add provider is submitted for approval</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Routing policy: edit rule submits for approval</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Wallet config: capability, fee and velocity settings submit for approval</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run: this page was switched off (“Coming soon” or removed from the menu) in the 3 November update.</span></li><li><strong>Live board: release / reject / reconcile / query / manual complete</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li><li><strong>Providers: mark status / retire; routing manual override</strong> <span class="muted">(Wallet management)</span><br><span class="muted">Not run on purpose: this action changes real records on the test system (for example releasing a transaction or freezing an account). It can be switched on when a safe test record is available.</span></li></ul>
     </div>
     </div>
     <div class="subpanel" role="tabpanel" id="subpanel-admin-byhand" aria-labelledby="sub-admin-byhand" data-sub="byhand">
@@ -1177,25 +1242,25 @@ expect(received).toEqual(expected) // deep equality
     </div>
 
     <section class="card verdict bad">
-      <h3>Not ready for release — 33 problems need attention (including 25 found by hand or in the app’s error log)</h3>
+      <h3>Not ready for release — 30 problems need attention (including 23 found by hand or in the app’s error log)</h3>
       <p>10 of them are Critical or High priority and should be fixed before release.</p>
     </section>
 
     <div class="stats">
       <a class="stat" href="#mobile"><div class="n">55</div><div class="muted">checks in total</div></a>
       <a class="stat ok" href="#mobile/passed"><div class="n">24</div><div class="muted">worked as expected <span class="go" aria-hidden="true">→</span></div></a>
-      <a class="stat bad" href="#mobile/problems"><div class="n">8</div><div class="muted">checks with a problem <span class="go" aria-hidden="true">→</span></div></a>
-      <a class="stat" href="#mobile/notrun"><div class="n">23</div><div class="muted">not run <span class="go" aria-hidden="true">→</span></div></a>
+      <a class="stat bad" href="#mobile/problems"><div class="n">7</div><div class="muted">checks with a problem <span class="go" aria-hidden="true">→</span></div></a>
+      <a class="stat" href="#mobile/notrun"><div class="n">24</div><div class="muted">not run <span class="go" aria-hidden="true">→</span></div></a>
     </div>
-    <div class="bar" role="img" aria-label="24 worked, 8 with a problem, 23 not run"><span class="p" style="flex-grow:24" title="24 worked (44%)"></span><span class="f" style="flex-grow:8" title="8 with a problem (15%)"></span><span class="s" style="flex-grow:23" title="23 not run (42%)"></span></div>
-    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (75% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot dot-idle"></i>Not run</span></div>
-    <h3 class="kicker">Problems by priority</h3><div class="sev-tiles"><a class="sev-tile s-critical" href="#mobile/problems/critical" title="blocks a core journey for every customer (for example no one can sign up or invest)"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></a><a class="sev-tile s-high" href="#mobile/problems/high" title="affects customers’ money, security or a compliance requirement"><span class="sev-tile-n">8</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></a><a class="sev-tile s-medium" href="#mobile/problems/medium" title="a feature is broken, wrong or misleading, but there is a way round it"><span class="sev-tile-n">20</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></a><a class="sev-tile s-low" href="#mobile/problems/low" title="minor or cosmetic; worth fixing when convenient"><span class="sev-tile-n">3</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></a></div>
+    <div class="bar" role="img" aria-label="24 worked, 7 with a problem, 24 not run"><span class="p" style="flex-grow:24" title="24 worked (44%)"></span><span class="f" style="flex-grow:7" title="7 with a problem (13%)"></span><span class="s" style="flex-grow:24" title="24 not run (44%)"></span></div>
+    <div class="legend muted"><span><i class="dot" style="background:var(--good)"></i>Worked (77% of checks that ran)</span><span><i class="dot" style="background:var(--bad)"></i>Problem</span><span><i class="dot dot-idle"></i>Not run</span></div>
+    <h3 class="kicker">Problems by priority</h3><div class="sev-tiles"><a class="sev-tile s-critical" href="#mobile/problems/critical" title="blocks a core journey for every customer (for example no one can sign up or invest)"><span class="sev-tile-n">2</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Critical</span></a><a class="sev-tile s-high" href="#mobile/problems/high" title="affects customers’ money, security or a compliance requirement"><span class="sev-tile-n">8</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>High</span></a><a class="sev-tile s-medium" href="#mobile/problems/medium" title="a feature is broken, wrong or misleading, but there is a way round it"><span class="sev-tile-n">17</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Medium</span></a><a class="sev-tile s-low" href="#mobile/problems/low" title="minor or cosmetic; worth fixing when convenient"><span class="sev-tile-n">3</span><span class="sev-tile-l"><i class="sev-dot" aria-hidden="true"></i>Low</span></a></div>
 
     <div class="subtabs" role="tablist" aria-label="Mobile app results by kind">
       <button class="subtab" role="tab" id="sub-mobile-overview" aria-controls="subpanel-mobile-overview" aria-selected="true" tabindex="0" data-panel="mobile" data-sub="overview">Overview</button>
-      <button class="subtab t-bad" role="tab" id="sub-mobile-problems" aria-controls="subpanel-mobile-problems" aria-selected="false" tabindex="-1" data-panel="mobile" data-sub="problems">Problems <span class="count">33</span></button>
+      <button class="subtab t-bad" role="tab" id="sub-mobile-problems" aria-controls="subpanel-mobile-problems" aria-selected="false" tabindex="-1" data-panel="mobile" data-sub="problems">Problems <span class="count">30</span></button>
       <button class="subtab t-ok" role="tab" id="sub-mobile-passed" aria-controls="subpanel-mobile-passed" aria-selected="false" tabindex="-1" data-panel="mobile" data-sub="passed">Passed <span class="count">24</span></button>
-      <button class="subtab t-idle" role="tab" id="sub-mobile-notrun" aria-controls="subpanel-mobile-notrun" aria-selected="false" tabindex="-1" data-panel="mobile" data-sub="notrun">Not run <span class="count">23</span></button>
+      <button class="subtab t-idle" role="tab" id="sub-mobile-notrun" aria-controls="subpanel-mobile-notrun" aria-selected="false" tabindex="-1" data-panel="mobile" data-sub="notrun">Not run <span class="count">24</span></button>
       <button class="subtab t-idle" role="tab" id="sub-mobile-byhand" aria-controls="subpanel-mobile-byhand" aria-selected="false" tabindex="-1" data-panel="mobile" data-sub="byhand">Tried by hand <span class="count">24</span></button>
       <button class="subtab" role="tab" id="sub-mobile-notes" aria-controls="subpanel-mobile-notes" aria-selected="false" tabindex="-1" data-panel="mobile" data-sub="notes">Notes &amp; questions</button>
     </div>
@@ -1212,7 +1277,7 @@ expect(received).toEqual(expected) // deep equality
     <div class="table-wrap">
     <table>
       <thead><tr><th>Area</th><th class="num">Checks run</th><th class="num">Worked</th><th>Result</th></tr></thead>
-      <tbody><tr><td class="area"><strong>Signing in</strong><div class="muted">Each test customer can sign in with email and password, or with phone number and passcode.</div></td><td class="num" data-label="Checks run">5</td><td class="num" data-label="Worked">4</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Sign-up, sign-in security and sessions</strong><div class="muted">Creating an account, wrong-password handling, account lock-out, staying signed in, and frozen accounts.</div></td><td class="num" data-label="Checks run">0</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge idle">Not run yet</span><div class="muted small">14 not run</div></td></tr><tr><td class="area"><strong>Home, Grow and Borrow screens</strong><div class="muted">The balance and quick actions on Home, investment products and plan totals on Grow, and the loans offered on Borrow.</div></td><td class="num" data-label="Checks run">11</td><td class="num" data-label="Worked">10</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Investing</strong><div class="muted">Opening each investment product, and creating, checking and deleting an RWIN savings goal.</div></td><td class="num" data-label="Checks run">9</td><td class="num" data-label="Worked">7</td><td class="result"><span class="badge bad">2 problems</span></td></tr><tr><td class="area"><strong>Borrowing</strong><div class="muted">Opening short-term loans, and checking a Personal loan’s quote, offer and repayment countdown against the loan rules.</div></td><td class="num" data-label="Checks run">1</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Profile</strong><div class="muted">Editing employment details, adding a next of kin and a home address.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge bad">1 problem</span></td></tr><tr><td class="area"><strong>Account</strong><div class="muted">Send Money recipients, funding the wallet by card, and logging out.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">1</td><td class="result"><span class="badge bad">2 problems</span></td></tr></tbody>
+      <tbody><tr><td class="area"><strong>Signing in</strong><div class="muted">Each test customer can sign in with email and password, or with phone number and passcode.</div></td><td class="num" data-label="Checks run">5</td><td class="num" data-label="Worked">4</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Sign-up, sign-in security and sessions</strong><div class="muted">Creating an account, wrong-password handling, account lock-out, staying signed in, and frozen accounts.</div></td><td class="num" data-label="Checks run">0</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge idle">Not run yet</span><div class="muted small">14 not run</div></td></tr><tr><td class="area"><strong>Home, Grow and Borrow screens</strong><div class="muted">The balance and quick actions on Home, investment products and plan totals on Grow, and the loans offered on Borrow.</div></td><td class="num" data-label="Checks run">11</td><td class="num" data-label="Worked">10</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Investing</strong><div class="muted">Opening each investment product, and creating, checking and deleting an RWIN savings goal.</div></td><td class="num" data-label="Checks run">8</td><td class="num" data-label="Worked">7</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">1 not run</div></td></tr><tr><td class="area"><strong>Borrowing</strong><div class="muted">Opening short-term loans, and checking a Personal loan’s quote, offer and repayment countdown against the loan rules.</div></td><td class="num" data-label="Checks run">1</td><td class="num" data-label="Worked">0</td><td class="result"><span class="badge bad">1 problem</span><div class="muted small">4 not run</div></td></tr><tr><td class="area"><strong>Profile</strong><div class="muted">Editing employment details, adding a next of kin and a home address.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">2</td><td class="result"><span class="badge bad">1 problem</span></td></tr><tr><td class="area"><strong>Account</strong><div class="muted">Send Money recipients, funding the wallet by card, and logging out.</div></td><td class="num" data-label="Checks run">3</td><td class="num" data-label="Worked">1</td><td class="result"><span class="badge bad">2 problems</span></td></tr></tbody>
     </table>
     </div>
     </div>
@@ -1225,10 +1290,10 @@ expect(received).toEqual(expected) // deep equality
     <p class="muted">These did not behave the way the product documents say they should. Most severe first.</p>
     <div class="sev-filter" role="group" aria-label="Show problems by priority" data-panel="mobile">
       <span class="sev-filter-label">Priority</span>
-      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">33</span></button>
+      <button type="button" class="fchip" data-sev="all" aria-pressed="true">All <span class="count">30</span></button>
       <button type="button" class="fchip s-critical" data-sev="critical" aria-pressed="false" title="Critical: blocks a core journey for every customer (for example no one can sign up or invest)"><i class="sev-dot" aria-hidden="true"></i>Critical <span class="count">2</span></button>
       <button type="button" class="fchip s-high" data-sev="high" aria-pressed="false" title="High: affects customers’ money, security or a compliance requirement"><i class="sev-dot" aria-hidden="true"></i>High <span class="count">8</span></button>
-      <button type="button" class="fchip s-medium" data-sev="medium" aria-pressed="false" title="Medium: a feature is broken, wrong or misleading, but there is a way round it"><i class="sev-dot" aria-hidden="true"></i>Medium <span class="count">20</span></button>
+      <button type="button" class="fchip s-medium" data-sev="medium" aria-pressed="false" title="Medium: a feature is broken, wrong or misleading, but there is a way round it"><i class="sev-dot" aria-hidden="true"></i>Medium <span class="count">17</span></button>
       <button type="button" class="fchip s-low" data-sev="low" aria-pressed="false" title="Low: minor or cosmetic; worth fixing when convenient"><i class="sev-dot" aria-hidden="true"></i>Low <span class="count">3</span></button>
     </div>
     <p class="muted small sev-filter-status" aria-live="polite"></p>
@@ -1406,28 +1471,6 @@ Expected: 3</pre>
       <article class="card finding s-medium" data-sev="medium">
         <header>
           <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing</span><span class="finding-no muted">#12</span></div>
-          <h3>RWIN goals offer tenors that are not in the RWIN rate table</h3>
-          <p class="muted small">Who should look at this: Product and Engineering (mobile app)</p>
-        </header>
-        
-        <p class="impact">Customers can book a term with no published rate, so the rate they get is unclear.</p>
-        <dl>
-          <dt>What we saw</dt><dd>Booking an RWIN goal offers 60, 90 or 120 days; the RWIN product page lists rates only for 90, 180, 270 and 360 days.</dd>
-          <dt>What should happen</dt><dd>Booking should offer the tenors in the rate table (or the table should cover every tenor offered).</dd>
-        </dl>
-        <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
-          <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 12" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
-            <pre class="snippet">expect(received).toContain(expected) // indexOf
-Expected substring: &quot;not in table: none&quot;</pre>
-          </div>
-          
-          
-        </details>
-      </article>
-      <article class="card finding s-medium" data-sev="medium">
-        <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing</span><span class="finding-no muted">#13</span></div>
           <h3>Investment goals can be created and topped up with an empty wallet, with no warning</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app) and Product</p>
         </header>
@@ -1439,7 +1482,7 @@ Expected substring: &quot;not in table: none&quot;</pre>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 13" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 12" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
             <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;the app responded&quot;</pre>
           </div>
@@ -1449,7 +1492,7 @@ Expected: &quot;the app responded&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Account</span><span class="finding-no muted">#14</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Account</span><span class="finding-no muted">#13</span></div>
           <h3>Funding the wallet by card does nothing</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and payments)</p>
         </header>
@@ -1461,7 +1504,7 @@ Expected: &quot;the app responded&quot;</pre>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 14" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 13" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
             <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;payment page opened&quot;</pre>
           </div>
@@ -1471,7 +1514,7 @@ Expected: &quot;payment page opened&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Account</span><span class="finding-no muted">#15</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Account</span><span class="finding-no muted">#14</span></div>
           <h3>“Log out” does nothing</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
@@ -1483,7 +1526,7 @@ Expected: &quot;payment page opened&quot;</pre>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 15" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 14" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
             <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;signed out&quot;</pre>
           </div>
@@ -1493,7 +1536,7 @@ Expected: &quot;signed out&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Signing in</span><span class="finding-no muted">#16</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Signing in</span><span class="finding-no muted">#15</span></div>
           <h3>Signing in with a +234 phone number does not work</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
@@ -1505,7 +1548,7 @@ Expected: &quot;signed out&quot;</pre>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 16" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 15" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
             <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;passcode screen&quot;</pre>
           </div>
@@ -1515,7 +1558,7 @@ Expected: &quot;passcode screen&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Profile</span><span class="finding-no muted">#17</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Profile</span><span class="finding-no muted">#16</span></div>
           <h3>Next of kin cannot be saved</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and API)</p>
         </header>
@@ -1527,7 +1570,7 @@ Expected: &quot;passcode screen&quot;</pre>
         </dl>
         <details class="evidence"><summary>View <span class="muted">(error details)</span></summary>
           <div class="snippet-wrap">
-            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 17" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
+            <button type="button" class="copy-btn" aria-label="Copy the error details for problem 16" title="Copy error details"><svg class="copy-ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="copy-label">Copy</span></button>
             <pre class="snippet">expect(received).toBe(expected) // Object.is equality
 Expected: &quot;QA Test Kin&quot;</pre>
           </div>
@@ -1537,7 +1580,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Wallet (tried by hand)</span><span class="finding-no muted">#18</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Wallet (tried by hand)</span><span class="finding-no muted">#17</span></div>
           <h3>Send money shows a fee and stamp duty that are not charged, and the two screens disagree</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and wallet back end)</p>
         </header>
@@ -1551,7 +1594,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#19</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#18</span></div>
           <h3>Booking success screens show ₦0.00 and missing details</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
@@ -1565,35 +1608,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#20</span></div>
-          <h3>RTN quotes two different rates for the same placement</h3>
-          <p class="muted small">Who should look at this: Engineering (mobile app and treasury rates)</p>
-        </header>
-        
-        <p class="impact">The customer cannot tell what rate they will earn.</p>
-        <dl>
-          <dt>What we saw</dt><dd>23 November, ₦1,000,000 for 90 days paid at maturity: the projection screen says “Interest earned (20% p.a.)” (+₦44,383.56), and the next screen, the summary, says “25% p.a.”, which is also what the plan was booked at. Two rate cards cover 90 days (20% for any payout, 25% for monthly back-end interest); the app picks a different one on each screen.</dd>
-          <dt>What should happen</dt><dd>One rate per amount, tenor and timing, the same on every screen; and the rate cards should not overlap.</dd>
-        </dl>
-        
-      </article>
-      <article class="card finding s-medium" data-sev="medium">
-        <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#21</span></div>
-          <h3>Product pages show rates for tenors the product does not offer</h3>
-          <p class="muted small">Who should look at this: Engineering (treasury rates) and Product</p>
-        </header>
-        
-        <p class="impact">Customers are shown rates they cannot get; REAP is advertised at a rate none of its tenors pays.</p>
-        <dl>
-          <dt>What we saw</dt><dd>23 November: Adebanjo REAP is advertised as “30% p.a.” on Grow and on its page, and its rate table lists 1-month (30%) and 2-month (18% and 12%) rates, but it only offers 3, 6, 12 and 24 months (14% to 18%). Adebanjo RWIN only offers a 90-day cycle but lists 180, 270 and 360-day rates and a 30% “small” rate. The rate cards seem to come from the older product of the same type.</dd>
-          <dt>What should happen</dt><dd>The headline rate and rate table should come only from the rates of tenors the product offers.</dd>
-        </dl>
-        
-      </article>
-      <article class="card finding s-medium" data-sev="medium">
-        <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#22</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#19</span></div>
           <h3>The app says nothing when a booking is refused</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
@@ -1607,7 +1622,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Notifications (checked by hand)</span><span class="finding-no muted">#23</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Notifications (checked by hand)</span><span class="finding-no muted">#20</span></div>
           <h3>Notifications show raw amounts and dates</h3>
           <p class="muted small">Who should look at this: Engineering (back end notification templates)</p>
         </header>
@@ -1621,7 +1636,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Borrowing (tried by hand)</span><span class="finding-no muted">#24</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Borrowing (tried by hand)</span><span class="finding-no muted">#21</span></div>
           <h3>Borrow shows wrong amounts for a moment after sign-in</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
@@ -1635,7 +1650,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#25</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#22</span></div>
           <h3>Home counts ₦300,000 in plans the customer does not have</h3>
           <p class="muted small">Who should look at this: Engineering (investments)</p>
         </header>
@@ -1649,7 +1664,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Sign-up (tried by hand)</span><span class="finding-no muted">#26</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Sign-up (tried by hand)</span><span class="finding-no muted">#23</span></div>
           <h3>A sign-up stopped part-way leaves an account that cannot sign in</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and API)</p>
         </header>
@@ -1663,7 +1678,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Profile (tried by hand)</span><span class="finding-no muted">#27</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Profile (tried by hand)</span><span class="finding-no muted">#24</span></div>
           <h3>A customer with no address on file is told they can no longer change it</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app and API) and Product</p>
         </header>
@@ -1677,7 +1692,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Borrowing (tried by hand)</span><span class="finding-no muted">#28</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Borrowing (tried by hand)</span><span class="finding-no muted">#25</span></div>
           <h3>Loan documents are marked “Verified” the moment they are uploaded</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app) and Operations</p>
         </header>
@@ -1691,7 +1706,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Borrowing (tried by hand)</span><span class="finding-no muted">#29</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Borrowing (tried by hand)</span><span class="finding-no muted">#26</span></div>
           <h3>Loan screens show a fee that is never charged, and hide the 7.5% VAT that is</h3>
           <p class="muted small">Who should look at this: Engineering (loans) and Finance</p>
         </header>
@@ -1705,7 +1720,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-medium" data-sev="medium">
         <header>
-          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Times and dates (tried by hand)</span><span class="finding-no muted">#30</span></div>
+          <div class="finding-meta"><span class="sev s-medium">Medium</span><span class="chip">Times and dates (tried by hand)</span><span class="finding-no muted">#27</span></div>
           <h3>Times are shown an hour behind Nigerian time</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app, admin portal and API)</p>
         </header>
@@ -1719,7 +1734,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-low" data-sev="low">
         <header>
-          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#31</span></div>
+          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">Investing (tried by hand)</span><span class="finding-no muted">#28</span></div>
           <h3>RWIN booking misses the 30-day holding confirmation, and auto-rollover starts off</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
@@ -1733,7 +1748,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-low" data-sev="low">
         <header>
-          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">Borrowing (tried by hand)</span><span class="finding-no muted">#32</span></div>
+          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">Borrowing (tried by hand)</span><span class="finding-no muted">#29</span></div>
           <h3>A waived penalty is not explained to the customer</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app) and Product</p>
         </header>
@@ -1747,7 +1762,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       </article>
       <article class="card finding s-low" data-sev="low">
         <header>
-          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">Sign-up (tried by hand)</span><span class="finding-no muted">#33</span></div>
+          <div class="finding-meta"><span class="sev s-low">Low</span><span class="chip">Sign-up (tried by hand)</span><span class="finding-no muted">#30</span></div>
           <h3>The selfie screen waits forever when it can’t see a face</h3>
           <p class="muted small">Who should look at this: Engineering (mobile app)</p>
         </header>
@@ -1775,7 +1790,7 @@ Expected: &quot;QA Test Kin&quot;</pre>
       
     <div class="sec">
     <h2>Not run in this round</h2>
-    <ul class="clean"><li><strong>happy path: BVN match → phone OTP → email OTP → PIN → lands on home as Tier 1</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN 10 digits is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN contains a letter is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN name/DOB mismatch blocks onboarding with clear guidance</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>identity provider timeout surfaces a retryable error, not a crash</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong OTP is rejected; resend is throttled</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>PIN confirmation mismatch and weak PINs are rejected</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid email + password logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid phone + passcode/PIN logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong password shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong PIN shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account locks after repeated wrong passwords — and the phone route is locked too</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>session survives short backgrounding but requires re-auth after relaunch</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account frozen by Compliance blocks login with support message</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>total working capital equals the sum of active plans</strong> <span class="muted">(Home, Grow and Borrow screens)</span><br><span class="muted">Not run in this round.</span></li><li><strong>phone sign-in moves on to the passcode screen within 10 seconds</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run in this round.</span></li><li><strong>Tier 1 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Tier 2 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Tier 3 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Nano loan application opens without crashing</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run in this round.</span></li><li><strong>Payday loan application opens without crashing</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run in this round.</span></li><li><strong>Loan offer shows the same terms as the application</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: only checked while an approved loan offer is waiting to be accepted.</span></li><li><strong>Active loan: next payment countdown is within a month</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: only checked while a loan is being repaid.</span></li></ul>
+    <ul class="clean"><li><strong>happy path: BVN match → phone OTP → email OTP → PIN → lands on home as Tier 1</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN 10 digits is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN contains a letter is rejected client-side</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>BVN name/DOB mismatch blocks onboarding with clear guidance</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>identity provider timeout surfaces a retryable error, not a crash</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong OTP is rejected; resend is throttled</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>PIN confirmation mismatch and weak PINs are rejected</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid email + password logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>valid phone + passcode/PIN logs in</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong password shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>wrong PIN shows generic error (no account enumeration)</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account locks after repeated wrong passwords — and the phone route is locked too</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>session survives short backgrounding but requires re-auth after relaunch</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>account frozen by Compliance blocks login with support message</strong> <span class="muted">(Sign-up, sign-in security and sessions)</span><br><span class="muted">Not run: needs backend test tools (to create fresh test customers and control the clock) that the backend team has not provided yet.</span></li><li><strong>total working capital equals the sum of active plans</strong> <span class="muted">(Home, Grow and Borrow screens)</span><br><span class="muted">Not run in this round.</span></li><li><strong>RWIN goal tenors match the product rate table</strong> <span class="muted">(Investing)</span><br><span class="muted">Not counted as a problem: it fails only because of an admin setting. See “Admin set-up to review” on the Overview.</span></li><li><strong>phone sign-in moves on to the passcode screen within 10 seconds</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run in this round.</span></li><li><strong>Tier 1 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Tier 2 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Tier 3 test account signs in with phone + passcode/PIN</strong> <span class="muted">(Signing in)</span><br><span class="muted">Not run: no phone number and passcode are on file for this test account yet.</span></li><li><strong>Nano loan application opens without crashing</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run in this round.</span></li><li><strong>Payday loan application opens without crashing</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run in this round.</span></li><li><strong>Loan offer shows the same terms as the application</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: only checked while an approved loan offer is waiting to be accepted.</span></li><li><strong>Active loan: next payment countdown is within a month</strong> <span class="muted">(Borrowing)</span><br><span class="muted">Not run: only checked while a loan is being repaid.</span></li></ul>
     </div>
     </div>
     <div class="subpanel" role="tabpanel" id="subpanel-mobile-byhand" aria-labelledby="sub-mobile-byhand" data-sub="byhand">
