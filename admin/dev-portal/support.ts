@@ -42,6 +42,8 @@ export const ROUTES = {
   campaigns: '#/operations/communications/campaigns',
   banners: '#/operations/communications/discovery-banners',
   products: '#/configurations/product-management',
+  // 24 November: Product Management became a sidebar group; loans have their own page (was a "Loan products" tab).
+  loanProducts: '#/loan-products',
   loanPurposes: '#/loan-products/purposes',
   loanVariants: '#/loan-products/variants',
   preEligibility: '#/loan-products/pre-eligibility',

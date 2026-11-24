@@ -20,8 +20,7 @@ const SCHEDULE_TO_MODEL: Record<string, loans.InterestModel> = { MONTHLY_EQUAL: 
 const MODEL_OPTION = { A: 'Monthly equal instalments', B: 'Monthly declining balance' } as const;
 
 async function newLoanProductForm(page: Page, type: 'personal' | 'public-sector' | 'nano' | 'payday') {
-  await open(page, ROUTES.products);
-  await btn(page, 'Loan products').click();
+  await open(page, ROUTES.loanProducts);
   await btn(page, 'New loan product').click();
   await page.getByRole('combobox', { name: 'Loan product type' }).selectOption(type);
   await page.getByRole('textbox', { name: /^Loan name/ }).fill('model check');

@@ -13,7 +13,8 @@ function row(page: Page, text: string) {
 }
 
 test.describe('Dev portal › Product Management', () => {
-  test('catalogue: investment/loan tabs, type and status filters, export @smoke', async ({ page }) => {
+  // Since 24 Nov the investment and loan catalogues are separate pages (Product Management → Investment / Loan).
+  test('catalogue: investment and loan pages, type and status filters, export @smoke', async ({ page }) => {
     await open(page, ROUTES.products);
     for (const t of ['Goal savings', 'Investment note', 'Treasury note', 'All types']) {
       await page.getByRole('combobox', { name: 'Filter by type' }).selectOption({ label: t });
@@ -21,9 +22,12 @@ test.describe('Dev portal › Product Management', () => {
     for (const s of ['Draft', 'Active', 'Retired', 'All statuses']) {
       await page.getByRole('combobox', { name: 'Filter by status' }).selectOption({ label: s });
     }
-    await btn(page, 'Loan products').click();
+    await expect(btn(page, 'Export CSV')).toBeVisible();
+    await open(page, ROUTES.loanProducts);
     await expect(btn(page, 'New loan product')).toBeVisible();
-    await btn(page, 'Investment products').click();
+    for (const s of ['Draft', 'Active', 'Retired', 'All statuses']) {
+      await page.getByRole('combobox', { name: 'Filter by status' }).selectOption({ label: s });
+    }
   });
 
   test('New investment product (RWIN 2.0 template): full form renders; cancel @smoke', async ({ page }) => {
@@ -45,8 +49,7 @@ test.describe('Dev portal › Product Management', () => {
   });
 
   test('New loan product (Nano): type → name → full configuration form; cancel @smoke', async ({ page }) => {
-    await open(page, ROUTES.products);
-    await btn(page, 'Loan products').click();
+    await open(page, ROUTES.loanProducts);
     await btn(page, 'New loan product').click();
     await page.getByRole('combobox', { name: 'Loan product type' }).selectOption('nano');
     await page.getByRole('textbox', { name: /^Loan name/ }).fill(uniq('auto-nano'));
@@ -157,5 +160,23 @@ test.describe('Dev portal › Product Management', () => {
     const fractions = (content as Record<string, unknown>[]).flatMap((c) =>
       fields.filter((f) => typeof c[f] === 'number' && (c[f] as number) > 0 && (c[f] as number) < 0.1).map((f) => `${c.code}: ${f} ${c[f]}%`));
     expect(fractions, 'values that look like fractions, not percent').toEqual([]);
+  });
+
+  // Back on 24 Nov as "Rewards Engine" (ticket 752). Read-only: the form is opened and cancelled.
+  test('Rewards Engine: referral rewards list and new-reward form; cancel @smoke', async ({ page }) => {
+    await open(page, '#/configurations/rewards-engine');
+    await expect(page.getByRole('heading', { name: 'Rewards Engine' })).toBeVisible();
+    for (const col of ['REFERRAL STATUS', 'TARGET PLAN', 'REWARD TYPE', 'VALUE']) {
+      await expect(page.getByRole('main').getByText(new RegExp(`^${col}$`, 'i'))).toBeVisible();
+    }
+    await btn(page, 'New referral reward').click();
+    const select = (first: string) => page.locator('select').filter({ has: page.locator('option', { hasText: first }) });
+    await expect(select('Select the stage that earns the reward').locator('option')).toHaveText(['Select the stage that earns the reward', 'Registered', 'Wallet funded', 'Plan created']);
+    await select('Select a reward type').selectOption({ label: 'Percentage' });
+    await expect(page.getByText('Value (%)')).toBeVisible();
+    await select('Select a reward type').selectOption({ label: 'Flat amount' });
+    await expect(page.getByText('Value (₦)')).toBeVisible();
+    await expect(btn(page, 'Create reward')).toBeDisabled();
+    await btn(page, 'Cancel').click();
   });
 });
