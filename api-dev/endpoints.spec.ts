@@ -255,7 +255,11 @@ test.describe('API › read-only endpoints (dev)', () => {
       }
 
       // Live streams (server-sent events) stay open by design: judge them on the status they open with.
-      if (spec.paths[op.path]?.get?.responses?.['200']?.content?.['text/event-stream']) {
+      // If the server refuses a stream request (406), the document is wrong and it is a normal JSON
+      // endpoint (seen 24 Nov on pending-address-verification): note that and check it normally below.
+      let streamDocWrong = false;
+      if (spec.paths[op.path]?.get?.responses?.['200']?.content?.['text/event-stream'] && (await openStream(built.url, tokens.customer?.token)).status === 406) streamDocWrong = true;
+      if (!streamDocWrong && spec.paths[op.path]?.get?.responses?.['200']?.content?.['text/event-stream']) {
         if (op.secured) {
           const anon = await openStream(built.url);
           checks.noAuth = refusal(anon.status, [401, 403]);
@@ -350,6 +354,7 @@ test.describe('API › read-only endpoints (dev)', () => {
         problems.push(...schemaProblems.map((p) => `format: ${p}`));
       }
 
+      if (streamDocWrong) { checks.schema = checks.schema === 'fail' ? 'fail' : 'warn'; problems.push('format: documented as a live stream (text/event-stream) but it is a normal JSON answer; a stream request is refused with 406'); }
       record({ ...meta, outcome: 'checked', role, status: res.status, ms: res.ms, checks, problems, url: built.url.slice(base().length), ...(Object.keys(evidence).length ? { evidence } : {}) });
       // Refusals with an unexpected status ('warn') are reported on the results page but don't fail the check.
       expect.soft(checks.noAuth ?? 'ok', 'refused without signing in').not.toBe('fail');
