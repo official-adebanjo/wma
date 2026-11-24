@@ -1349,7 +1349,6 @@ const API_DOC_NOTES = [
 ];
 const API_QUESTIONS = [
   'Where in the app does a customer re-enter their BVN and agree to a credit check (POST /api/v3/loan-products/credit-check)? On 24 November no loan had a bureau report because no customer had done this step.',
-  'Should Payday products have a debt-to-income limit? On 24 November their bank assessments say “Product has no DTI limit” and pass at any level.',
   'Where should NIN verification happen in the app? The ticket says during onboarding, but the app has no NIN step. (The API itself verifies a NIN correctly since 24 November.)',
   'Should the completed KYC steps (GET /api/v3/users/completed-user-tier) include NIN once it is verified? On 24 November it did not, and it listed email and phone as completed although the profile shows them as not verified.',
   'Which roles may call each staff-only area? The API document does not say, so these checks treat Investment Management, the Investment and Loan reports, the approval workflows, the audit log, account controls and portal admin users as staff-only.',
@@ -1537,7 +1536,7 @@ function readApi() {
     area: 'API', owner: 'Engineering (backend, loan decisioning)', severity: 'High',
     title: 'The bank-statement check passes loans whose creditworthiness check failed or never ran',
     impact: 'Loans can be approved even though the Mono check failed, so the automated decision doesn’t protect Rosabon from risky lending.',
-    saw: '24 November, GET /api/v3/mono/admin/loan-applications/{id}/bank-assessment: loans #205 and #206 show creditworthinessStatus “FAILED” (“Mono: BVN does not match sandbox BVN”) but passed: true; loans #207, #217 and #219 show “SKIPPED_NO_BVN” and passed: true. canAfford is empty on every assessment. Payday loans have no debt-to-income limit (“Product has no DTI limit”), so #207 passed at 39% of income. Bureau reports: GET /api/v3/loan-applications/{id}/credit-reports says for every loan “The customer hasn’t re-entered their BVN and agreed to a credit check yet”, so no bureau check has run on any loan. On dev every bank assessment uses the same Mono test account and name, which is expected for the Mono sandbox.',
+    saw: '24 November, GET /api/v3/mono/admin/loan-applications/{id}/bank-assessment: loans #205 and #206 show creditworthinessStatus “FAILED” (“Mono: BVN does not match sandbox BVN”) but passed: true; loans #207, #217 and #219 show “SKIPPED_NO_BVN” and passed: true. canAfford is empty on every assessment. Bureau reports: GET /api/v3/loan-applications/{id}/credit-reports says for every loan “The customer hasn’t re-entered their BVN and agreed to a credit check yet”, so no bureau check has run on any loan. On dev every bank assessment uses the same Mono test account and name, which is expected for the Mono sandbox.',
     expected: 'Fail or hold for review a loan whose creditworthiness check failed or was skipped, fill canAfford, and require the bureau check (or a staff decision) before approval.',
   });
   findings.push({
