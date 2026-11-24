@@ -26,7 +26,7 @@ const assetsDir = path.join(root, 'report-assets'); // favicons (scripts/make-fa
 
 /** Copy the icons next to a built page and write its web manifest ("Add to home screen"). */
 function writeIcons(dir) {
-  for (const f of ['favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png']) {
+  for (const f of ['favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'prepared-by.png']) {
     if (fs.existsSync(path.join(assetsDir, f))) fs.copyFileSync(path.join(assetsDir, f), path.join(dir, f));
   }
   fs.writeFileSync(path.join(dir, 'site.webmanifest'), JSON.stringify({
@@ -1795,7 +1795,13 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
 
   /* Masthead */
   .masthead { background: linear-gradient(135deg, var(--mast-a), var(--mast-b)); color: #fff; padding: 28px 16px 64px; }
-  .masthead-in { max-width: 1120px; margin: 0 auto; }
+  .masthead-in { max-width: 1120px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+  .mast-main { min-width: 0; flex: 1; }
+  .prepared-by { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 12px 16px 12px 12px; border-radius: 14px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); max-width: 360px; }
+  .prepared-by img { width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; }
+  .pb-label { font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
+  .pb-name { font-weight: 700; font-size: 1.02rem; margin-top: 2px; }
+  .pb-role, .pb-org { font-size: .8rem; color: rgba(255,255,255,.82); line-height: 1.35; }
   .brand { display: flex; align-items: center; gap: 10px; font-size: .85rem; font-weight: 600; letter-spacing: .02em; opacity: .9; margin-bottom: 10px; }
   .brand img { width: 26px; height: 26px; border-radius: 6px; background: #fff; padding: 2px; }
   .masthead p { margin: 8px 0 0; max-width: 70ch; color: rgba(255,255,255,.82); }
@@ -2061,6 +2067,9 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
     body { font-size: 15px; }
     main { padding: 0 16px 96px; }
     .masthead { padding: 16px 16px 52px; }
+    .masthead-in { flex-direction: column; gap: 14px; }
+    .prepared-by { max-width: none; width: 100%; padding: 10px 12px; }
+    .prepared-by img { width: 52px; height: 52px; }
     .masthead p { font-size: .88rem; line-height: 1.45; }
     .brand { margin-bottom: 6px; }
     .mast-meta { margin-top: 10px; gap: 6px; }
@@ -2119,10 +2128,21 @@ ${pub ? '<meta name="robots" content="noindex, nofollow">' : ''}
 <body>
 <header class="masthead">
   <div class="masthead-in">
+    <div class="mast-main">
     <div class="brand"><img src="favicon.svg" alt="" width="26" height="26"> Rosabon Unified · Quality dashboard</div>
     <h1>Automated Test Results</h1>
     <p>Start with the Overview for the whole picture, or open one part of the product. The admin portal is the staff website; the mobile app is what customers use; the API is the service both of them talk to.</p>
     <div class="mast-meta"><span>Test environment (dev)</span>${areaData.length ? `<span>Latest run ${esc(fmt(new Date(Math.max(...areaData.map((d) => +d.runAt)))))} WAT</span>` : ''}${pub ? '' : '<span>Internal copy</span>'}</div>
+    </div>
+    <aside class="prepared-by" aria-label="Prepared by">
+      <img src="prepared-by.png" alt="Adebanjo Adeniji" width="72" height="72">
+      <div>
+        <div class="pb-label">Prepared by</div>
+        <div class="pb-name">Adebanjo Adeniji</div>
+        <div class="pb-role">QA Executive, Rosabon Financial Services</div>
+        <div class="pb-org">A subsidiary of The Concept Group</div>
+      </div>
+    </aside>
   </div>
 </header>
 <main>
