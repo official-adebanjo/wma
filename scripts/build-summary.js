@@ -1409,12 +1409,15 @@ const API_QUESTIONS = [
   'Should the completed KYC steps (GET /api/v3/users/completed-user-tier) include NIN once it is verified? On 24 November it did not, and it listed email and phone as completed although the profile shows them as not verified.',
   'Which roles may call each staff-only area? The API document does not say, so these checks treat Investment Management, the Investment and Loan reports, the approval workflows, the audit log, account controls and portal admin users as staff-only.',
   'Can the API document mark which parameters and request fields are required? Many are only enforced by the server.',
+  'May a super admin decline (or approve) a loan in another approver’s place? On 25 November PATCH /api/v3/loan-applications/{id}/decline/{userId}, sent with the super-admin sign-in and the workflow approver’s user ID, declined the loan; with the super admin’s own ID it was refused (“You are not expected to approve at this time”).',
+  'What does “reapply waiting days” (30 on every loan product) control? On 25 November the Tier 3 test customer applied for a Personal loan again straight after one was declined, and was accepted.',
 ];
 const maskPII = (s) => String(s).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '<email>').replace(/(\+?234|0)[789][01]\d{8}/g, '<phone>');
 const apiAreaName = (tag) => (tag === 'lead-api-resource' ? 'Leads' : tag.replace(/ Endpoints$/, ''));
 
 /** What the latest backend update changed, written up after each re-run (shown above the live comparison). */
 const API_UPDATES = [
+  ['25 November: loan pre-eligibility and basic underwriting retested (ticket 539)', 'Sent loan applications that the product rules should refuse, as the Tier 1 and Tier 3 test customers; every test loan was closed straight after (#222–#231, with the dev “mark as paid” shortcut or a decline). Working: the Public Sector pre-eligibility gate refuses a customer with no age, service or salary details (“You are not eligible to take this loan”); Payday refuses a Tier 1 customer (“Please upgrade your account”) and caps the amount at half the salary (₦250,000 for a ₦500,000 salary); a purpose the product doesn’t offer is refused; a customer with a loan running can’t take another. Not working: the products’ amount and tenor limits, retired products, and Personal’s minimum time in employment are not checked; loans outside every approval workflow’s range are approved automatically; and a missing loan length crashes the server. Also found: any customer can read every customer’s loan applications. See “Problems found” for all five. The automatic checks now treat the all-loans list as staff-only. Side effect on dev: the three Nano test loans paid ₦51,810 into the Tier 3 test wallet, and “mark as paid” closed them without taking it back.'],
   ['24 November (afternoon): address verification retested — server error fixed, but customer data exposed', 'Reported fixed. GET /api/v3/users/pending-address-verification no longer fails with a server error (it now needs pageNo and pageSize, as its document says); staff get the list of 31 pending verifications and it still refuses callers who are not signed in (401). But a signed-in customer gets the same full list — every customer’s email, address and IP address (see “Problems found”, Critical). GET /api/v3/users/residential-address still answers 404 for customers with no address, and PUT /api/v3/users/change-residential-address answers 404 “Address Not Found” for them, so the app still can’t save a first address.'],
   ['24 November: re-run, wallet (Wema) and loan decisioning checked', 'Re-run after a dev outage interrupted the first attempt (dev stopped answering several times during the day, for 5–15 minutes each time): 149 checks passed, nothing new broken. Credit reports for a loan (GET /api/v3/loan-applications/{id}/credit-reports) worked for the loan the check used in the morning, but fail for some loans (see “Problems found”). New in the API document: a Freshdesk webhook (POST /api/v3/webhooks/freshdesk); it correctly refuses calls without its secret or with a wrong one (401). Wallet tickets (720, 739, 741–743): every test customer has a Wema account number; a test bank transfer (POST /api/v3/simulation/wallet-inflows) credits the wallet at once; a wallet-to-wallet send settles in about 7 seconds and both sides are notified; Wema account balance (GET /api/v3/wema/{accountNumber}/balance) still answers 400 “Vendor not found”. Loan decisioning tickets (422, 423, 424): the Mono endpoints (link a bank account, linked accounts, direct-debit mandate, bank-statement assessment for staff) answer correctly; there are no separate endpoints for underwriting or routing, so their effect was checked on the latest 40 loans — the same credit score everywhere and assessments that pass failed checks (see “Problems found”).'],
   ['24 November: NIN verification fixed', 'PATCH /api/v3/users/verify-nin now accepts the account holder’s own NIN: “Operation successful” (200) in about 1 second, and the profile then shows the NIN as verified. On 23 November the same account and NIN were refused with “First name does not match NIN details”. A NIN that belongs to someone else is still refused with that message, and a malformed NIN with “Your NIN is invalid” (both correct). One open question: the customer’s list of completed KYC steps (GET /api/v3/users/completed-user-tier) does not include NIN after verification, and it lists “Email Address” and “Phone Number” although the profile shows both as not verified.'],
@@ -1518,7 +1521,9 @@ function readApi() {
     sawPublic: `Signed in as one test customer and asking for another test customer’s ID returned the other customer’s records on ${other.length} endpoint${other.length > 1 ? 's' : ''}. ${offPublic}`,
     expected: 'A customer should only ever get their own records (403 or 404 for anyone else’s).',
   });
-  const staff = failing('customerOnAdmin');
+  // Endpoints with their own, more specific finding below (the loan list exposes every customer's loans).
+  const OWN_FINDING = new Set(['GET /api/v3/loan-applications']);
+  const staff = failing('customerOnAdmin').filter((r) => !OWN_FINDING.has(key(r)));
   add(staff, {
     title: 'A customer sign-in can read staff-only data', severity: 'High', owner: 'Engineering (backend) and Security',
     impact: 'Customers can see internal set-up meant for staff, such as who approves loans and the limits used.',
@@ -1587,6 +1592,36 @@ function readApi() {
     impact: 'Personal data of all customers waiting for address verification is open to any signed-in customer — a data-protection breach if it reached production.',
     saw: '24 November, after the address-verification fix: GET /api/v3/users/pending-address-verification (pageNo=1, pageSize=50) no longer fails with a server error, but signed in as the Tier 1, Tier 2 or Tier 3 test customer it returns all 31 pending verifications — none of them the caller’s own — with each customer’s email (31 of 31), street and city (31), landmark (18) and IP address (31). Staff get the same list, which is right for the admin page. Without sign-in it is refused (401). The endpoint was documented on 6 November as the customer’s own pending address verifications.',
     expected: 'A customer should get only their own address verification (or be refused, if this list is meant for staff only); the full list should be staff-only.',
+  });
+
+  // Loan pre-eligibility and basic underwriting (ticket 539), retested by hand on 25 November.
+  findings.push({
+    area: 'API', owner: 'Engineering (backend) and Security', severity: 'Critical',
+    title: 'Any customer can read every customer’s loan applications',
+    impact: 'Every borrower’s name, loan amounts, status and credit score are open to any signed-in customer — a data-protection breach if it reached production.',
+    saw: '25 November: signed in as the Tier 1 or the Tier 3 test customer, GET /api/v3/loan-applications (“Get all loans”) returns all 163 loan applications of 16 customers — each with the customer’s full name, amount, status, credit score and dates — not only the caller’s own. GET /api/v3/loan-applications/{id} also returns another customer’s loan by its number: the Tier 1 test customer, whose only loan is #58, read loan #221. The app has its own endpoints for this (GET /api/v3/loan-applications/my, /my-active, /my-recent), which correctly return only the caller’s loans. The automatic checks had treated the all-loans list as a customer endpoint; from 25 November they treat it as staff-only.',
+    expected: 'The all-loans list should be staff-only (403 for a customer), and a customer asking for a loan that isn’t theirs should get 403 or 404.',
+  });
+  findings.push({
+    area: 'API', owner: 'Engineering (backend, loans)', severity: 'High',
+    title: 'Loan applications ignore the product’s amount and tenor limits, and loans outside every approval range are approved automatically',
+    impact: 'Customers can borrow more or less than a product allows, for lengths it doesn’t offer, or on retired products — and some of these loans are approved, or paid out, with no staff review.',
+    saw: '25 November (ticket 539), applications sent as the Tier 3 test customer, each closed straight after (loans #222–#230). Adebanjo Nano (₦5,000–₦50,000; 3, 7, 14 or 30 days) accepted ₦1,000 and ₦60,000 for 7 days and ₦5,000 for 10 days; all three were approved and paid out at once (₦785, ₦47,100 and ₦3,925 after fees). Adebanjo Personal (₦100,000–₦30,000,000; 3, 6, 9, 12, 18 or 24 months) accepted ₦31,000,000 for 12 months and ₦50,000 for 3 months, both APPROVED with no approval workflow (the Personal workflow covers ₦100,000–₦30,000,000), and ₦200,000 for 5 months (sent to the workflow). Adebanjo Payday (₦10,000–₦500,000; 30 days) accepted ₦5,000, APPROVED with no workflow (its workflow covers ₦50,000–₦5,000,000), and 7 days (sent to the workflow). The retired payday-loan-v2 product still accepted an application and approved it. Every one of these loans got credit score 569, and the Nano loans were paid out although the account is classed “poor-performing repeat”.',
+    expected: 'Refuse amounts and tenors outside the product’s settings and applications for retired products. Never approve a loan without an approval step: anything outside every workflow’s range should go to staff review.',
+  });
+  findings.push({
+    area: 'API', owner: 'Engineering (backend, loans)', severity: 'Medium',
+    title: 'Personal loans don’t check the minimum time in employment',
+    impact: 'Customers with no job, or a job shorter than the product requires, can apply and reach the approvers as if they qualified.',
+    saw: '25 November: Adebanjo Personal requires at least 6 months in employment. The Tier 1 test customer, who has no employment details at all, applied for ₦200,000 over 3 months and was accepted (loan #231, sent to the approval workflow; declined straight after). By contrast the Public Sector pre-eligibility gate refused the same customer (“You are not eligible to take this loan”) and Payday told them to upgrade their account.',
+    expected: 'Refuse, or hold for review, applicants whose employment start date is missing or shorter than the product’s minimum.',
+  });
+  findings.push({
+    area: 'API', owner: 'Engineering (backend, loans)', severity: 'Low',
+    title: 'Applying for a loan without a loan length crashes the server',
+    impact: 'An app or integration that leaves out the length gets a crash page instead of a message it can show.',
+    saw: '25 November: POST /api/v3/loan-applications for Adebanjo Nano with an amount but no duration answered 500 with the web server’s own error page.',
+    expected: 'Answer 400 with a clear message, such as “Choose a loan length”.',
   });
 
   // Loan decisioning (tickets 422, 423, 424), checked by hand on 24 November against the last 40 loans.

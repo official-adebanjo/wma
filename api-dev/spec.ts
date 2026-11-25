@@ -67,7 +67,10 @@ const ADMIN_TAGS = [
   'Investment Report Endpoints', 'Loan Report Endpoints', 'Loan Approval Workflow Endpoints',
   'System-Wide Audit Log Endpoints', 'Portal Admin User Endpoints', 'Message Template Endpoints',
 ];
-export const isAdminOnly = (op: Operation) => ADMIN_TAGS.includes(op.tag) || /\/admin(\/|-|$)/.test(op.path);
+/** Staff lists of every customer's records that sit in customer-facing tags (the app has its own "my" endpoints). */
+const STAFF_PATHS = ['GET /api/v3/loan-applications', 'GET /api/v3/loan-applications/overdue'];
+export const isAdminOnly = (op: Operation) =>
+  ADMIN_TAGS.includes(op.tag) || /\/admin(\/|-|$)/.test(op.path) || STAFF_PATHS.includes(`${op.method.toUpperCase()} ${op.path}`);
 
 /** The documented success body schema (200, else the first 2xx with JSON). */
 export function successSchema(op: Operation): Schema | undefined {
