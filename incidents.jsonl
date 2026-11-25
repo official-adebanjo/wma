@@ -9,3 +9,5 @@
 {"at":"2026-11-20T13:55:26.329Z","change":"deployed","name":"Admin portal","area":"Websites","why":"index-CHp9cCpx.css index-FljamXDP.js"}
 {"at":"2026-11-20T21:44:36.302Z","change":"deployed","name":"Admin portal","area":"Websites","why":"index--u03vIMd.css index-Clj8a3xd.js"}
 {"at":"2026-11-23T15:49:31.061Z","change":"deployed","name":"Admin portal","area":"Websites","why":"index-DyIx7SeL.css index-KhDdGGiK.js"}
+{"at":"2026-11-25T23:45:41.038Z","change":"deployed","name":"Admin portal","area":"Websites","why":"index-D2nKJnFm.js index-DyIx7SeL.css"}
+{"at":"2026-11-25T23:45:41.038Z","change":"down","name":"Get loan collections (GET /api/v3/loan-repayments/collections)","area":"Loan Repayment Endpoints","why":"500","since":"2026-11-25T15:24:47.968Z"}

@@ -1,21 +1,23 @@
 # Dev system status
 
-Last check: **25 Nov, 16:24** (Lagos time) · 77 checked · 🟢 all up · 42 not checked (no monitor customer account set)
+Last check: **26 Nov, 00:45** (Lagos time) · 77 checked · 🔴 **1 down** · 42 not checked (no monitor customer account set)
 
 Checks run every 15 minutes, Monday to Friday, 6am–7pm. Something counts as down after 2 failed checks in a row. The browser check opens the main admin pages after each new portal version and otherwise about once an hour; a page counts as broken when it fails twice in the same check.
 
-Admin portal version: `index-DyIx7SeL.css index-KhDdGGiK.js`, first seen 23 Nov, 16:49 · last browser check: 25 Nov, 16:24
+Admin portal version: `index-D2nKJnFm.js index-DyIx7SeL.css`, first seen 26 Nov, 00:45 · last browser check: 26 Nov, 00:45
 
-## Failed the last check (not yet counted as down)
+## Down now
 
-| Area | What | Answer | |
+| Area | What | Answer | Down since |
 |---|---|---|---|
-| Loan Repayment Endpoints | Get loan collections (GET /api/v3/loan-repayments/collections) | 500 |  |
+| Loan Repayment Endpoints | Get loan collections (GET /api/v3/loan-repayments/collections) | 500 | 25 Nov, 16:24 |
 
 ## Recent changes
 
 | When | What | Change |
 |---|---|---|
+| 26 Nov, 00:45 | Get loan collections (GET /api/v3/loan-repayments/collections) | 🔴 down: 500 |
+| 26 Nov, 00:45 | Admin portal | 🔵 new version deployed (index-D2nKJnFm.js index-DyIx7SeL.css) |
 | 23 Nov, 16:49 | Admin portal | 🔵 new version deployed (index-DyIx7SeL.css index-KhDdGGiK.js) |
 | 20 Nov, 22:44 | Admin portal | 🔵 new version deployed (index--u03vIMd.css index-Clj8a3xd.js) |
 | 20 Nov, 14:55 | Admin portal | 🔵 new version deployed (index-CHp9cCpx.css index-FljamXDP.js) |
